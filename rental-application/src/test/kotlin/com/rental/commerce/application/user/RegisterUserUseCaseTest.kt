@@ -15,15 +15,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.springframework.security.crypto.password.PasswordEncoder
 
 class RegisterUserUseCaseTest : BehaviorSpec({
 
     val userRepository = mockk<UserRepository>()
-    val passwordEncoder = mockk<PasswordEncoder>()
     val phoneVerificationStore = mockk<PhoneVerificationStore>(relaxed = true)
     val smsGateway = mockk<SmsGateway>(relaxed = true)
-    val useCase = RegisterUserUseCase(userRepository, passwordEncoder, phoneVerificationStore, smsGateway)
+    val useCase = RegisterUserUseCase(userRepository, phoneVerificationStore, smsGateway)
 
     Given("회원가입 요청 시") {
 
@@ -37,7 +35,6 @@ class RegisterUserUseCaseTest : BehaviorSpec({
             )
 
             every { userRepository.existsByEmail(command.email) } returns false
-            every { passwordEncoder.encode(command.password) } returns "bcrypt_hashed_password"
 
             val codeSlot = slot<String>()
             every { phoneVerificationStore.save(command.phone, capture(codeSlot), any()) } returns Unit

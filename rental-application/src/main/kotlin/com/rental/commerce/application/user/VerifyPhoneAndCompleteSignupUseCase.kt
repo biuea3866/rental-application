@@ -4,11 +4,11 @@ import com.rental.commerce.application.auth.RefreshTokenService
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.DuplicateResourceException
 import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.PasswordHasher
 import com.rental.commerce.domain.common.PhoneVerificationStore
+import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
-import com.rental.commerce.domain.common.TokenProvider
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,7 +18,7 @@ class VerifyPhoneAndCompleteSignupUseCase(
     private val phoneVerificationStore: PhoneVerificationStore,
     private val tokenProvider: TokenProvider,
     private val refreshTokenService: RefreshTokenService,
-    private val passwordEncoder: PasswordEncoder,
+    private val passwordHasher: PasswordHasher,
 ) {
 
     @Transactional
@@ -62,7 +62,7 @@ class VerifyPhoneAndCompleteSignupUseCase(
             email = command.email,
             name = command.name,
             phone = command.phone,
-            passwordHash = passwordEncoder.encode(command.password),
+            passwordHash = passwordHasher.hash(command.password),
             role = command.role,
         )
     }

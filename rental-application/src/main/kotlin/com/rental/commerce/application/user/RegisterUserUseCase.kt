@@ -5,14 +5,12 @@ import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PhoneVerificationStore
 import com.rental.commerce.domain.common.SmsGateway
 import com.rental.commerce.domain.user.UserRepository
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 
 @Service
 class RegisterUserUseCase(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
     private val phoneVerificationStore: PhoneVerificationStore,
     private val smsGateway: SmsGateway,
 ) {

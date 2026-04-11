@@ -33,6 +33,9 @@ dependencies {
     // Caffeine
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
+    // Security (PasswordEncoder)
+    implementation("org.springframework.security:spring-security-crypto")
+
     // JWT (RS256)
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")

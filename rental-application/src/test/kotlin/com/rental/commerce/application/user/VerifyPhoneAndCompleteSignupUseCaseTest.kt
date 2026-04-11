@@ -8,6 +8,7 @@ import com.rental.commerce.domain.common.PhoneVerificationStore
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole
+import com.rental.commerce.domain.common.PasswordHasher
 import com.rental.commerce.domain.common.TokenProvider
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -17,7 +18,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.springframework.security.crypto.password.PasswordEncoder
 
 class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
 
@@ -25,9 +25,9 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
     val phoneVerificationStore = mockk<PhoneVerificationStore>(relaxed = true)
     val tokenProvider = mockk<TokenProvider>()
     val refreshTokenService = mockk<RefreshTokenService>()
-    val passwordEncoder = mockk<PasswordEncoder>()
+    val passwordHasher = mockk<PasswordHasher>()
     val useCase = VerifyPhoneAndCompleteSignupUseCase(
-        userRepository, phoneVerificationStore, tokenProvider, refreshTokenService, passwordEncoder,
+        userRepository, phoneVerificationStore, tokenProvider, refreshTokenService, passwordHasher,
     )
 
     Given("휴대폰 인증 완료 시") {
@@ -43,7 +43,7 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
             )
 
             every { phoneVerificationStore.findByPhone(command.phone) } returns "123456"
-            every { passwordEncoder.encode(command.password) } returns "bcrypt_hashed"
+            every { passwordHasher.hash(command.password) } returns "bcrypt_hashed"
             every { userRepository.existsByEmail(command.email) } returns false
 
             val savedUserSlot = slot<User>()
