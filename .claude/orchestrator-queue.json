@@ -1,0 +1,316 @@
+{
+  "tickets": [
+    {
+      "id": "RC-BE-001",
+      "title": "[BE] BaseEntity + ErrorCode + ErrorResponse + GlobalExceptionHandler",
+      "priority": 0,
+      "deps": [],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T08:56:39.702402+00:00"
+    },
+    {
+      "id": "RC-BE-002",
+      "title": "[BE] JWT Provider — Access Token 생성/검증",
+      "priority": 0,
+      "deps": [
+        "RC-BE-001"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:03:47.999176+00:00"
+    },
+    {
+      "id": "RC-BE-003",
+      "title": "[BE] Refresh Token — Redis + Token Rotation + Family Detection",
+      "priority": 0,
+      "deps": [
+        "RC-BE-002"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:13:28.723616+00:00"
+    },
+    {
+      "id": "RC-BE-004",
+      "title": "[BE] Spring Security — JWT Filter, 권한, CORS",
+      "priority": 0,
+      "deps": [
+        "RC-BE-002"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:11:36.272678+00:00"
+    },
+    {
+      "id": "RC-BE-005",
+      "title": "[BE] MinIO ObjectStorageGateway — Presigned URL",
+      "priority": 0,
+      "deps": [
+        "RC-BE-001"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:05:05.157508+00:00"
+    },
+    {
+      "id": "RC-BE-006",
+      "title": "[BE] Flyway + 초기 DDL",
+      "priority": 0,
+      "deps": [
+        "RC-BE-001"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T08:59:02.139710+00:00"
+    },
+    {
+      "id": "RC-BE-007",
+      "title": "[BE] User 엔티티 + UserRole + Repository",
+      "priority": 0,
+      "deps": [
+        "RC-BE-006"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:25:48.106742+00:00"
+    },
+    {
+      "id": "RC-BE-008",
+      "title": "[BE] RegisterUserUseCase — 이메일 가입 + 인증",
+      "priority": 0,
+      "deps": [
+        "RC-BE-007",
+        "RC-BE-003"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-009",
+      "title": "[BE] OAuth2 소셜 로그인 — 카카오/네이버",
+      "priority": 0,
+      "deps": [
+        "RC-BE-008"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-010",
+      "title": "[BE] LenderProfile + RenterProfile",
+      "priority": 0,
+      "deps": [
+        "RC-BE-007"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-011",
+      "title": "[BE] LoginUseCase + RefreshTokenUseCase",
+      "priority": 0,
+      "deps": [
+        "RC-BE-008",
+        "RC-BE-004"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-012",
+      "title": "[BE] Product 엔티티 + ProductStatus + 상태 전이",
+      "priority": 0,
+      "deps": [
+        "RC-BE-006"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:11:05.413770+00:00"
+    },
+    {
+      "id": "RC-BE-013",
+      "title": "[BE] ProductPrice + ProductImage + Repository",
+      "priority": 0,
+      "deps": [
+        "RC-BE-012"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:25:41.787575+00:00"
+    },
+    {
+      "id": "RC-BE-014",
+      "title": "[BE] RegisterProductUseCase — DRAFT 생성 + PATCH",
+      "priority": 0,
+      "deps": [
+        "RC-BE-012",
+        "RC-BE-013",
+        "RC-BE-005"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-015",
+      "title": "[BE] SubmitProductUseCase — DRAFT→UNDER_REVIEW",
+      "priority": 0,
+      "deps": [
+        "RC-BE-014"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-016",
+      "title": "[BE] InspectProductUseCase — Admin 검수 + 이벤트",
+      "priority": 0,
+      "deps": [
+        "RC-BE-015"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-017",
+      "title": "[BE] SearchProductUseCase — QueryDSL 검색",
+      "priority": 0,
+      "deps": [
+        "RC-BE-012",
+        "RC-BE-013"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-018",
+      "title": "[BE] CategoryPriceGuide — 가이드 가격 + 캐시",
+      "priority": 0,
+      "deps": [
+        "RC-BE-006"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:12:45.987712+00:00"
+    },
+    {
+      "id": "RC-BE-019",
+      "title": "[BE] GetPresignedUrlUseCase — 이미지 업로드 API",
+      "priority": 0,
+      "deps": [
+        "RC-BE-005",
+        "RC-BE-004"
+      ],
+      "status": "done",
+      "added_at": "2026-04-11T09:00:00Z",
+      "completed_at": "2026-04-11T09:19:17.503940+00:00"
+    },
+    {
+      "id": "RC-BE-020",
+      "title": "[BE] 마이페이지 — Profile 조회/수정",
+      "priority": 0,
+      "deps": [
+        "RC-BE-007",
+        "RC-BE-010"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-021",
+      "title": "[BE] 알림 기본 — Notification 엔티티 + 조회",
+      "priority": 0,
+      "deps": [
+        "RC-BE-007"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-BE-022",
+      "title": "[BE] 등록 상품 관리 — 목록/수정/삭제",
+      "priority": 0,
+      "deps": [
+        "RC-BE-012",
+        "RC-BE-013"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z"
+    },
+    {
+      "id": "RC-FE-001",
+      "title": "[FE] 프로젝트 초기 설정 (Next.js, Tailwind, shadcn, PWA, 인증 공통)",
+      "priority": 0,
+      "deps": [],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z",
+      "team": "Frontend",
+      "notion_page_id": "33f165b9-9f5f-81d0-9ce2-c1898e7bb594"
+    },
+    {
+      "id": "RC-FE-002",
+      "title": "[FE] 회원가입/로그인 (소셜, 휴대폰 인증, JWT)",
+      "priority": 0,
+      "deps": [
+        "RC-FE-001"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z",
+      "team": "Frontend",
+      "notion_page_id": "33f165b9-9f5f-813d-a3e9-fff0df00e1d6"
+    },
+    {
+      "id": "RC-FE-003",
+      "title": "[FE] 등록자 홈 + 상품 등록 (5단계 폼, Presigned URL)",
+      "priority": 0,
+      "deps": [
+        "RC-FE-002"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z",
+      "team": "Frontend",
+      "notion_page_id": "33f165b9-9f5f-815d-beb2-ca5b26420fc4"
+    },
+    {
+      "id": "RC-FE-004",
+      "title": "[FE] 대여자 홈 + 상품 검색/목록/상세",
+      "priority": 0,
+      "deps": [
+        "RC-FE-002"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z",
+      "team": "Frontend",
+      "notion_page_id": "33f165b9-9f5f-8174-a2a8-e9568f1d9cf3"
+    },
+    {
+      "id": "RC-FE-005",
+      "title": "[FE] 마이페이지 + 알림 + 상품 관리",
+      "priority": 0,
+      "deps": [
+        "RC-FE-002"
+      ],
+      "status": "pending",
+      "added_at": "2026-04-11T09:00:00Z",
+      "team": "Frontend",
+      "notion_page_id": "33f165b9-9f5f-81bd-b02f-c28f037de941"
+    }
+  ],
+  "current_index": 0,
+  "completed": [
+    "RC-BE-001",
+    "RC-BE-006",
+    "RC-BE-002",
+    "RC-BE-005",
+    "RC-BE-012",
+    "RC-BE-004",
+    "RC-BE-018",
+    "RC-BE-003",
+    "RC-BE-019",
+    "RC-BE-013",
+    "RC-BE-007"
+  ],
+  "skipped": [],
+  "started_at": "2026-04-11T09:00:00Z",
+  "updated_at": "2026-04-11T09:25:48.106997+00:00"
+}

@@ -1,0 +1,22 @@
+{
+  "phase": "ticket",
+  "ticket": {
+    "id": "RC-BE-001",
+    "title": "[BE] BaseEntity + ErrorCode + ErrorResponse + GlobalExceptionHandler",
+    "url": null
+  },
+  "test_files": [],
+  "impl_files": [],
+  "review": {
+    "status": null,
+    "reviewer": null,
+    "attempts": 0,
+    "comments": []
+  },
+  "pr": {
+    "url": null,
+    "number": null
+  },
+  "started_at": "2026-04-11T08:55:28.127307+00:00",
+  "updated_at": "2026-04-11T08:55:28.127493+00:00"
+}
