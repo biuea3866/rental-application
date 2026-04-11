@@ -104,6 +104,27 @@
         "file_glob": "*Dto*.kt,*Response*.kt,*Request*.kt",
         "message": "DTO에서 Any 타입 사용 금지 — 구체적인 타입(ZonedDateTime 등)을 사용하세요.",
         "severity": "error"
+      },
+      {
+        "id": "no-double-bang",
+        "pattern": "\\w+!!",
+        "file_glob": "*.kt",
+        "message": "!! (단정 기호) 사용 금지 — requireNotNull, ?:, ?.let 등 안전한 처리를 사용하세요.",
+        "severity": "error"
+      },
+      {
+        "id": "no-entity-field-comparison-in-usecase",
+        "pattern": "\\w+\\.(userId|productId|orderId|rentalId|status|role)\\s*(==|!=)\\s*",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에서 Entity 필드를 직접 비교하지 마세요 — Entity 내부에 검증 메서드를 캡슐화하세요 (Rich Domain Model).",
+        "severity": "error"
+      },
+      {
+        "id": "no-business-logic-in-usecase",
+        "pattern": "private fun validate",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에 private 검증 로직(validate*) 금지 — Domain Service 또는 Entity 메서드로 위임하세요.",
+        "severity": "error"
       }
     ]
   },
@@ -157,9 +178,19 @@
       "3. 테스트 작성 → 구현",
       "4. git add + git commit",
       "5. git push -u origin feature/{ticket-id}",
-      "6. 리뷰 후 gh pr create --base dev",
-      "7. 머지 후 feature 브랜치 삭제"
+      "6. gh pr create --base dev (커밋 직후 즉시 실행 — 지연/누락 금지)",
+      "7. 노션 티켓 상태 업데이트 (In Progress → In Review)",
+      "8. 머지 후 feature 브랜치 삭제 + 노션 상태 Done"
     ],
+    "pipeline_enforcement": {
+      "description": "파이프라인 전 단계를 커밋 완료 시 자동으로 연속 실행. 단계 누락/지연 절대 금지.",
+      "auto_sequence_after_commit": [
+        "git push -u origin {branch}",
+        "gh pr create --base dev",
+        "노션 티켓 상태 업데이트"
+      ],
+      "message": "커밋 완료 → 푸시 → PR 생성 → 노션 업데이트는 하나의 연속 동작이다. 중간에 끊기지 않도록 한다."
+    },
     "branch_strategy": {
       "main": "프로덕션 배포 전용 — dev에서 QA 검증 완전 통과 후에만 머지 가능. 직접 커밋/푸시 절대 금지",
       "dev": "개발 — 모든 feature 브랜치의 PR 대상. QA 검증은 dev 기준으로 수행",
@@ -176,6 +207,71 @@
     "remote": "https://github.com/biuea3866/rental-application.git"
   },
 
+  "pr_gate": {
+    "description": "PR 생성 전 필수 검증 — 모든 조건 충족 시에만 gh pr create 허용",
+    "checks": [
+      {
+        "id": "harness-code-pattern",
+        "description": "forbidden_patterns 전체 스캔 (변경된 .kt 파일 대상)",
+        "command": "git diff dev...HEAD --name-only -- '*.kt' | xargs -I{} python3 .claude/harness-check.py code-pattern",
+        "blocking": true
+      },
+      {
+        "id": "harness-layer-dependency",
+        "description": "레이어 간 의존 방향 위반 검사",
+        "check_rules": [
+          "application 레이어에서 infrastructure import 금지",
+          "domain 레이어에서 infrastructure/presentation import 금지"
+        ],
+        "blocking": true
+      },
+      {
+        "id": "build-success",
+        "description": "gradlew compileKotlin compileTestKotlin 성공 필수",
+        "blocking": true
+      },
+      {
+        "id": "test-pass",
+        "description": "gradlew test 전체 통과 필수",
+        "blocking": true
+      },
+      {
+        "id": "test-layers-exist",
+        "description": "be_test_requirements의 모든 필수 레이어 테스트 존재 확인 (domain 단위, application 단위, presentation 통합, infrastructure 통합)",
+        "blocking": true
+      },
+      {
+        "id": "no-double-bang-scan",
+        "description": "변경 파일에서 !! 사용 여부 최종 확인",
+        "blocking": true
+      }
+    ],
+    "sequence": [
+      "0. git fetch origin dev && git rebase origin/dev → dev 최신화 (충돌 시 해결 후 진행)",
+      "1. forbidden_patterns + layer_dependency 검사 수행",
+      "2. gradlew compileKotlin compileTestKotlin → BUILD SUCCESSFUL 확인",
+      "3. gradlew test → 전체 테스트 통과 확인",
+      "4. 필수 테스트 레이어 존재 확인 (domain 단위, application 단위, presentation 통합, infrastructure 통합)",
+      "5. 코드 리뷰어 에이전트 수행 (kotlin-reviewer 또는 code-reviewer) → 리뷰 통과 확인",
+      "6. 모든 검증 통과 시에만 git push + gh pr create 실행"
+    ],
+    "reviewer": {
+      "description": "PR 생성 전 필수 코드 리뷰",
+      "agent_type": "everything-claude-code:kotlin-reviewer",
+      "scope": "변경된 파일 대상 리뷰",
+      "must_pass": true,
+      "review_criteria": [
+        "캡슐화 원칙 준수",
+        "!! 사용 여부",
+        "레이어 의존 방향",
+        "테스트 커버리지",
+        "네이밍 컨벤션",
+        "비즈니스 로직 정확성"
+      ]
+    },
+    "message": "PR 생성 전 반드시 harness 전체 검증 + 코드 리뷰어 통과해야 합니다. 위반/리뷰 미통과 시 PR 생성 차단."
+  },
+
   "build_check": {
     "description": "빌드 성공 여부 확인",
     "gradle_commands": ["compileKotlin", "compileTestKotlin", "test "],
@@ -187,6 +283,75 @@
     "description": "노션 티켓 작성 가이드 참조",
     "guide_path": ".claude/ticket-guide.md",
     "message": "티켓 본문은 반드시 ticket-guide.md의 구조를 따라야 합니다 (개요, 작업 내용+다이어그램, 테스트 케이스)."
+  },
+
+  "architecture_convention": {
+    "description": "ADR-002 레이어 아키텍처 컨벤션 — 모든 BE 코드는 이 규칙을 준수해야 한다",
+    "reference": "docs/adr/ADR-002-layer-architecture.md",
+    "layer_responsibility": {
+      "presentation": {
+        "description": "외부 진입점 (얇게) — 라우팅, 인증, Request→Command 변환, UseCase 호출만 수행",
+        "allowed_dependency": ["application"],
+        "rules": [
+          "Controller는 UseCase를 1:1로 호출한다 — 비즈니스 로직을 Controller에 작성하지 않는다",
+          "Request DTO → Command 변환은 toCommand() 메서드로 수행한다",
+          "Response는 Application 레이어에서 반환한 DTO를 그대로 사용한다"
+        ]
+      },
+      "application": {
+        "description": "UseCase 단위 오케스트레이션 — Domain Service/Repository를 호출하여 aggregate한다",
+        "allowed_dependency": ["domain"],
+        "rules": [
+          "UseCase는 도메인 서비스와 리포지토리를 호출하여 오케스트레이션만 수행한다",
+          "비즈니스 로직(검증, 상태 전이, 계산)은 UseCase에 작성하지 않는다 — Entity/Domain Service에 위임한다",
+          "UseCase 1개 = 행위 1개 = 클래스 1개",
+          "@Transactional은 UseCase에 선언한다",
+          "Infrastructure 구현체를 직접 참조하지 않는다 — Domain interface(Port)를 통해서만 접근한다"
+        ]
+      },
+      "domain": {
+        "description": "순수 비즈니스 로직 — Rich Domain Model, 외부 의존 없음",
+        "allowed_dependency": [],
+        "rules": [
+          "Entity는 Rich Domain Model로 설계한다 — 비즈니스 로직(검증, 상태 전이, 계산)은 Entity 메서드에 캡슐화한다",
+          "Anemic Domain Model (getter/setter만 있는 Entity) 금지 — 행위가 Entity 밖에 있으면 안 된다",
+          "상태 전이는 Enum 내부에 canTransitTo()로 캡슐화한다",
+          "외부 시스템 접근은 Port interface(Repository, Gateway)로 정의한다",
+          "Domain Service는 여러 Entity/VO를 조합하는 로직이 필요할 때만 사용한다",
+          "Domain Event는 Entity 내부에서 발행한다 (@Transient domainEvents 리스트 패턴)"
+        ]
+      },
+      "infrastructure": {
+        "description": "기술 구현체 — DB, Kafka, Redis, 외부 API",
+        "allowed_dependency": ["domain"],
+        "rules": [
+          "Domain의 Port interface를 구현한다 (Repository, Gateway, Store)",
+          "JPA Repository + QueryDSL RepositoryImpl 패턴을 사용한다",
+          "외부 API는 Gateway interface + GatewayImpl 패턴(Port-Adapter)으로 추상화한다"
+        ]
+      }
+    },
+    "naming_convention": {
+      "controller": "~ApiController.kt",
+      "usecase": "~UseCase.kt",
+      "entity": "도메인명 그대로 (Rental.kt, Product.kt)",
+      "repository_domain": "~Repository.kt (interface)",
+      "repository_jpa": "~JpaRepository.kt",
+      "repository_impl": "~RepositoryImpl.kt",
+      "gateway_domain": "~Gateway.kt (interface)",
+      "gateway_impl": "~GatewayImpl.kt",
+      "worker": "~EventWorker.kt",
+      "command": "~Command.kt",
+      "response": "~Response.kt",
+      "request": "~Request.kt"
+    },
+    "dto_flow": "Request (presentation) → Command (application) → Entity (domain) → Response (application) → 그대로 반환",
+    "transaction": {
+      "default": "UseCase에 @Transactional 선언",
+      "event": "@TransactionalEventListener(AFTER_COMMIT)으로 이벤트 처리",
+      "cross_domain_event": "다른 도메인 간 이벤트는 비동기 (@Async + @Retryable)"
+    },
+    "message": "모든 BE 코드는 ADR-002 컨벤션을 준수해야 합니다. UseCase는 오케스트레이터, Entity는 Rich Domain Model."
   },
 
   "layer_dependency": {
