@@ -156,10 +156,18 @@
       "7. 머지 후 feature 브랜치 삭제"
     ],
     "branch_strategy": {
-      "main": "프로덕션 — 스프린트 완료 + QA 통과 시 dev → main 머지",
-      "dev": "개발 — 모든 feature 브랜치의 PR 대상",
+      "main": "프로덕션 배포 전용 — dev에서 QA 검증 완전 통과 후에만 머지 가능. 직접 커밋/푸시 절대 금지",
+      "dev": "개발 — 모든 feature 브랜치의 PR 대상. QA 검증은 dev 기준으로 수행",
       "feature/{ticket-id}": "티켓별 작업 브랜치 — dev에서 분기, dev로 PR"
     },
+    "merge_to_main_gate": [
+      "1. dev에서 스프린트 전체 기능 구현 완료",
+      "2. QA 테스트 케이스 전부 통과 (dev 환경)",
+      "3. k6 부하 테스트 성공 기준 충족 (dev 환경)",
+      "4. QA 승인 획득",
+      "5. dev → main PR 생성 → 머지",
+      "※ QA 미통과 시 main 머지 절대 불가"
+    ],
     "remote": "https://github.com/biuea3866/rental-application.git"
   },
 
