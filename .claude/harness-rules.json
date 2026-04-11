@@ -147,11 +147,20 @@
       "main 직접 커밋 금지 (.claude/ 인프라 파일 예외)"
     ],
     "agent_workflow": [
-      "1. git checkout -b feature/{ticket-id}",
-      "2. 테스트 작성 → 구현",
-      "3. git add + git commit",
-      "4. 리뷰 후 PR 생성"
-    ]
+      "1. git checkout dev && git pull origin dev",
+      "2. git checkout -b feature/{ticket-id}",
+      "3. 테스트 작성 → 구현",
+      "4. git add + git commit",
+      "5. git push -u origin feature/{ticket-id}",
+      "6. 리뷰 후 gh pr create --base dev",
+      "7. 머지 후 feature 브랜치 삭제"
+    ],
+    "branch_strategy": {
+      "main": "프로덕션 — 스프린트 완료 + QA 통과 시 dev → main 머지",
+      "dev": "개발 — 모든 feature 브랜치의 PR 대상",
+      "feature/{ticket-id}": "티켓별 작업 브랜치 — dev에서 분기, dev로 PR"
+    },
+    "remote": "https://github.com/biuea3866/rental-application.git"
   },
 
   "build_check": {
