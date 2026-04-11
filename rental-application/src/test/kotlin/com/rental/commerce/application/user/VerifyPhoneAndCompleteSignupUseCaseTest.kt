@@ -4,30 +4,33 @@ import com.rental.commerce.application.auth.RefreshTokenResult
 import com.rental.commerce.application.auth.RefreshTokenService
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.PasswordHasher
 import com.rental.commerce.domain.common.PhoneVerificationStore
+import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.User
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole
-import com.rental.commerce.domain.common.PasswordHasher
-import com.rental.commerce.domain.common.TokenProvider
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 
 class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
 
     val userRepository = mockk<UserRepository>()
+    val userDomainService = mockk<UserDomainService>()
     val phoneVerificationStore = mockk<PhoneVerificationStore>(relaxed = true)
     val tokenProvider = mockk<TokenProvider>()
     val refreshTokenService = mockk<RefreshTokenService>()
     val passwordHasher = mockk<PasswordHasher>()
     val useCase = VerifyPhoneAndCompleteSignupUseCase(
-        userRepository, phoneVerificationStore, tokenProvider, refreshTokenService, passwordHasher,
+        userRepository, userDomainService, phoneVerificationStore, tokenProvider, refreshTokenService, passwordHasher,
     )
 
     Given("휴대폰 인증 완료 시") {
@@ -42,15 +45,12 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
             )
 
-            every { phoneVerificationStore.findByPhone(command.phone) } returns "123456"
+            every { phoneVerificationStore.verify(command.phone, command.code) } returns "test@example.com"
+            every { userDomainService.checkEmailNotDuplicate(command.email) } just runs
             every { passwordHasher.hash(command.password) } returns "bcrypt_hashed"
-            every { userRepository.existsByEmail(command.email) } returns false
 
             val savedUserSlot = slot<User>()
             every { userRepository.save(capture(savedUserSlot)) } answers {
-                savedUserSlot.captured.apply {
-                    // userId는 DB 자동생성이므로 reflection으로 설정할 수 없음 — mock에서 고정값 반환
-                }
                 User(
                     email = savedUserSlot.captured.email,
                     name = savedUserSlot.captured.name,
@@ -102,7 +102,8 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
             )
 
-            every { phoneVerificationStore.findByPhone(command.phone) } returns "123456"
+            every { phoneVerificationStore.verify(command.phone, command.code) } throws
+                BusinessException(ErrorCode.INVALID_VERIFICATION_CODE)
 
             Then("INVALID_VERIFICATION_CODE 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
@@ -122,13 +123,34 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
             )
 
-            every { phoneVerificationStore.findByPhone(command.phone) } returns null
+            every { phoneVerificationStore.verify(command.phone, command.code) } throws
+                BusinessException(ErrorCode.VERIFICATION_CODE_EXPIRED)
 
             Then("VERIFICATION_CODE_EXPIRED 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.VERIFICATION_CODE_EXPIRED
+            }
+        }
+
+        When("인증 요청 이메일과 가입 이메일이 다르면") {
+            val command = VerifyPhoneCommand(
+                email = "different@example.com",
+                phone = "01012345678",
+                code = "123456",
+                password = "password123!",
+                name = "홍길동",
+                role = UserRole.RENTER,
+            )
+
+            every { phoneVerificationStore.verify(command.phone, command.code) } returns "test@example.com"
+
+            Then("INVALID_INPUT 에러가 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    useCase.execute(command)
+                }
+                exception.errorCode shouldBe ErrorCode.INVALID_INPUT
             }
         }
 
@@ -142,8 +164,11 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
             )
 
-            every { phoneVerificationStore.findByPhone(command.phone) } returns "123456"
-            every { userRepository.existsByEmail(command.email) } returns true
+            every { phoneVerificationStore.verify(command.phone, command.code) } returns "existing@example.com"
+            every { userDomainService.checkEmailNotDuplicate(command.email) } throws
+                com.rental.commerce.domain.common.DuplicateResourceException(
+                    errorCode = ErrorCode.DUPLICATE_EMAIL,
+                )
 
             Then("DUPLICATE_EMAIL 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {

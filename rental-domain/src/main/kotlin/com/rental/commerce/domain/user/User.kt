@@ -62,4 +62,20 @@ class User(
     }
 
     fun isSocialUser(): Boolean = socialProvider != null
+
+    companion object {
+        fun register(
+            email: String,
+            name: String,
+            phone: String,
+            passwordHash: String,
+            role: UserRole,
+        ): User = User(
+            email = email,
+            name = name,
+            phone = phone,
+            passwordHash = passwordHash,
+            role = role,
+        )
+    }
 }

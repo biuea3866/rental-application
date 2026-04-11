@@ -1,16 +1,15 @@
 package com.rental.commerce.application.user
 
-import com.rental.commerce.domain.common.DuplicateResourceException
-import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PhoneVerificationStore
 import com.rental.commerce.domain.common.SmsGateway
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.security.SecureRandom
 
 @Service
 class RegisterUserUseCase(
-    private val userRepository: UserRepository,
+    private val userDomainService: UserDomainService,
     private val phoneVerificationStore: PhoneVerificationStore,
     private val smsGateway: SmsGateway,
 ) {
@@ -21,11 +20,12 @@ class RegisterUserUseCase(
         private val secureRandom = SecureRandom()
     }
 
+    @Transactional(readOnly = true)
     fun execute(command: RegisterUserCommand): RegisterUserResponse {
-        validateEmailNotDuplicate(command.email)
+        userDomainService.checkEmailNotDuplicate(command.email)
 
         val verificationCode = generateVerificationCode()
-        phoneVerificationStore.save(command.phone, verificationCode, VERIFICATION_CODE_TTL_SECONDS)
+        phoneVerificationStore.save(command.phone, verificationCode, command.email, VERIFICATION_CODE_TTL_SECONDS)
         smsGateway.sendVerificationCode(command.phone, verificationCode)
 
         return RegisterUserResponse(
@@ -33,14 +33,6 @@ class RegisterUserUseCase(
             phone = command.phone,
             message = "인증코드가 발송되었습니다",
         )
-    }
-
-    private fun validateEmailNotDuplicate(email: String) {
-        if (userRepository.existsByEmail(email)) {
-            throw DuplicateResourceException(
-                errorCode = ErrorCode.DUPLICATE_EMAIL,
-            )
-        }
     }
 
     private fun generateVerificationCode(): String {
