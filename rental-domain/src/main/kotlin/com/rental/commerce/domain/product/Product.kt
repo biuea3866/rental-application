@@ -66,6 +66,24 @@ class Product(
         return events
     }
 
+    fun validateOwnership(requestUserId: Long) {
+        if (userId != requestUserId) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
+                message = "해당 상품의 소유자가 아닙니다 (productId=$productId)",
+            )
+        }
+    }
+
+    fun validateDraftStatus() {
+        if (status != ProductStatus.DRAFT) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_NOT_DRAFT,
+                message = "임시저장 상태의 상품만 수정할 수 있습니다 (현재 상태: $status)",
+            )
+        }
+    }
+
     fun updateDraft(
         step: Int,
         name: String?,
