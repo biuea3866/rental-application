@@ -104,6 +104,13 @@
         "file_glob": "*Dto*.kt,*Response*.kt,*Request*.kt",
         "message": "DTO에서 Any 타입 사용 금지 — 구체적인 타입(ZonedDateTime 등)을 사용하세요.",
         "severity": "error"
+      },
+      {
+        "id": "no-double-bang",
+        "pattern": "\\w+!!",
+        "file_glob": "*.kt",
+        "message": "!! (단정 기호) 사용 금지 — requireNotNull, ?:, ?.let 등 안전한 처리를 사용하세요.",
+        "severity": "error"
       }
     ]
   },
