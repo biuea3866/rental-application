@@ -164,9 +164,19 @@
       "3. 테스트 작성 → 구현",
       "4. git add + git commit",
       "5. git push -u origin feature/{ticket-id}",
-      "6. 리뷰 후 gh pr create --base dev",
-      "7. 머지 후 feature 브랜치 삭제"
+      "6. gh pr create --base dev (커밋 직후 즉시 실행 — 지연/누락 금지)",
+      "7. 노션 티켓 상태 업데이트 (In Progress → In Review)",
+      "8. 머지 후 feature 브랜치 삭제 + 노션 상태 Done"
     ],
+    "pipeline_enforcement": {
+      "description": "파이프라인 전 단계를 커밋 완료 시 자동으로 연속 실행. 단계 누락/지연 절대 금지.",
+      "auto_sequence_after_commit": [
+        "git push -u origin {branch}",
+        "gh pr create --base dev",
+        "노션 티켓 상태 업데이트"
+      ],
+      "message": "커밋 완료 → 푸시 → PR 생성 → 노션 업데이트는 하나의 연속 동작이다. 중간에 끊기지 않도록 한다."
+    },
     "branch_strategy": {
       "main": "프로덕션 배포 전용 — dev에서 QA 검증 완전 통과 후에만 머지 가능. 직접 커밋/푸시 절대 금지",
       "dev": "개발 — 모든 feature 브랜치의 PR 대상. QA 검증은 dev 기준으로 수행",
@@ -181,6 +191,71 @@
       "※ QA 미통과 시 main 머지 절대 불가"
     ],
     "remote": "https://github.com/biuea3866/rental-application.git"
+  },
+
+  "pr_gate": {
+    "description": "PR 생성 전 필수 검증 — 모든 조건 충족 시에만 gh pr create 허용",
+    "checks": [
+      {
+        "id": "harness-code-pattern",
+        "description": "forbidden_patterns 전체 스캔 (변경된 .kt 파일 대상)",
+        "command": "git diff dev...HEAD --name-only -- '*.kt' | xargs -I{} python3 .claude/harness-check.py code-pattern",
+        "blocking": true
+      },
+      {
+        "id": "harness-layer-dependency",
+        "description": "레이어 간 의존 방향 위반 검사",
+        "check_rules": [
+          "application 레이어에서 infrastructure import 금지",
+          "domain 레이어에서 infrastructure/presentation import 금지"
+        ],
+        "blocking": true
+      },
+      {
+        "id": "build-success",
+        "description": "gradlew compileKotlin compileTestKotlin 성공 필수",
+        "blocking": true
+      },
+      {
+        "id": "test-pass",
+        "description": "gradlew test 전체 통과 필수",
+        "blocking": true
+      },
+      {
+        "id": "test-layers-exist",
+        "description": "be_test_requirements의 모든 필수 레이어 테스트 존재 확인 (domain 단위, application 단위, presentation 통합, infrastructure 통합)",
+        "blocking": true
+      },
+      {
+        "id": "no-double-bang-scan",
+        "description": "변경 파일에서 !! 사용 여부 최종 확인",
+        "blocking": true
+      }
+    ],
+    "sequence": [
+      "0. git fetch origin dev && git rebase origin/dev → dev 최신화 (충돌 시 해결 후 진행)",
+      "1. forbidden_patterns + layer_dependency 검사 수행",
+      "2. gradlew compileKotlin compileTestKotlin → BUILD SUCCESSFUL 확인",
+      "3. gradlew test → 전체 테스트 통과 확인",
+      "4. 필수 테스트 레이어 존재 확인 (domain 단위, application 단위, presentation 통합, infrastructure 통합)",
+      "5. 코드 리뷰어 에이전트 수행 (kotlin-reviewer 또는 code-reviewer) → 리뷰 통과 확인",
+      "6. 모든 검증 통과 시에만 git push + gh pr create 실행"
+    ],
+    "reviewer": {
+      "description": "PR 생성 전 필수 코드 리뷰",
+      "agent_type": "everything-claude-code:kotlin-reviewer",
+      "scope": "변경된 파일 대상 리뷰",
+      "must_pass": true,
+      "review_criteria": [
+        "캡슐화 원칙 준수",
+        "!! 사용 여부",
+        "레이어 의존 방향",
+        "테스트 커버리지",
+        "네이밍 컨벤션",
+        "비즈니스 로직 정확성"
+      ]
+    },
+    "message": "PR 생성 전 반드시 harness 전체 검증 + 코드 리뷰어 통과해야 합니다. 위반/리뷰 미통과 시 PR 생성 차단."
   },
 
   "build_check": {

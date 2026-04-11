@@ -12,4 +12,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
 
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:testcontainers:1.20.4")
+    testImplementation("org.testcontainers:mysql:1.20.4")
+    testImplementation("org.testcontainers:minio:1.20.4")
+    testImplementation("io.minio:minio:8.5.14")
 }
