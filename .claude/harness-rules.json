@@ -126,7 +126,12 @@
       {
         "id": "no-push-main",
         "pattern": "git push.*\\b(origin|upstream)\\s+(main|master)\\b",
-        "message": "BLOCKED: main 직접 푸시 금지 — feature 브랜치 + PR로만 반영하세요."
+        "message": "BLOCKED: main 직접 푸시 금지 — PR로만 반영하세요."
+      },
+      {
+        "id": "no-push-dev",
+        "pattern": "git push.*\\b(origin|upstream)\\s+dev\\b",
+        "message": "BLOCKED: dev 직접 푸시 금지 — feature 브랜치에서 PR로만 반영하세요."
       },
       {
         "id": "no-force-push",
