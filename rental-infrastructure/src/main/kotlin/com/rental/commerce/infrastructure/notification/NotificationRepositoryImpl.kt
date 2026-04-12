@@ -1,12 +1,12 @@
 package com.rental.commerce.infrastructure.notification
 
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.notification.Notification
 import com.rental.commerce.domain.notification.NotificationRepository
 import com.rental.commerce.domain.notification.QNotification
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
+import kotlin.math.ceil
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -21,28 +21,43 @@ class NotificationRepositoryImpl(
         return notificationJpaRepository.save(notification)
     }
 
-    override fun findByUserId(userId: Long, pageable: Pageable): Page<Notification> {
+    override fun findByUserId(userId: Long, pageQuery: PageQuery): PageResult<Notification> {
         val content = queryFactory
             .selectFrom(notification)
-            .where(notification.userId.eq(userId))
+            .where(
+                notification.userId.eq(userId),
+                notification.deletedAt.isNull,
+            )
             .orderBy(notification.createdAt.desc())
-            .offset(pageable.offset)
-            .limit(pageable.pageSize.toLong())
+            .offset((pageQuery.page * pageQuery.size).toLong())
+            .limit(pageQuery.size.toLong())
             .fetch()
 
         val total = queryFactory
             .select(notification.count())
             .from(notification)
-            .where(notification.userId.eq(userId))
+            .where(
+                notification.userId.eq(userId),
+                notification.deletedAt.isNull,
+            )
             .fetchOne() ?: 0L
 
-        return PageImpl(content, pageable, total)
+        val totalPages = if (total == 0L) 0 else ceil(total.toDouble() / pageQuery.size).toInt()
+
+        return PageResult(
+            content = content,
+            totalElements = total,
+            totalPages = totalPages,
+        )
     }
 
     override fun findById(notificationId: Long): Notification? {
         return queryFactory
             .selectFrom(notification)
-            .where(notification.notificationId.eq(notificationId))
+            .where(
+                notification.id.eq(notificationId),
+                notification.deletedAt.isNull,
+            )
             .fetchOne()
     }
 
@@ -53,6 +68,7 @@ class NotificationRepositoryImpl(
             .where(
                 notification.userId.eq(userId),
                 notification.isRead.isFalse,
+                notification.deletedAt.isNull,
             )
             .fetchOne() ?: 0L
     }
@@ -64,6 +80,7 @@ class NotificationRepositoryImpl(
             .where(
                 notification.userId.eq(userId),
                 notification.isRead.isFalse,
+                notification.deletedAt.isNull,
             )
             .execute()
     }

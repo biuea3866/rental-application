@@ -1,5 +1,8 @@
 package com.rental.commerce.domain.notification
 
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 
@@ -64,6 +67,7 @@ class NotificationTest : BehaviorSpec({
                 notification.referenceId shouldBe null
                 notification.referenceType shouldBe null
                 notification.isRead shouldBe false
+                notification.deletedAt shouldBe null
             }
         }
 
@@ -81,6 +85,28 @@ class NotificationTest : BehaviorSpec({
                 notification.referenceId shouldBe 100L
                 notification.referenceType shouldBe "PRODUCT"
                 notification.notificationType shouldBe NotificationType.PRODUCT_APPROVED
+            }
+        }
+    }
+
+    Given("verifyOwner - 소유자 검증") {
+
+        When("알림 소유자 ID와 동일한 userId로 verifyOwner를 호출하면") {
+            val notification = createNotification(userId = 1L)
+
+            Then("예외가 발생하지 않는다") {
+                notification.verifyOwner(1L)
+            }
+        }
+
+        When("알림 소유자 ID와 다른 userId로 verifyOwner를 호출하면") {
+            val notification = createNotification(userId = 1L)
+
+            Then("BusinessException(FORBIDDEN)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    notification.verifyOwner(99L)
+                }
+                exception.errorCode shouldBe ErrorCode.FORBIDDEN
             }
         }
     }

@@ -1,33 +1,33 @@
 package com.rental.commerce.application.notification
 
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.notification.Notification
-import com.rental.commerce.domain.notification.NotificationRepository
+import com.rental.commerce.domain.notification.NotificationDomainService
 import com.rental.commerce.domain.notification.NotificationType
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 
 class GetNotificationsUseCaseTest : BehaviorSpec({
 
-    val notificationRepository = mockk<NotificationRepository>()
-    val useCase = GetNotificationsUseCase(notificationRepository)
+    val notificationDomainService = mockk<NotificationDomainService>()
+    val useCase = GetNotificationsUseCase(notificationDomainService)
 
     beforeEach {
-        clearMocks(notificationRepository)
+        clearMocks(notificationDomainService)
     }
 
     Given("사용자 알림 목록 조회") {
 
         When("알림이 존재하는 사용자의 목록을 조회하면") {
             val userId = 1L
-            val pageable = PageRequest.of(0, 10)
+            val pageQuery = PageQuery(page = 0, size = 10)
             val notifications = listOf(
                 Notification(
-                    notificationId = 1L,
+                    id = 1L,
                     userId = userId,
                     title = "상품 승인",
                     message = "상품이 승인되었습니다",
@@ -36,22 +36,27 @@ class GetNotificationsUseCaseTest : BehaviorSpec({
                     referenceType = "PRODUCT",
                 ),
                 Notification(
-                    notificationId = 2L,
+                    id = 2L,
                     userId = userId,
                     title = "시스템 공지",
                     message = "시스템 점검 예정입니다",
                     notificationType = NotificationType.SYSTEM,
                 ),
             )
-            val page = PageImpl(notifications, pageable, 2L)
+            val pageResult = PageResult(
+                content = notifications,
+                totalElements = 2L,
+                totalPages = 1,
+            )
 
-            every { notificationRepository.findByUserId(userId, pageable) } returns page
+            every { notificationDomainService.getNotifications(userId, pageQuery) } returns pageResult
 
-            val result = useCase.execute(userId, pageable)
+            val result = useCase.execute(userId, pageQuery)
 
             Then("페이지 정보와 함께 알림 목록이 반환된다") {
                 result.content.size shouldBe 2
                 result.totalElements shouldBe 2L
+                result.totalPages shouldBe 1
             }
 
             Then("알림 정보가 올바르게 매핑된다") {
@@ -68,14 +73,18 @@ class GetNotificationsUseCaseTest : BehaviorSpec({
 
         When("알림이 없는 사용자의 목록을 조회하면") {
             val userId = 999L
-            val pageable = PageRequest.of(0, 10)
-            val emptyPage = PageImpl<Notification>(emptyList(), pageable, 0L)
+            val pageQuery = PageQuery(page = 0, size = 10)
+            val emptyResult = PageResult<Notification>(
+                content = emptyList(),
+                totalElements = 0L,
+                totalPages = 0,
+            )
 
-            every { notificationRepository.findByUserId(userId, pageable) } returns emptyPage
+            every { notificationDomainService.getNotifications(userId, pageQuery) } returns emptyResult
 
-            val result = useCase.execute(userId, pageable)
+            val result = useCase.execute(userId, pageQuery)
 
-            Then("빈 페이지가 반환된다") {
+            Then("빈 결과가 반환된다") {
                 result.content.size shouldBe 0
                 result.totalElements shouldBe 0L
             }

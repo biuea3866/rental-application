@@ -1,13 +1,13 @@
 package com.rental.commerce.domain.notification
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 
 interface NotificationRepository {
 
     fun save(notification: Notification): Notification
 
-    fun findByUserId(userId: Long, pageable: Pageable): Page<Notification>
+    fun findByUserId(userId: Long, pageQuery: PageQuery): PageResult<Notification>
 
     fun findById(notificationId: Long): Notification?
 

@@ -9,6 +9,7 @@ CREATE TABLE notification (
     is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '읽음 여부',
     created_at DATETIME(6) NOT NULL COMMENT '생성일시',
     updated_at DATETIME(6) NOT NULL COMMENT '수정일시',
+    deleted_at DATETIME(6) NULL DEFAULT NULL COMMENT '삭제일시(소프트 삭제)',
     PRIMARY KEY (notification_id),
     INDEX idx_notification_user_read (user_id, is_read),
     INDEX idx_notification_user_created (user_id, created_at DESC)

@@ -6,8 +6,8 @@ import com.rental.commerce.application.notification.MarkAllNotificationsReadUseC
 import com.rental.commerce.application.notification.MarkNotificationReadUseCase
 import com.rental.commerce.application.notification.NotificationResponse
 import com.rental.commerce.application.notification.UnreadCountResponse
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,10 +30,10 @@ class NotificationApiController(
     fun getNotifications(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): ResponseEntity<Page<NotificationResponse>> {
+    ): ResponseEntity<PageResult<NotificationResponse>> {
         val userId = extractUserId()
-        val pageable = PageRequest.of(page, size)
-        val result = getNotificationsUseCase.execute(userId, pageable)
+        val pageQuery = PageQuery(page = page, size = size)
+        val result = getNotificationsUseCase.execute(userId, pageQuery)
         return ResponseEntity.ok(result)
     }
 

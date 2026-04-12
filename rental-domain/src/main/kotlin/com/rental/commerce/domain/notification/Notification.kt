@@ -1,6 +1,8 @@
 package com.rental.commerce.domain.notification
 
 import com.rental.commerce.domain.common.BaseEntity
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -9,6 +11,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.time.ZonedDateTime
 
 @Entity
 @Table(name = "notification")
@@ -17,7 +20,7 @@ class Notification(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notification_id")
-    val notificationId: Long = 0L,
+    val id: Long = 0L,
 
     @Column(name = "user_id", nullable = false)
     val userId: Long,
@@ -41,9 +44,16 @@ class Notification(
     @Column(name = "is_read", nullable = false)
     var isRead: Boolean = false,
 
+    @Column(name = "deleted_at")
+    var deletedAt: ZonedDateTime? = null,
+
 ) : BaseEntity() {
 
     fun markAsRead() {
         this.isRead = true
+    }
+
+    fun verifyOwner(ownerId: Long) {
+        if (this.userId != ownerId) throw BusinessException(ErrorCode.FORBIDDEN)
     }
 }

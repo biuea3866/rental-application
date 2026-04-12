@@ -6,6 +6,8 @@ import com.rental.commerce.application.notification.MarkAllNotificationsReadUseC
 import com.rental.commerce.application.notification.MarkNotificationReadUseCase
 import com.rental.commerce.application.notification.NotificationResponse
 import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.notification.NotificationType
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
@@ -15,8 +17,6 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
@@ -91,10 +91,13 @@ class NotificationApiControllerTest : BehaviorSpec({
                         createdAt = now,
                     ),
                 )
-                val pageable = PageRequest.of(0, 20)
-                val page = PageImpl(notifications, pageable, 2L)
+                val pageResult = PageResult(
+                    content = notifications,
+                    totalElements = 2L,
+                    totalPages = 1,
+                )
 
-                every { getNotificationsUseCase.execute(1L, any()) } returns page
+                every { getNotificationsUseCase.execute(1L, PageQuery(page = 0, size = 20)) } returns pageResult
 
                 val result = mockMvc.get("/api/v1/notifications") {
                     param("page", "0")
