@@ -14,15 +14,22 @@ abstract class IntegrationTestBase {
             withDatabaseName("rental_commerce_test")
             withUsername("test")
             withPassword("test")
+            withReuse(true)
         }
 
         val redisContainer: GenericContainer<*> = GenericContainer("redis:7-alpine").apply {
             withExposedPorts(6379)
+            withReuse(true)
         }
 
         init {
             mysqlContainer.start()
             redisContainer.start()
+
+            Runtime.getRuntime().addShutdownHook(Thread {
+                redisContainer.stop()
+                mysqlContainer.stop()
+            })
         }
 
         @JvmStatic
