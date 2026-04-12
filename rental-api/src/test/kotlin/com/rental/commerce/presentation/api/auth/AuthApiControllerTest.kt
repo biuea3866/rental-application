@@ -420,6 +420,7 @@ class AuthApiControllerTest : BehaviorSpec({
             every { socialLoginUseCase.execute(any()) } returns AuthTokenResponse(
                 accessToken = "social_access_token",
                 refreshToken = "social_refresh_token",
+                tokenFamily = "family_social",
                 userId = 10L,
             )
 

@@ -47,11 +47,8 @@ export function PhoneVerification({
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 타이머 시작
-  const startTimer = useCallback(() => {
-    setTimeLeft(TIMER_SECONDS);
-    setIsExpired(false);
-
+  // 인터벌 시작 (상태 변경 없이 인터벌만 설정)
+  const startInterval = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -68,12 +65,19 @@ export function PhoneVerification({
     }, 1000);
   }, []);
 
+  // 재전송 시 타이머 리셋 + 시작
+  const startTimer = useCallback(() => {
+    setTimeLeft(TIMER_SECONDS);
+    setIsExpired(false);
+    startInterval();
+  }, [startInterval]);
+
   useEffect(() => {
-    startTimer();
+    startInterval();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startTimer]);
+  }, [startInterval]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
