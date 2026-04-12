@@ -1,6 +1,8 @@
 package com.rental.commerce.domain.user
 
 import com.rental.commerce.domain.common.BaseEntity
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -31,10 +33,10 @@ class User(
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    val socialProvider: SocialProvider? = null,
+    var socialProvider: SocialProvider? = null,
 
     @Column(length = 255)
-    val socialProviderId: String? = null,
+    var socialProviderId: String? = null,
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,7 +65,19 @@ class User(
 
     fun isSocialUser(): Boolean = socialProvider != null
 
+    fun linkSocialAccount(provider: SocialProvider, providerId: String) {
+        if (isSocialUser()) {
+            throw BusinessException(
+                errorCode = ErrorCode.SOCIAL_ACCOUNT_ALREADY_LINKED,
+            )
+        }
+        this.socialProvider = provider
+        this.socialProviderId = providerId
+    }
+
     companion object {
+        private const val SOCIAL_LOGIN_PASSWORD_MARKER = "SOCIAL_LOGIN"
+
         fun register(
             email: String,
             name: String,
@@ -76,6 +90,21 @@ class User(
             phone = phone,
             passwordHash = passwordHash,
             role = role,
+        )
+
+        fun registerSocial(
+            email: String,
+            name: String,
+            socialProvider: SocialProvider,
+            socialProviderId: String,
+        ): User = User(
+            email = email,
+            name = name,
+            phone = "",
+            passwordHash = SOCIAL_LOGIN_PASSWORD_MARKER,
+            role = UserRole.RENTER,
+            socialProvider = socialProvider,
+            socialProviderId = socialProviderId,
         )
     }
 }

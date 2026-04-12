@@ -30,6 +30,9 @@ dependencies {
     // MinIO
     implementation("io.minio:minio:8.5.14")
 
+    // Web (RestClient for external API calls)
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
     // Caffeine
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
