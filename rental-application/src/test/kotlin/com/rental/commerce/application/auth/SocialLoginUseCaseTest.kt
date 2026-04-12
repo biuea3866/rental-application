@@ -63,7 +63,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(1L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_abc",
                 tokenFamily = "family_abc",
-                id = 1L,
+                userId = 1L,
             )
 
             val result = useCase.execute(command)
@@ -114,7 +114,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(2L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_new",
                 tokenFamily = "family_new",
-                id = 2L,
+                userId = 2L,
             )
 
             val result = useCase.execute(command)
@@ -178,7 +178,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(3L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_linked",
                 tokenFamily = "family_linked",
-                id = 3L,
+                userId = 3L,
             )
 
             val result = useCase.execute(command)
