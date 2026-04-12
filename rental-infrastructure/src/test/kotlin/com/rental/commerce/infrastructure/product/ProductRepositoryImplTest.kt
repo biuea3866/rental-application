@@ -13,6 +13,7 @@ import com.rental.commerce.infrastructure.common.config.QuerydslConfig
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -30,6 +31,7 @@ import org.testcontainers.containers.MySQLContainer
         JpaAuditingConfig::class,
         QuerydslConfig::class,
         ProductRepositoryImpl::class,
+        ProductSearchRepositoryImpl::class,
         ProductPriceRepositoryImpl::class,
         ProductImageRepositoryImpl::class,
     ],
@@ -76,10 +78,9 @@ class ProductRepositoryImplTest(
 
             Then("ID로 조회할 수 있다") {
                 val found = productRepository.findById(savedProduct.productId)
-                found shouldNotBe null
-                val result = requireNotNull(found)
-                result.name shouldBe "테스트 상품"
-                result.userId shouldBe 1L
+                found.shouldNotBeNull()
+                found.name shouldBe "테스트 상품"
+                found.userId shouldBe 1L
             }
         }
 
