@@ -4,4 +4,5 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework:spring-tx")
+    implementation("org.springframework.data:spring-data-commons")
 }
