@@ -329,4 +329,69 @@ class ProductTest : BehaviorSpec({
             }
         }
     }
+
+    Given("delete - DRAFT/REJECTED 상태에서 삭제") {
+
+        When("DRAFT 상태에서 delete하면") {
+            val product = createDraftProduct()
+            product.delete()
+
+            Then("상태가 DELETED로 변경된다") {
+                product.status shouldBe ProductStatus.DELETED
+            }
+        }
+
+        When("REJECTED 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.reject("사유")
+            product.pullEvents()
+            product.delete()
+
+            Then("상태가 DELETED로 변경된다") {
+                product.status shouldBe ProductStatus.DELETED
+            }
+        }
+
+        When("UNDER_REVIEW 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+
+        When("APPROVED 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.approve()
+            product.pullEvents()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+
+        When("AVAILABLE 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.approve()
+            product.pullEvents()
+            product.makeAvailable()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+    }
 })

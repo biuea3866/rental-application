@@ -151,6 +151,16 @@ class Product(
         this.rejectReason = null
     }
 
+    fun delete() {
+        if (!status.canTransitTo(ProductStatus.DELETED)) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_NOT_DELETABLE,
+                message = "삭제할 수 없는 상태의 상품입니다 (현재 상태: $status)",
+            )
+        }
+        this.status = ProductStatus.DELETED
+    }
+
     private fun validateTransition(target: ProductStatus) {
         if (!status.canTransitTo(target)) {
             throw InvalidStateTransitionException(
