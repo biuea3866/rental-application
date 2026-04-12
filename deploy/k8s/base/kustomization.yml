@@ -14,10 +14,10 @@ commonLabels:
   app.kubernetes.io/managed-by: kustomize
 
 resources:
-  - ../namespace.yml
-  - ../configmap.yml
-  - ../secret.yml
-  - ../deployment.yml
-  - ../service.yml
-  - ../ingress.yml
-  - ../hpa.yml
+  - namespace.yml
+  - configmap.yml
+  - secret.yml
+  - deployment.yml
+  - service.yml
+  - ingress.yml
+  - hpa.yml
