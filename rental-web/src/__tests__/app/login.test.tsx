@@ -34,10 +34,26 @@ vi.mock("@/hooks/use-auth", () => ({
   }),
 }));
 
+// useAuthStore mock — vi.hoisted() 로 hoisting 이슈 회피
+const { mockGetState } = vi.hoisted(() => ({
+  mockGetState: vi.fn(),
+}));
+
+vi.mock("@/stores/auth-store", () => ({
+  useAuthStore: Object.assign(
+    vi.fn(() => ({ user: null, isAuthenticated: false })),
+    {
+      getState: mockGetState,
+    }
+  ),
+}));
+
 describe("LoginPage 통합 테스트", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLogin.mockResolvedValue({ success: false, error: "로그인에 실패했습니다." });
+    // 기본: 로그인 후 유저 없음
+    mockGetState.mockReturnValue({ user: null });
   });
 
   it("로그인 페이지 제목이 렌더링되어야 한다", () => {
@@ -71,12 +87,61 @@ describe("LoginPage 통합 테스트", () => {
     expect(signupLink).toHaveAttribute("href", "/signup");
   });
 
-  it("올바른 자격증명으로 로그인하면 홈으로 리다이렉트되어야 한다", async () => {
+  it("LENDER 유저로 로그인하면 /lender로 리다이렉트되어야 한다", async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue({ success: true });
+    mockGetState.mockReturnValue({
+      user: {
+        id: "user-lender-001",
+        email: "lender@rental.com",
+        name: "김대여",
+        phone: "010-1234-5678",
+        role: "LENDER",
+        createdAt: "2026-01-15T09:00:00Z",
+      },
+    });
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText("이메일"), "lender@rental.com");
+    await user.type(screen.getByLabelText("비밀번호"), "password123");
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/lender");
+    });
+  });
+
+  it("RENTER 유저로 로그인하면 /products로 리다이렉트되어야 한다", async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ success: true });
+    mockGetState.mockReturnValue({
+      user: {
+        id: "user-renter-001",
+        email: "renter@rental.com",
+        name: "이빌림",
+        phone: "010-3456-7890",
+        role: "RENTER",
+        createdAt: "2026-01-20T11:00:00Z",
+      },
+    });
+    render(<LoginPage />);
+
+    await user.type(screen.getByLabelText("이메일"), "renter@rental.com");
+    await user.type(screen.getByLabelText("비밀번호"), "password123");
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/products");
+    });
+  });
+
+  it("role이 없는 유저로 로그인하면 /로 리다이렉트되어야 한다", async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ success: true });
+    mockGetState.mockReturnValue({ user: null });
+    render(<LoginPage />);
+
+    await user.type(screen.getByLabelText("이메일"), "test@test.com");
     await user.type(screen.getByLabelText("비밀번호"), "password123");
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
@@ -119,6 +184,7 @@ describe("LoginPage 통합 테스트", () => {
   it("로그인 버튼 클릭 시 login 함수가 올바른 인자로 호출되어야 한다", async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue({ success: true });
+    mockGetState.mockReturnValue({ user: null });
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText("이메일"), "test@test.com");
