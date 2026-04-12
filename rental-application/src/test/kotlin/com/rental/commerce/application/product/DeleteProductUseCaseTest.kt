@@ -5,26 +5,28 @@ import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.Product
 import com.rental.commerce.domain.product.ProductCondition
-import com.rental.commerce.domain.product.ProductRepository
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 
 class DeleteProductUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
+    val productDomainService = mockk<ProductDomainService>()
     val useCase = DeleteProductUseCase(
-        productRepository = productRepository,
+        productDomainService = productDomainService,
     )
 
     Given("상품 삭제를 요청할 때") {
 
         When("존재하지 않는 상품 ID로 요청하면") {
-            every { productRepository.findById(999L) } returns null
+            every { productDomainService.getProductById(999L) } throws ResourceNotFoundException(
+                errorCode = ErrorCode.PRODUCT_NOT_FOUND,
+            )
 
             Then("PRODUCT_NOT_FOUND 에러가 발생한다") {
                 val exception = shouldThrow<ResourceNotFoundException> {
@@ -41,7 +43,7 @@ class DeleteProductUseCaseTest : BehaviorSpec({
                 status = ProductStatus.DRAFT,
             )
 
-            every { productRepository.findById(1L) } returns product
+            every { productDomainService.getProductById(1L) } returns product
 
             Then("PRODUCT_OWNERSHIP_DENIED 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
@@ -59,8 +61,7 @@ class DeleteProductUseCaseTest : BehaviorSpec({
                 status = ProductStatus.DRAFT,
             )
 
-            every { productRepository.findById(1L) } returns product
-            every { productRepository.save(any()) } answers { firstArg() }
+            every { productDomainService.getProductById(1L) } returns product
 
             useCase.execute(userId = 1L, productId = 1L)
 
@@ -68,8 +69,8 @@ class DeleteProductUseCaseTest : BehaviorSpec({
                 product.status shouldBe ProductStatus.DELETED
             }
 
-            Then("저장소에 저장된다") {
-                verify(exactly = 1) { productRepository.save(product) }
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
             }
         }
 
@@ -89,8 +90,7 @@ class DeleteProductUseCaseTest : BehaviorSpec({
             product.reject("품질 미달")
             product.pullEvents()
 
-            every { productRepository.findById(2L) } returns product
-            every { productRepository.save(any()) } answers { firstArg() }
+            every { productDomainService.getProductById(2L) } returns product
 
             useCase.execute(userId = 1L, productId = 2L)
 
@@ -98,8 +98,8 @@ class DeleteProductUseCaseTest : BehaviorSpec({
                 product.status shouldBe ProductStatus.DELETED
             }
 
-            Then("저장소에 저장된다") {
-                verify(exactly = 1) { productRepository.save(product) }
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
             }
         }
 
@@ -116,7 +116,7 @@ class DeleteProductUseCaseTest : BehaviorSpec({
             )
             product.submit()
 
-            every { productRepository.findById(3L) } returns product
+            every { productDomainService.getProductById(3L) } returns product
 
             Then("PRODUCT_NOT_DELETABLE 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
@@ -142,7 +142,7 @@ class DeleteProductUseCaseTest : BehaviorSpec({
             product.pullEvents()
             product.makeAvailable()
 
-            every { productRepository.findById(4L) } returns product
+            every { productDomainService.getProductById(4L) } returns product
 
             Then("PRODUCT_NOT_DELETABLE 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {

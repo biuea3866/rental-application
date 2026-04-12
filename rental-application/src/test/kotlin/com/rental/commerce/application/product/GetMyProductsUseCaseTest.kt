@@ -2,7 +2,7 @@ package com.rental.commerce.application.product
 
 import com.rental.commerce.domain.product.Product
 import com.rental.commerce.domain.product.ProductCondition
-import com.rental.commerce.domain.product.ProductRepository
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductStatus
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -15,9 +15,9 @@ import org.springframework.data.domain.Sort
 
 class GetMyProductsUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
+    val productDomainService = mockk<ProductDomainService>()
     val useCase = GetMyProductsUseCase(
-        productRepository = productRepository,
+        productDomainService = productDomainService,
     )
 
     Given("내 상품 목록 조회를 요청할 때") {
@@ -48,9 +48,8 @@ class GetMyProductsUseCaseTest : BehaviorSpec({
             )
 
             every {
-                productRepository.findByUserIdAndStatusNot(
+                productDomainService.getMyProducts(
                     userId = userId,
-                    excludeStatus = ProductStatus.DELETED,
                     pageable = pageable,
                 )
             } returns PageImpl(products, pageable, 2L)
@@ -63,7 +62,7 @@ class GetMyProductsUseCaseTest : BehaviorSpec({
 
             Then("첫 번째 상품 정보가 올바르게 매핑된다") {
                 val first = result.content[0]
-                first.productId shouldBe 1L
+                first.id shouldBe 1L
                 first.name shouldBe "맥북 프로"
                 first.categoryCode shouldBe "ELECTRONICS"
                 first.condition shouldBe ProductCondition.LIKE_NEW
@@ -73,7 +72,7 @@ class GetMyProductsUseCaseTest : BehaviorSpec({
 
             Then("두 번째 상품 정보가 올바르게 매핑된다") {
                 val second = result.content[1]
-                second.productId shouldBe 2L
+                second.id shouldBe 2L
                 second.name shouldBe "아이패드"
                 second.status shouldBe ProductStatus.AVAILABLE
             }
@@ -90,9 +89,8 @@ class GetMyProductsUseCaseTest : BehaviorSpec({
             val pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
 
             every {
-                productRepository.findByUserIdAndStatusNot(
+                productDomainService.getMyProducts(
                     userId = userId,
-                    excludeStatus = ProductStatus.DELETED,
                     pageable = pageable,
                 )
             } returns PageImpl(emptyList(), pageable, 0L)
@@ -120,9 +118,8 @@ class GetMyProductsUseCaseTest : BehaviorSpec({
             )
 
             every {
-                productRepository.findByUserIdAndStatusNot(
+                productDomainService.getMyProducts(
                     userId = userId,
-                    excludeStatus = ProductStatus.DELETED,
                     pageable = pageable,
                 )
             } returns PageImpl(products, pageable, 11L)

@@ -62,7 +62,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                 val pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
                 val products = listOf(
                     MyProductSummaryResponse(
-                        productId = 1L,
+                        id = 1L,
                         name = "맥북 프로",
                         categoryCode = "ELECTRONICS",
                         condition = ProductCondition.LIKE_NEW,
@@ -72,7 +72,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                         updatedAt = now,
                     ),
                     MyProductSummaryResponse(
-                        productId = 2L,
+                        id = 2L,
                         name = "아이패드",
                         categoryCode = "ELECTRONICS",
                         condition = ProductCondition.GOOD,
@@ -95,10 +95,10 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                 result.andExpect {
                     status { isOk() }
                     jsonPath("$.content.length()") { value(2) }
-                    jsonPath("$.content[0].productId") { value(1) }
+                    jsonPath("$.content[0].id") { value(1) }
                     jsonPath("$.content[0].name") { value("맥북 프로") }
                     jsonPath("$.content[0].status") { value("DRAFT") }
-                    jsonPath("$.content[1].productId") { value(2) }
+                    jsonPath("$.content[1].id") { value(2) }
                     jsonPath("$.content[1].name") { value("아이패드") }
                     jsonPath("$.content[1].status") { value("AVAILABLE") }
                     jsonPath("$.totalElements") { value(2) }
@@ -152,7 +152,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
         }
     }
 
-    Given("DELETE /api/v1/products/drafts/{productId}") {
+    Given("DELETE /api/v1/my-products/{productId}") {
 
         When("DRAFT 상품을 정상적으로 삭제하면") {
             Then("204 No Content가 반환된다") {
@@ -160,7 +160,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
                 justRun { deleteProductUseCase.execute(userId = 1L, productId = 1L) }
 
-                val result = mockMvc.delete("/api/v1/products/drafts/1")
+                val result = mockMvc.delete("/api/v1/my-products/1")
 
                 result.andExpect {
                     status { isNoContent() }
@@ -180,7 +180,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                     errorCode = ErrorCode.PRODUCT_NOT_FOUND,
                 )
 
-                val result = mockMvc.delete("/api/v1/products/drafts/999")
+                val result = mockMvc.delete("/api/v1/my-products/999")
 
                 result.andExpect {
                     status { isNotFound() }
@@ -199,7 +199,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                     errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
                 )
 
-                val result = mockMvc.delete("/api/v1/products/drafts/1")
+                val result = mockMvc.delete("/api/v1/my-products/1")
 
                 result.andExpect {
                     status { isForbidden() }
@@ -218,7 +218,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                     errorCode = ErrorCode.PRODUCT_NOT_DELETABLE,
                 )
 
-                val result = mockMvc.delete("/api/v1/products/drafts/1")
+                val result = mockMvc.delete("/api/v1/my-products/1")
 
                 result.andExpect {
                     status { isBadRequest() }

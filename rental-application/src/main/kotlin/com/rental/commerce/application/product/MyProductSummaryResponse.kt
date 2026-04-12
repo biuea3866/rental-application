@@ -6,7 +6,7 @@ import com.rental.commerce.domain.product.ProductStatus
 import java.time.ZonedDateTime
 
 data class MyProductSummaryResponse(
-    val productId: Long,
+    val id: Long,
     val name: String?,
     val categoryCode: String?,
     val condition: ProductCondition?,
@@ -17,7 +17,7 @@ data class MyProductSummaryResponse(
 ) {
     companion object {
         fun from(product: Product): MyProductSummaryResponse = MyProductSummaryResponse(
-            productId = product.productId,
+            id = product.productId,
             name = product.name,
             categoryCode = product.categoryCode,
             condition = product.condition,

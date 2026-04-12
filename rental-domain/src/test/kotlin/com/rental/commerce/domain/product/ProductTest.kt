@@ -9,6 +9,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 class ProductTest : BehaviorSpec({
@@ -339,6 +340,10 @@ class ProductTest : BehaviorSpec({
             Then("상태가 DELETED로 변경된다") {
                 product.status shouldBe ProductStatus.DELETED
             }
+
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
+            }
         }
 
         When("REJECTED 상태에서 delete하면") {
@@ -350,6 +355,10 @@ class ProductTest : BehaviorSpec({
 
             Then("상태가 DELETED로 변경된다") {
                 product.status shouldBe ProductStatus.DELETED
+            }
+
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
             }
         }
 

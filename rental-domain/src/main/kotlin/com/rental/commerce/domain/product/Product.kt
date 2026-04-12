@@ -16,6 +16,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
+import java.time.ZonedDateTime
 
 @Entity
 @Table(name = "product")
@@ -54,6 +55,9 @@ class Product(
 
     @Column(name = "reject_reason", length = 500)
     var rejectReason: String? = null,
+
+    @Column(name = "deleted_at")
+    var deletedAt: ZonedDateTime? = null,
 
 ) : BaseEntity() {
 
@@ -159,6 +163,7 @@ class Product(
             )
         }
         this.status = ProductStatus.DELETED
+        this.deletedAt = ZonedDateTime.now()
     }
 
     private fun validateTransition(target: ProductStatus) {

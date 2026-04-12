@@ -32,7 +32,7 @@ class ProductManagementApiController(
         return ResponseEntity.ok(result)
     }
 
-    @DeleteMapping("/api/v1/products/drafts/{productId}")
+    @DeleteMapping("/api/v1/my-products/{productId}")
     fun deleteProduct(
         @PathVariable productId: Long,
     ): ResponseEntity<Void> {
