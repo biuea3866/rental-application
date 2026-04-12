@@ -24,8 +24,8 @@ class LoginUseCase(
 
         user.verifyPassword(command.password, passwordHasher)
 
-        val userId = requireNotNull(user.userId) { "사용자 ID가 존재하지 않습니다" }
-        val accessToken = tokenProvider.createAccessToken(userId, user.role.name)
+        val userId = user.requireId()
+        val accessToken = tokenProvider.createAccessToken(userId, user.roleName())
         val refreshTokenResult = refreshTokenService.issueRefreshToken(userId)
 
         return AuthTokenResponse(

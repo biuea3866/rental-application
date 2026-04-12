@@ -42,8 +42,12 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    val userId: Long? = null,
+    val id: Long? = null,
 ) : BaseEntity() {
+
+    fun requireId(): Long = requireNotNull(id) { "사용자 ID가 존재하지 않습니다" }
+
+    fun roleName(): String = role.name
 
     fun addRole(newRole: UserRole) {
         if (role == UserRole.BOTH || role == newRole) {

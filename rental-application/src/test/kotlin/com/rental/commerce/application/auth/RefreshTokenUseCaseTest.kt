@@ -35,7 +35,7 @@ class RefreshTokenUseCaseTest : BehaviorSpec({
                 phone = "01012345678",
                 passwordHash = "bcrypt_hashed",
                 role = UserRole.RENTER,
-                userId = 1L,
+                id = 1L,
             )
 
             every { refreshTokenService.rotateToken("family-id", "old-refresh-token") } returns RefreshTokenResult(
@@ -79,6 +79,27 @@ class RefreshTokenUseCaseTest : BehaviorSpec({
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.INVALID_TOKEN
+            }
+        }
+
+        When("유효한 Refresh Token이지만 해당 사용자가 존재하지 않으면") {
+            val command = RefreshTokenCommand(
+                refreshToken = "valid-refresh-token",
+                tokenFamily = "family-id",
+            )
+
+            every { refreshTokenService.rotateToken("family-id", "valid-refresh-token") } returns RefreshTokenResult(
+                refreshToken = "new-refresh-token",
+                tokenFamily = "family-id",
+                userId = 999L,
+            )
+            every { userRepository.findById(999L) } returns null
+
+            Then("USER_NOT_FOUND 에러가 발생한다") {
+                val exception = shouldThrow<ResourceNotFoundException> {
+                    useCase.execute(command)
+                }
+                exception.errorCode shouldBe ErrorCode.USER_NOT_FOUND
             }
         }
 

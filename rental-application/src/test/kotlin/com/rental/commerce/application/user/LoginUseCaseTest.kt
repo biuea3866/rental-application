@@ -38,7 +38,7 @@ class LoginUseCaseTest : BehaviorSpec({
                 phone = "01012345678",
                 passwordHash = "bcrypt_hashed",
                 role = UserRole.RENTER,
-                userId = 1L,
+                id = 1L,
             )
 
             every { userRepository.findByEmail(command.email) } returns user
@@ -97,7 +97,7 @@ class LoginUseCaseTest : BehaviorSpec({
                 phone = "01012345678",
                 passwordHash = "bcrypt_hashed",
                 role = UserRole.RENTER,
-                userId = 1L,
+                id = 1L,
             )
 
             every { userRepository.findByEmail(command.email) } returns user

@@ -57,7 +57,7 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
                     phone = savedUserSlot.captured.phone,
                     passwordHash = savedUserSlot.captured.passwordHash,
                     role = savedUserSlot.captured.role,
-                    userId = 1L,
+                    id = 1L,
                 )
             }
 

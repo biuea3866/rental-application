@@ -22,8 +22,8 @@ class RefreshTokenUseCase(
         val user = userRepository.findById(refreshTokenResult.userId)
             ?: throw ResourceNotFoundException(errorCode = ErrorCode.USER_NOT_FOUND)
 
-        val userId = requireNotNull(user.userId) { "사용자 ID가 존재하지 않습니다" }
-        val accessToken = tokenProvider.createAccessToken(userId, user.role.name)
+        val userId = user.requireId()
+        val accessToken = tokenProvider.createAccessToken(userId, user.roleName())
 
         return AuthTokenResponse(
             accessToken = accessToken,

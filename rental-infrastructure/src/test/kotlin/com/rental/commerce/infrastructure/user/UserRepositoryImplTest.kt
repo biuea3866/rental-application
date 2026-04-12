@@ -60,12 +60,12 @@ class UserRepositoryImplTest(
             val savedUser = userRepository.save(user)
 
             Then("저장된 유저의 ID가 생성된다") {
-                savedUser.userId shouldNotBe null
-                savedUser.userId shouldNotBe 0L
+                savedUser.id shouldNotBe null
+                savedUser.id shouldNotBe 0L
             }
 
             Then("ID로 조회할 수 있다") {
-                val found = userRepository.findById(savedUser.userId!!)
+                val found = userRepository.findById(savedUser.requireId())
                 found shouldNotBe null
                 found!!.email shouldBe "test@example.com"
                 found.name shouldBe "홍길동"
@@ -161,7 +161,7 @@ class UserRepositoryImplTest(
             val updatedUser = userRepository.save(savedUser)
 
             Then("역할이 BOTH로 저장된다") {
-                val found = userRepository.findById(updatedUser.userId!!)
+                val found = userRepository.findById(updatedUser.requireId())
                 found shouldNotBe null
                 found!!.role shouldBe UserRole.BOTH
             }
