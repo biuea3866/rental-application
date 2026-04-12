@@ -117,6 +117,12 @@ class Product(
     }
 
     fun approve() {
+        if (status != ProductStatus.UNDER_REVIEW) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_NOT_UNDER_REVIEW,
+                message = "검수 중인 상품만 승인할 수 있습니다 (현재 상태: $status)",
+            )
+        }
         validateTransition(ProductStatus.APPROVED)
 
         this.status = ProductStatus.APPROVED
@@ -129,6 +135,12 @@ class Product(
     }
 
     fun reject(reason: String) {
+        if (status != ProductStatus.UNDER_REVIEW) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_NOT_UNDER_REVIEW,
+                message = "검수 중인 상품만 반려할 수 있습니다 (현재 상태: $status)",
+            )
+        }
         validateTransition(ProductStatus.REJECTED)
 
         this.status = ProductStatus.REJECTED

@@ -13,6 +13,7 @@ enum class ErrorCode(
     VERIFICATION_CODE_EXPIRED(400, "VERIFICATION_CODE_EXPIRED", "인증코드가 만료되었습니다"),
     PHONE_NOT_VERIFIED(400, "PHONE_NOT_VERIFIED", "휴대폰 인증이 완료되지 않았습니다"),
     PRODUCT_NOT_DRAFT(400, "PRODUCT_NOT_DRAFT", "임시저장 상태의 상품만 수정할 수 있습니다"),
+    PRODUCT_NOT_UNDER_REVIEW(400, "PRODUCT_NOT_UNDER_REVIEW", "검수 중인 상품만 승인/반려할 수 있습니다"),
 
     // 401
     UNAUTHORIZED(401, "UNAUTHORIZED", "인증이 필요합니다"),
