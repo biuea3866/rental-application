@@ -5,6 +5,7 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ProductDomainService(
@@ -28,5 +29,17 @@ class ProductDomainService(
             excludeStatus = ProductStatus.DELETED,
             pageable = pageable,
         )
+    }
+
+    @Transactional
+    fun approve(productId: Long) {
+        val product = getProductById(productId)
+        product.approve()
+    }
+
+    @Transactional
+    fun reject(productId: Long, reason: String) {
+        val product = getProductById(productId)
+        product.reject(reason)
     }
 }
