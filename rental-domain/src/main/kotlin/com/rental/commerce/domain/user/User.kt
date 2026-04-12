@@ -2,6 +2,8 @@ package com.rental.commerce.domain.user
 
 import com.rental.commerce.domain.common.BaseEntity
 import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.PasswordHasher
+import com.rental.commerce.domain.common.UnauthorizedException
 import com.rental.commerce.domain.common.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -41,8 +43,12 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    val userId: Long? = null,
+    val id: Long? = null,
 ) : BaseEntity() {
+
+    fun requireId(): Long = requireNotNull(id) { "사용자 ID가 존재하지 않습니다" }
+
+    fun roleName(): String = role.name
 
     fun addRole(newRole: UserRole) {
         if (role == UserRole.BOTH || role == newRole) {
@@ -61,6 +67,14 @@ class User(
     fun updateProfile(name: String?, phone: String?) {
         name?.let { this.name = it }
         phone?.let { this.phone = it }
+    }
+
+    fun verifyPassword(rawPassword: String, passwordHasher: PasswordHasher) {
+        if (!passwordHasher.matches(rawPassword, passwordHash)) {
+            throw UnauthorizedException(
+                errorCode = ErrorCode.INVALID_PASSWORD,
+            )
+        }
     }
 
     fun isSocialUser(): Boolean = socialProvider != null

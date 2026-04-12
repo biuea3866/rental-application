@@ -41,7 +41,7 @@ class AddLenderProfileUseCaseTest : BehaviorSpec({
                 phone = "010-1234-5678",
                 passwordHash = "hashed",
                 role = UserRole.RENTER,
-                userId = userId,
+                id = userId,
             )
 
             every { userRepository.findById(userId) } returns user
@@ -81,7 +81,7 @@ class AddLenderProfileUseCaseTest : BehaviorSpec({
         When("이미 등록자 프로필이 존재하면") {
             val userId = 1L
             val command = AddLenderProfileCommand(userId = userId, lenderType = LenderType.INDIVIDUAL)
-            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.RENTER, userId = userId)
+            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.RENTER, id = userId)
 
             every { userRepository.findById(userId) } returns user
             every { userDomainService.checkLenderProfileNotDuplicate(userId) } throws DuplicateResourceException()

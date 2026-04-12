@@ -1,11 +1,16 @@
 package com.rental.commerce.domain.user
 
 import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.PasswordHasher
+import com.rental.commerce.domain.common.UnauthorizedException
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.mockk
 
 class UserTest : BehaviorSpec({
 
@@ -174,6 +179,33 @@ class UserTest : BehaviorSpec({
             Then("아무것도 변경되지 않는다") {
                 user.name shouldBe "홍길동"
                 user.phone shouldBe "010-1234-5678"
+            }
+        }
+    }
+
+    Given("verifyPassword") {
+        val passwordHasher = mockk<PasswordHasher>()
+
+        When("올바른 비밀번호로 검증하면") {
+            val user = createDefaultUser()
+            every { passwordHasher.matches("correct_password", "hashed_password_123") } returns true
+
+            Then("예외가 발생하지 않는다") {
+                shouldNotThrow<Exception> {
+                    user.verifyPassword("correct_password", passwordHasher)
+                }
+            }
+        }
+
+        When("잘못된 비밀번호로 검증하면") {
+            val user = createDefaultUser()
+            every { passwordHasher.matches("wrong_password", "hashed_password_123") } returns false
+
+            Then("INVALID_PASSWORD 에러가 발생한다") {
+                val exception = shouldThrow<UnauthorizedException> {
+                    user.verifyPassword("wrong_password", passwordHasher)
+                }
+                exception.errorCode shouldBe ErrorCode.INVALID_PASSWORD
             }
         }
     }
