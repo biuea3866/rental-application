@@ -37,11 +37,6 @@ class SecurityConfig(
                 authorize
                     .requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/price-guides/**").permitAll()
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.GET,
-                        "/api/v1/products",
-                        "/api/v1/products/{productId}",
-                    ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .requestMatchers("/api/v1/**").authenticated()
                     .anyRequest().permitAll()

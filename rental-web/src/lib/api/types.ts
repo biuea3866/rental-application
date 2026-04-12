@@ -54,23 +54,6 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-export interface VerifyPhoneRequest {
-  phone: string;
-  code: string;
-}
-
-export type SocialProvider = "KAKAO" | "NAVER";
-
-export interface SocialLoginRequest {
-  provider: SocialProvider;
-  code: string;
-  redirectUri: string;
-}
-
-export interface SendVerificationCodeRequest {
-  phone: string;
-}
-
 // ========================================
 // 유저 관련 타입
 // ========================================
@@ -138,76 +121,4 @@ export interface GuidePriceRange {
   minPricePerDay: number;
   maxPricePerDay: number;
   averagePricePerDay: number;
-}
-
-// ========================================
-// 마이페이지 타입
-// ========================================
-
-export interface LenderProfile {
-  businessName?: string;
-  description?: string;
-  bankName?: string;
-  bankAccount?: string;
-}
-
-export interface RenterProfile {
-  preferredCategories?: ProductCategory[];
-  deliveryAddress?: string;
-}
-
-export interface MyPageInfo {
-  id: string;
-  email: string;
-  name: string;
-  phone: string;
-  role: UserRole;
-  profileImageUrl?: string;
-  createdAt: string;
-  lenderProfile?: LenderProfile;
-  renterProfile?: RenterProfile;
-}
-
-export interface UpdateProfileRequest {
-  name: string;
-  phone: string;
-  profileImageUrl?: string;
-}
-
-export interface UpdateLenderProfileRequest {
-  businessName?: string;
-  description?: string;
-  bankName?: string;
-  bankAccount?: string;
-}
-
-export interface UpdateRenterProfileRequest {
-  preferredCategories?: ProductCategory[];
-  deliveryAddress?: string;
-}
-
-// ========================================
-// 알림 타입
-// ========================================
-
-export type NotificationType =
-  | "RENTAL_REQUEST"
-  | "RENTAL_APPROVED"
-  | "RENTAL_REJECTED"
-  | "RENTAL_RETURNED"
-  | "PAYMENT_COMPLETED"
-  | "SYSTEM";
-
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-  relatedId?: string;
-}
-
-export interface UnreadCountResponse {
-  count: number;
 }
