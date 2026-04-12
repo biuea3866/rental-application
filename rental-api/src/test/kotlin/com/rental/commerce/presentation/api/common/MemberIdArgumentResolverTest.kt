@@ -8,12 +8,19 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.core.MethodParameter
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.context.SecurityContextImpl
 import org.springframework.web.context.request.NativeWebRequest
-import jakarta.servlet.http.HttpServletRequest
 
 class MemberIdArgumentResolverTest : BehaviorSpec({
 
     val resolver = MemberIdArgumentResolver()
+
+    afterEach {
+        SecurityContextHolder.clearContext()
+    }
 
     Given("supportsParameter") {
 
@@ -50,43 +57,37 @@ class MemberIdArgumentResolverTest : BehaviorSpec({
 
     Given("resolveArgument") {
 
-        When("request attribute에 X-Member-Id가 설정되어 있으면") {
+        When("SecurityContext에 인증 정보(principal=Long)가 있으면") {
             val parameter = mockk<MethodParameter>()
             every { parameter.isOptional } returns false
-            val request = mockk<HttpServletRequest>()
-            every { request.getAttribute("X-Member-Id") } returns 42L
+            val authentication = UsernamePasswordAuthenticationToken(42L, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
+            SecurityContextHolder.setContext(SecurityContextImpl(authentication))
             val webRequest = mockk<NativeWebRequest>()
-            every { webRequest.getNativeRequest(HttpServletRequest::class.java) } returns request
 
-            Then("attribute에서 userId를 반환한다") {
+            Then("principal에서 userId를 반환한다") {
                 val result = resolver.resolveArgument(parameter, null, webRequest, null)
                 result shouldBe 42L
             }
         }
 
-        When("attribute는 없고 X-Member-Id 헤더가 설정되어 있으면") {
+        When("SecurityContext에 인증 정보(principal=String)가 있으면") {
             val parameter = mockk<MethodParameter>()
             every { parameter.isOptional } returns false
-            val request = mockk<HttpServletRequest>()
-            every { request.getAttribute("X-Member-Id") } returns null
-            every { request.getHeader("X-Member-Id") } returns "99"
+            val authentication = UsernamePasswordAuthenticationToken("99", null, listOf(SimpleGrantedAuthority("ROLE_USER")))
+            SecurityContextHolder.setContext(SecurityContextImpl(authentication))
             val webRequest = mockk<NativeWebRequest>()
-            every { webRequest.getNativeRequest(HttpServletRequest::class.java) } returns request
 
-            Then("헤더에서 userId를 반환한다") {
+            Then("String principal을 Long으로 변환하여 반환한다") {
                 val result = resolver.resolveArgument(parameter, null, webRequest, null)
                 result shouldBe 99L
             }
         }
 
-        When("attribute도 헤더도 없고 필수 파라미터이면") {
+        When("SecurityContext에 인증 정보가 없고 필수 파라미터이면") {
             val parameter = mockk<MethodParameter>()
             every { parameter.isOptional } returns false
-            val request = mockk<HttpServletRequest>()
-            every { request.getAttribute("X-Member-Id") } returns null
-            every { request.getHeader("X-Member-Id") } returns null
+            SecurityContextHolder.clearContext()
             val webRequest = mockk<NativeWebRequest>()
-            every { webRequest.getNativeRequest(HttpServletRequest::class.java) } returns request
 
             Then("UNAUTHORIZED BusinessException을 던진다") {
                 val exception = shouldThrow<BusinessException> {
@@ -96,32 +97,30 @@ class MemberIdArgumentResolverTest : BehaviorSpec({
             }
         }
 
-        When("attribute도 헤더도 없고 nullable 파라미터이면") {
+        When("클라이언트가 X-Member-Id 헤더를 위조하더라도 SecurityContext에 인증 정보가 없으면") {
+            val parameter = mockk<MethodParameter>()
+            every { parameter.isOptional } returns false
+            SecurityContextHolder.clearContext()
+            // 헤더는 이제 읽지 않으므로 위조된 헤더는 무시됨
+            val webRequest = mockk<NativeWebRequest>()
+
+            Then("헤더는 무시하고 UNAUTHORIZED BusinessException을 던진다") {
+                val exception = shouldThrow<BusinessException> {
+                    resolver.resolveArgument(parameter, null, webRequest, null)
+                }
+                exception.errorCode shouldBe ErrorCode.UNAUTHORIZED
+            }
+        }
+
+        When("SecurityContext에 인증 정보가 없고 nullable 파라미터이면") {
             val parameter = mockk<MethodParameter>()
             every { parameter.isOptional } returns true
-            val request = mockk<HttpServletRequest>()
-            every { request.getAttribute("X-Member-Id") } returns null
-            every { request.getHeader("X-Member-Id") } returns null
+            SecurityContextHolder.clearContext()
             val webRequest = mockk<NativeWebRequest>()
-            every { webRequest.getNativeRequest(HttpServletRequest::class.java) } returns request
 
             Then("null을 반환한다") {
                 val result = resolver.resolveArgument(parameter, null, webRequest, null)
                 result shouldBe null
-            }
-        }
-
-        When("attribute에 Number 타입(Int)이 설정되어 있으면") {
-            val parameter = mockk<MethodParameter>()
-            every { parameter.isOptional } returns false
-            val request = mockk<HttpServletRequest>()
-            every { request.getAttribute("X-Member-Id") } returns 7
-            val webRequest = mockk<NativeWebRequest>()
-            every { webRequest.getNativeRequest(HttpServletRequest::class.java) } returns request
-
-            Then("Long으로 변환하여 반환한다") {
-                val result = resolver.resolveArgument(parameter, null, webRequest, null)
-                result shouldBe 7L
             }
         }
     }

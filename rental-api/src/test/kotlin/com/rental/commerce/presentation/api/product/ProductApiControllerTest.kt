@@ -23,6 +23,10 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.http.MediaType
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.context.SecurityContextImpl
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -49,6 +53,12 @@ class ProductApiControllerTest : BehaviorSpec({
 
     beforeEach {
         clearMocks(createProductDraftUseCase, updateProductDraftUseCase, getProductDraftUseCase, submitProductUseCase)
+        val auth = UsernamePasswordAuthenticationToken(1L, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
+        SecurityContextHolder.setContext(SecurityContextImpl(auth))
+    }
+
+    afterEach {
+        SecurityContextHolder.clearContext()
     }
 
     Given("POST /api/v1/products/drafts") {
@@ -76,7 +86,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"name":"맥북 프로","categoryCode":"ELECTRONICS"}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -109,7 +119,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -147,7 +157,7 @@ class ProductApiControllerTest : BehaviorSpec({
                         "condition": "LIKE_NEW",
                         "depositAmount": 500000
                     }"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -164,7 +174,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 0}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -178,7 +188,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 11}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -198,7 +208,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/999") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -219,7 +229,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -265,7 +275,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 } returns response
 
                 val result = mockMvc.get("/api/v1/products/drafts/1") {
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -294,7 +304,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 )
 
                 val result = mockMvc.get("/api/v1/products/drafts/999") {
-                    requestAttr("X-Member-Id", 1L)
+
                 }
 
                 result.andExpect {
@@ -309,8 +319,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("정상적인 상품 제출 요청을 보내면") {
             Then("200 OK와 UNDER_REVIEW 상태의 상품 정보가 반환된다") {
-                setAuthentication()
-
                 val response = ProductSubmitResponse(
                     productId = 1L,
                     status = ProductStatus.UNDER_REVIEW,
@@ -344,8 +352,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("존재하지 않는 상품을 제출하면") {
             Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 999L)
@@ -366,8 +372,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("소유자가 아닌 사용자가 상품을 제출하면") {
             Then("403 PRODUCT_OWNERSHIP_DENIED 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)
@@ -388,8 +392,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("DRAFT가 아닌 상태의 상품을 제출하면") {
             Then("400 INVALID_STATE_TRANSITION 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)
@@ -409,8 +411,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("필수 필드가 누락된 상품을 제출하면") {
             Then("400 INVALID_INPUT 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)

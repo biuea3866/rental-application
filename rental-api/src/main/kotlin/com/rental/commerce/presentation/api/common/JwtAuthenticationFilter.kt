@@ -46,9 +46,6 @@ class JwtAuthenticationFilter(
                     authorities,
                 )
                 SecurityContextHolder.getContext().authentication = authentication
-
-                request.setAttribute("X-Member-Id", claims.userId)
-                request.setAttribute("X-Member-Role", claims.role)
             } catch (exception: BusinessException) {
                 log.warn("JWT 인증 실패: [${exception.errorCode.code}] ${exception.message}")
                 writeErrorResponse(response, exception.errorCode)
