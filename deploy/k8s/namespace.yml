@@ -1,0 +1,13 @@
+# =============================================================================
+# Namespace: rental-commerce
+# =============================================================================
+# 모든 rental-commerce 리소스를 격리하기 위한 네임스페이스.
+# 적용: kubectl apply -f namespace.yml
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rental-commerce
+  labels:
+    app.kubernetes.io/name: rental-commerce
+    app.kubernetes.io/part-of: rental-commerce
