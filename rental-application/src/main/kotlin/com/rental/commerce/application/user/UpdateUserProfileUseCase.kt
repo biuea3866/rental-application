@@ -20,7 +20,5 @@ class UpdateUserProfileUseCase(
             name = command.name,
             phone = command.phone,
         )
-
-        userRepository.save(user)
     }
 }

@@ -9,7 +9,6 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 
 class UpdateUserProfileUseCaseTest : BehaviorSpec({
 
@@ -35,7 +34,6 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
             )
 
             every { userRepository.findById(userId) } returns user
-            every { userRepository.save(any()) } returns user
 
             useCase.execute(command)
 
@@ -45,10 +43,6 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
 
             Then("전화번호가 변경된다") {
                 user.phone shouldBe "010-9999-8888"
-            }
-
-            Then("저장이 호출된다") {
-                verify { userRepository.save(user) }
             }
         }
 
@@ -69,7 +63,6 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
             )
 
             every { userRepository.findById(userId) } returns user
-            every { userRepository.save(any()) } returns user
 
             useCase.execute(command)
 

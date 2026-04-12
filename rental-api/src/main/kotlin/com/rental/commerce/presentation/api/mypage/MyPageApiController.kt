@@ -7,6 +7,7 @@ import com.rental.commerce.application.user.RenterProfileResponse
 import com.rental.commerce.application.user.UpdateLenderProfileUseCase
 import com.rental.commerce.application.user.UpdateRenterProfileUseCase
 import com.rental.commerce.application.user.UpdateUserProfileUseCase
+import com.rental.commerce.domain.common.UnauthorizedException
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
@@ -60,8 +61,8 @@ class MyPageApiController(
 
     private fun extractUserId(): Long {
         val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw com.rental.commerce.domain.common.UnauthorizedException()
+            ?: throw UnauthorizedException()
         return (authentication.principal as? Long)
-            ?: throw com.rental.commerce.domain.common.UnauthorizedException()
+            ?: throw UnauthorizedException()
     }
 }

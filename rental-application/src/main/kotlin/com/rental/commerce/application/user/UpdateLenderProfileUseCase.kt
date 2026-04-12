@@ -21,8 +21,6 @@ class UpdateLenderProfileUseCase(
             settlementAccountNumber = command.settlementAccountNumber,
         )
 
-        lenderProfileRepository.save(profile)
-
         return LenderProfileResponse.from(profile)
     }
 }

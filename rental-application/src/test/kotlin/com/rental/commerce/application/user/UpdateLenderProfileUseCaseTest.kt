@@ -10,7 +10,6 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 
 class UpdateLenderProfileUseCaseTest : BehaviorSpec({
 
@@ -36,7 +35,6 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
             )
 
             every { lenderProfileRepository.findByUserId(userId) } returns profile
-            every { lenderProfileRepository.save(any()) } returns profile
 
             val result = useCase.execute(command)
 
@@ -46,10 +44,6 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
 
             Then("정산 계좌 번호가 변경된다") {
                 result.settlementAccountNumber shouldBe "999-888-777666"
-            }
-
-            Then("저장이 호출된다") {
-                verify { lenderProfileRepository.save(profile) }
             }
         }
 
@@ -70,7 +64,6 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
             )
 
             every { lenderProfileRepository.findByUserId(userId) } returns profile
-            every { lenderProfileRepository.save(any()) } returns profile
 
             val result = useCase.execute(command)
 

@@ -18,8 +18,6 @@ class UpdateRenterProfileUseCase(
 
         profile.updateProfile(shippingAddress = command.shippingAddress)
 
-        renterProfileRepository.save(profile)
-
         return RenterProfileResponse.from(profile)
     }
 }

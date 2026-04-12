@@ -9,7 +9,6 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 
 class UpdateRenterProfileUseCaseTest : BehaviorSpec({
 
@@ -33,16 +32,11 @@ class UpdateRenterProfileUseCaseTest : BehaviorSpec({
             )
 
             every { renterProfileRepository.findByUserId(userId) } returns profile
-            every { renterProfileRepository.save(any()) } returns profile
 
             val result = useCase.execute(command)
 
             Then("배송지 주소가 변경된다") {
                 result.shippingAddress shouldBe "서울시 서초구"
-            }
-
-            Then("저장이 호출된다") {
-                verify { renterProfileRepository.save(profile) }
             }
         }
 
@@ -61,7 +55,6 @@ class UpdateRenterProfileUseCaseTest : BehaviorSpec({
             )
 
             every { renterProfileRepository.findByUserId(userId) } returns profile
-            every { renterProfileRepository.save(any()) } returns profile
 
             val result = useCase.execute(command)
 
