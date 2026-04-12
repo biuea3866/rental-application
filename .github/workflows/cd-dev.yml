@@ -1,0 +1,78 @@
+# =============================================================================
+# CD Pipeline - Dev Environment
+# =============================================================================
+# dev 브랜치에 PR 머지 후 자동으로 Docker 이미지를 빌드하여 GHCR에 푸시합니다.
+# =============================================================================
+
+name: CD Dev
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: biuea3866/rental-commerce
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Image (Dev)
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Tests
+        run: ./gradlew test
+
+      - name: Build bootJar
+        run: ./gradlew :rental-api:bootJar
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Dev (placeholder)
+        run: |
+          echo "=========================================="
+          echo " Deploy to Dev Environment"
+          echo "=========================================="
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}"
+          echo ""
+          echo "TODO: 실제 배포 스크립트로 교체하세요."
+          echo "  예시: kubectl set image deployment/rental-api ..."
+          echo "  예시: docker compose pull && docker compose up -d"
+          echo "=========================================="
