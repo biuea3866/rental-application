@@ -2,18 +2,31 @@ package com.rental.commerce.presentation.api.image
 
 import com.rental.commerce.infrastructure.auth.JwtProvider
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.extensions.spring.SpringExtension
+import io.minio.BucketExistsArgs
+import io.minio.MakeBucketArgs
+import io.minio.MinioClient
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.MinIOContainer
+import org.testcontainers.containers.MySQLContainer
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class ImageApiIntegrationTest(
     private val mockMvc: MockMvc,
     private val jwtProvider: JwtProvider,
 ) : BehaviorSpec({
+
+    extensions(SpringExtension)
 
     Given("POST /api/v1/images/presigned-url") {
 
@@ -65,4 +78,51 @@ class ImageApiIntegrationTest(
             }
         }
     }
-})
+}) {
+    companion object {
+        private val mysqlContainer = MySQLContainer("mysql:8.0").apply {
+            withDatabaseName("rental_commerce_test")
+            withUsername("test")
+            withPassword("test")
+        }
+
+        private val redisContainer = GenericContainer("redis:7-alpine").apply {
+            withExposedPorts(6379)
+        }
+
+        private val minioContainer = MinIOContainer("minio/minio:latest").apply {
+            withUserName("minioadmin")
+            withPassword("minioadmin")
+        }
+
+        init {
+            mysqlContainer.start()
+            redisContainer.start()
+            minioContainer.start()
+
+            val client = MinioClient.builder()
+                .endpoint(minioContainer.s3URL)
+                .credentials(minioContainer.userName, minioContainer.password)
+                .build()
+            listOf("products", "inspections", "documents", "chat").forEach { bucket ->
+                if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
+                    client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build())
+                }
+            }
+        }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun properties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { mysqlContainer.jdbcUrl }
+            registry.add("spring.datasource.username") { mysqlContainer.username }
+            registry.add("spring.datasource.password") { mysqlContainer.password }
+            registry.add("spring.datasource.driver-class-name") { mysqlContainer.driverClassName }
+            registry.add("spring.data.redis.host") { redisContainer.host }
+            registry.add("spring.data.redis.port") { redisContainer.getMappedPort(6379) }
+            registry.add("minio.endpoint") { minioContainer.s3URL }
+            registry.add("minio.access-key") { minioContainer.userName }
+            registry.add("minio.secret-key") { minioContainer.password }
+        }
+    }
+}

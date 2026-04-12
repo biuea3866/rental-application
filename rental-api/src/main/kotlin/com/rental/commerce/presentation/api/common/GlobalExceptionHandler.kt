@@ -4,6 +4,7 @@ import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -26,6 +27,13 @@ class GlobalExceptionHandler {
             .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
         logger.warn("ValidationException: $message")
         val response = ErrorResponse.of(ErrorCode.INVALID_INPUT, message)
+        return ResponseEntity.badRequest().body(response)
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadable(exception: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
+        logger.warn("HttpMessageNotReadableException: ${exception.message}")
+        val response = ErrorResponse.of(ErrorCode.INVALID_INPUT, "요청 본문을 읽을 수 없습니다. 입력값을 확인해주세요.")
         return ResponseEntity.badRequest().body(response)
     }
 

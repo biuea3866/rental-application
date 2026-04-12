@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { getApiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/lib/api/endpoints";
+import { saveTokens } from "@/lib/auth/token";
 import type {
   User,
   AuthTokens,
@@ -38,14 +39,20 @@ export function useAuth() {
       setError(null);
 
       try {
+        // 1. 토큰 발급
         const tokenResponse = await apiClient.post<AuthTokens>(
           ENDPOINTS.AUTH.LOGIN,
           request,
           { requiresAuth: false }
         );
 
+        // 2. 토큰 먼저 저장 (Authorization 헤더 사용 가능하도록)
+        saveTokens(tokenResponse.data);
+
+        // 3. 유저 정보 조회 (토큰이 설정된 상태)
         const userResponse = await apiClient.get<User>(ENDPOINTS.AUTH.ME);
 
+        // 4. 스토어에 유저 + 토큰 저장 (isLoading: false 포함)
         storeLogin(userResponse.data, tokenResponse.data);
         return { success: true };
       } catch (err) {
@@ -53,8 +60,6 @@ export function useAuth() {
           err instanceof Error ? err.message : "로그인에 실패했습니다.";
         setError(message);
         return { success: false, error: message };
-      } finally {
-        setLoading(false);
       }
     },
     [apiClient, storeLogin, setLoading, setError]
@@ -67,14 +72,20 @@ export function useAuth() {
       setError(null);
 
       try {
+        // 1. 토큰 발급
         const tokenResponse = await apiClient.post<AuthTokens>(
           ENDPOINTS.AUTH.SIGNUP,
           request,
           { requiresAuth: false }
         );
 
+        // 2. 토큰 먼저 저장 (Authorization 헤더 사용 가능하도록)
+        saveTokens(tokenResponse.data);
+
+        // 3. 유저 정보 조회 (토큰이 설정된 상태)
         const userResponse = await apiClient.get<User>(ENDPOINTS.AUTH.ME);
 
+        // 4. 스토어에 유저 + 토큰 저장 (isLoading: false 포함)
         storeLogin(userResponse.data, tokenResponse.data);
         return { success: true };
       } catch (err) {
@@ -82,8 +93,6 @@ export function useAuth() {
           err instanceof Error ? err.message : "회원가입에 실패했습니다.";
         setError(message);
         return { success: false, error: message };
-      } finally {
-        setLoading(false);
       }
     },
     [apiClient, storeLogin, setLoading, setError]
