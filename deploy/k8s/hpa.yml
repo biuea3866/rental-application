@@ -1,0 +1,46 @@
+# =============================================================================
+# HorizontalPodAutoscaler: rental-api
+# =============================================================================
+# CPU 사용률 기반 자동 스케일링.
+# - 최소 2개 파드 (고가용성)
+# - 최대 5개 파드
+# - 목표 CPU 사용률 70%
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rental-api
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: rental-api
+    app.kubernetes.io/component: autoscaler
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rental-api
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    # 스케일 업: 빠르게 (부하 대응)
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    # 스케일 다운: 천천히 (안정성)
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
