@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   // State
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   error: null,
 
   // Actions
@@ -70,8 +70,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setError: (error: string | null) => set({ error }),
 
   checkAuth: async () => {
-    set({ isLoading: true });
-
     if (!hasValidTokens()) {
       set({ isAuthenticated: false, isLoading: false, user: null });
       return;

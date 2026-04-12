@@ -28,14 +28,6 @@ class ProductImageRepositoryImpl(
     }
 
     @Transactional
-    override fun deleteByProductId(productId: Long) {
-        queryFactory
-            .delete(productImage)
-            .where(productImage.productId.eq(productId))
-            .execute()
-    }
-
-    @Transactional
     override fun deleteByProductIdAndObjectKey(productId: Long, objectKey: String) {
         queryFactory
             .delete(productImage)

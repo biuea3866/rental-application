@@ -1,123 +1,66 @@
-# =============================================================================
-# Rental Commerce - Local Development Environment
-# =============================================================================
-# 사용법:
-#   1. cp .env.example .env (환경변수 설정)
-#   2. docker compose up -d (전체 서비스 기동)
-#   3. docker compose logs -f app (앱 로그 확인)
-#   4. docker compose down -v (종료 + 볼륨 삭제)
-# =============================================================================
-
 services:
-  # ---------------------------------------------------------------------------
-  # Application: rental-commerce API
-  # ---------------------------------------------------------------------------
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: rental-app
-    ports:
-      - "${APP_PORT:-8080}:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/rental_commerce?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-rental}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-rental}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      TZ: Asia/Seoul
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_started
-      kafka:
-        condition: service_started
-    networks:
-      - rental-network
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # MySQL 8.0: 메인 RDBMS
-  # ---------------------------------------------------------------------------
   mysql:
     image: mysql:8.0
     container_name: rental-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: rental_commerce
-      MYSQL_USER: ${DB_USERNAME:-rental}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-rental}
       TZ: Asia/Seoul
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --default-authentication-plugin=caching_sha2_password
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-    networks:
-      - rental-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
 
-  # ---------------------------------------------------------------------------
-  # Redis 7: 캐시 / 세션 스토어
-  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: rental-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - rental-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
+      - "6379:6379"
 
-  # ---------------------------------------------------------------------------
-  # MinIO: S3 호환 오브젝트 스토리지 (상품 이미지, 문서 등)
-  # ---------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: rental-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: rental-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  mongodb:
+    image: mongo:7
+    container_name: rental-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     container_name: rental-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio-data:/data
-    networks:
-      - rental-network
-    restart: unless-stopped
 
-  # ---------------------------------------------------------------------------
-  # MinIO 초기화: 기본 버킷 생성
-  # ---------------------------------------------------------------------------
   minio-init:
-    image: minio/mc
+    image: minio/mc:latest
     container_name: rental-minio-init
     depends_on:
       - minio
@@ -131,59 +74,7 @@ services:
       mc mb --ignore-existing rental/chat;
       echo 'Buckets created';
       "
-    networks:
-      - rental-network
 
-  # ---------------------------------------------------------------------------
-  # Zookeeper: Kafka 의존성
-  # ---------------------------------------------------------------------------
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    container_name: rental-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-    ports:
-      - "2181:2181"
-    networks:
-      - rental-network
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # Kafka: 이벤트 브로커
-  # ---------------------------------------------------------------------------
-  kafka:
-    image: confluentinc/cp-kafka:7.6.0
-    container_name: rental-kafka
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    ports:
-      - "9092:9092"
-    networks:
-      - rental-network
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # MongoDB 7: 채팅/로그 등 도큐먼트 스토어
-  # ---------------------------------------------------------------------------
-  mongodb:
-    image: mongo:7
-    container_name: rental-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - rental-network
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # Pinpoint: APM 모니터링 (HBase + Collector + Web)
-  # ---------------------------------------------------------------------------
   pinpoint-hbase:
     image: pinpointdocker/pinpoint-hbase:3.0.0
     container_name: rental-pinpoint-hbase
@@ -192,9 +83,6 @@ services:
       - "16030:16030"
     volumes:
       - hbase-data:/home/pinpoint/hbase
-    networks:
-      - rental-network
-    restart: unless-stopped
 
   pinpoint-collector:
     image: pinpointdocker/pinpoint-collector:3.0.0
@@ -212,9 +100,6 @@ services:
       - "9994:9994/udp"
       - "9995:9995/udp"
       - "9996:9996/udp"
-    networks:
-      - rental-network
-    restart: unless-stopped
 
   pinpoint-web:
     image: pinpointdocker/pinpoint-web:3.0.0
@@ -227,23 +112,9 @@ services:
       HBASE_PORT: 2181
     ports:
       - "28080:8080"
-    networks:
-      - rental-network
-    restart: unless-stopped
 
-# =============================================================================
-# Volumes: 데이터 영속화
-# =============================================================================
 volumes:
   mysql-data:
-  redis-data:
   mongo-data:
   minio-data:
   hbase-data:
-
-# =============================================================================
-# Networks: 서비스 간 통신
-# =============================================================================
-networks:
-  rental-network:
-    driver: bridge
