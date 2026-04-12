@@ -8,8 +8,10 @@
 #   kubectl kustomize deploy/k8s/          # 미리보기 (dry-run)
 #   kubectl delete -k deploy/k8s/          # 전체 삭제
 #
-# 환경별 오버레이가 필요하면 deploy/k8s/overlays/{dev,staging,prod}/를
-# 추가하여 kustomize overlay 패턴을 적용합니다.
+# 환경별 오버레이:
+#   kubectl apply -k deploy/k8s/overlays/dev/   # dev 환경
+#   kubectl apply -k deploy/k8s/overlays/prod/  # prod 환경
+# ArgoCD는 overlay 경로를 직접 참조합니다.
 # =============================================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   id-token: none
 
@@ -70,14 +70,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to Dev (placeholder)
+      # ArgoCD GitOps: Kustomize overlay의 이미지 태그를 갱신하여 커밋
+      # ArgoCD가 이 변경을 감지하고 자동으로 dev 클러스터에 배포 (automated sync)
+      - name: Update Kustomize image tag
         run: |
-          echo "=========================================="
-          echo " Deploy to Dev Environment"
-          echo "=========================================="
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}"
-          echo ""
-          echo "TODO: 실제 배포 스크립트로 교체하세요."
-          echo "  예시: kubectl set image deployment/rental-api ..."
-          echo "  예시: docker compose pull && docker compose up -d"
-          echo "=========================================="
+          cd deploy/k8s/overlays/dev
+          # kustomize edit으로 이미지 태그 갱신
+          cat kustomization.yml | sed "s/newTag: .*/newTag: dev-${{ github.sha }}/" > kustomization.tmp.yml
+          mv kustomization.tmp.yml kustomization.yml
+
+      - name: Commit and push image tag update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/k8s/overlays/dev/kustomization.yml
+          git diff --staged --quiet || git commit -m "chore(cd): dev 이미지 태그 갱신 — dev-${{ github.sha }}"
+          git push

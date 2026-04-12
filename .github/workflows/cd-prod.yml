@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   id-token: none
 
@@ -72,15 +72,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to Production (placeholder)
+      # ArgoCD GitOps: Kustomize overlay의 이미지 태그를 갱신하여 커밋
+      # prod는 ArgoCD에서 수동 sync 필요 (automated sync 비활성화)
+      # 배포 절차: 이미지 태그 커밋 → ArgoCD UI에서 diff 확인 → argocd app sync
+      - name: Update Kustomize image tag
+        run: |
+          cd deploy/k8s/overlays/prod
+          cat kustomization.yml | sed "s/newTag: .*/newTag: prod-${{ github.sha }}/" > kustomization.tmp.yml
+          mv kustomization.tmp.yml kustomization.yml
+
+      - name: Commit and push image tag update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/k8s/overlays/prod/kustomization.yml
+          git diff --staged --quiet || git commit -m "chore(cd): prod 이미지 태그 갱신 — prod-${{ github.sha }}"
+          git push
+
+      - name: Notify ArgoCD sync required
         run: |
           echo "=========================================="
-          echo " Deploy to Production Environment"
+          echo " ArgoCD Sync Required (Production)"
           echo "=========================================="
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ github.sha }}"
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "이미지 태그가 갱신되었습니다: prod-${{ github.sha }}"
           echo ""
-          echo "TODO: 실제 배포 스크립트로 교체하세요."
-          echo "  예시: kubectl set image deployment/rental-api ..."
-          echo "  예시: ArgoCD sync / Helm upgrade"
+          echo "ArgoCD UI에서 diff를 확인하고 수동 sync하세요:"
+          echo "  argocd app sync rental-commerce-prod"
           echo "=========================================="
