@@ -9,6 +9,8 @@ export const ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_VERSION}/auth/login`,
     SIGNUP: `${API_VERSION}/auth/signup`,
+    VERIFY_PHONE: `${API_VERSION}/auth/verify-phone`,
+    SOCIAL_LOGIN: `${API_VERSION}/auth/social-login`,
     REFRESH: `${API_VERSION}/auth/refresh`,
     LOGOUT: `${API_VERSION}/auth/logout`,
     ME: `${API_VERSION}/auth/me`,
