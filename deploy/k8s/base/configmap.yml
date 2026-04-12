@@ -24,6 +24,12 @@ data:
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_DOODLIN: "DEBUG"
   # MinIO 엔드포인트 (클러스터 내부)
-  MINIO_ENDPOINT: "http://minio.rental-commerce.svc.cluster.local:9000"
+  MINIO_ENDPOINT: "http://minio:9000"
   # Redis 포트
   SPRING_DATA_REDIS_PORT: "6379"
+  # Redis 호스트
+  SPRING_DATA_REDIS_HOST: "redis"
+  # MySQL DataSource URL
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/rental_commerce?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul"
+  # Kafka Bootstrap Servers
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"

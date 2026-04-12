@@ -37,7 +37,7 @@ spec:
       containers:
         - name: rental-api
           image: ghcr.io/biuea3866/rental-commerce:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
@@ -48,13 +48,9 @@ spec:
             - configMapRef:
                 name: rental-api-config
 
-          # Secret 환경변수
+          # Secret 환경변수 (민감 정보: DB 자격증명, JWT, MinIO 키)
+          # SPRING_DATASOURCE_URL, SPRING_DATA_REDIS_HOST, SPRING_KAFKA_BOOTSTRAP_SERVERS, MINIO_ENDPOINT 는 ConfigMap에서 주입
           env:
-            - name: SPRING_DATASOURCE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: rental-api-secret
-                  key: DB_URL
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -65,11 +61,6 @@ spec:
                 secretKeyRef:
                   name: rental-api-secret
                   key: DB_PASSWORD
-            - name: SPRING_DATA_REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: rental-api-secret
-                  key: REDIS_HOST
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -115,6 +106,4 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
 
-      # GHCR 프라이빗 이미지 접근 시 필요 (공개 이미지면 생략 가능)
-      imagePullSecrets:
-        - name: ghcr-credentials
+      # imagePullSecrets: 로컬 minikube에서는 불필요 (IfNotPresent + local docker build 사용)

@@ -21,3 +21,10 @@ resources:
   - service.yml
   - ingress.yml
   - hpa.yml
+  - mysql.yml
+  - redis.yml
+  - zookeeper.yml
+  - kafka.yml
+  - minio.yml
+  - mongodb.yml
+  - rental-web.yml

@@ -15,7 +15,9 @@ resources:
 # dev 환경 이미지 태그 — ArgoCD Image Updater 또는 CD 파이프라인이 갱신
 images:
   - name: ghcr.io/biuea3866/rental-commerce
-    newTag: dev-b985429c8df70fa682fc31111a6d3810d2485b17
+    newTag: dev-latest
+  - name: ghcr.io/biuea3866/rental-web
+    newTag: dev-latest
 
 # dev 환경 레플리카 수 축소 + ConfigMap 오버라이드
 patches:
@@ -37,6 +39,10 @@ patches:
       data:
         SPRING_PROFILES_ACTIVE: "dev"
         LOG_LEVEL: "DEBUG"
+        SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/rental_commerce?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul"
+        SPRING_DATA_REDIS_HOST: "redis"
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+        MINIO_ENDPOINT: "http://minio:9000"
 
 # dev 환경 라벨
 commonLabels:
