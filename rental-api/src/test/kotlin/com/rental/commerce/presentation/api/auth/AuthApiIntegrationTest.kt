@@ -5,6 +5,7 @@ import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole
 import com.rental.commerce.infrastructure.auth.JwtProvider
+import com.rental.commerce.presentation.api.IntegrationTestBase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -15,8 +16,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.MySQLContainer
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -140,30 +139,10 @@ class AuthApiIntegrationTest(
     }
 }) {
     companion object {
-        private val mysqlContainer = MySQLContainer("mysql:8.0").apply {
-            withDatabaseName("rental_commerce_test")
-            withUsername("test")
-            withPassword("test")
-        }
-
-        private val redisContainer = GenericContainer("redis:7-alpine").apply {
-            withExposedPorts(6379)
-        }
-
-        init {
-            mysqlContainer.start()
-            redisContainer.start()
-        }
-
         @JvmStatic
         @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { mysqlContainer.jdbcUrl }
-            registry.add("spring.datasource.username") { mysqlContainer.username }
-            registry.add("spring.datasource.password") { mysqlContainer.password }
-            registry.add("spring.datasource.driver-class-name") { mysqlContainer.driverClassName }
-            registry.add("spring.data.redis.host") { redisContainer.host }
-            registry.add("spring.data.redis.port") { redisContainer.getMappedPort(6379) }
+            IntegrationTestBase.properties(registry)
             registry.add("minio.endpoint") { "http://localhost:9000" }
             registry.add("minio.access-key") { "minioadmin" }
             registry.add("minio.secret-key") { "minioadmin" }

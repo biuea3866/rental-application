@@ -77,8 +77,9 @@ class ProductRepositoryImplTest(
             Then("ID로 조회할 수 있다") {
                 val found = productRepository.findById(savedProduct.productId)
                 found shouldNotBe null
-                found!!.name shouldBe "테스트 상품"
-                found.userId shouldBe 1L
+                val result = requireNotNull(found)
+                result.name shouldBe "테스트 상품"
+                result.userId shouldBe 1L
             }
         }
 

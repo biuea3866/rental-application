@@ -67,9 +67,10 @@ class UserRepositoryImplTest(
             Then("ID로 조회할 수 있다") {
                 val found = userRepository.findById(savedUser.requireId())
                 found shouldNotBe null
-                found!!.email shouldBe "test@example.com"
-                found.name shouldBe "홍길동"
-                found.role shouldBe UserRole.RENTER
+                val result = requireNotNull(found)
+                result.email shouldBe "test@example.com"
+                result.name shouldBe "홍길동"
+                result.role shouldBe UserRole.RENTER
             }
         }
 
@@ -89,7 +90,8 @@ class UserRepositoryImplTest(
             Then("해당 유저가 반환된다") {
                 val found = userRepository.findByEmail("findbyemail@example.com")
                 found shouldNotBe null
-                found!!.email shouldBe "findbyemail@example.com"
+                val result = requireNotNull(found)
+                result.email shouldBe "findbyemail@example.com"
             }
         }
 
@@ -116,9 +118,10 @@ class UserRepositoryImplTest(
                     "kakao_99999",
                 )
                 found shouldNotBe null
-                found!!.email shouldBe "social@example.com"
-                found.socialProvider shouldBe SocialProvider.KAKAO
-                found.socialProviderId shouldBe "kakao_99999"
+                val result = requireNotNull(found)
+                result.email shouldBe "social@example.com"
+                result.socialProvider shouldBe SocialProvider.KAKAO
+                result.socialProviderId shouldBe "kakao_99999"
             }
         }
 
@@ -163,7 +166,8 @@ class UserRepositoryImplTest(
             Then("역할이 BOTH로 저장된다") {
                 val found = userRepository.findById(updatedUser.requireId())
                 found shouldNotBe null
-                found!!.role shouldBe UserRole.BOTH
+                val result = requireNotNull(found)
+                result.role shouldBe UserRole.BOTH
             }
         }
     }
