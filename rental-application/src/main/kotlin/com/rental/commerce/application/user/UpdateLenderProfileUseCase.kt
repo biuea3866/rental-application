@@ -7,14 +7,19 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class GetLenderProfileUseCase(
+class UpdateLenderProfileUseCase(
     private val userDomainService: UserDomainService,
 ) {
 
-    @Transactional(readOnly = true)
-    fun execute(userId: Long): LenderProfileResponse {
-        val profile = userDomainService.findLenderProfileByUserId(userId)
+    @Transactional
+    fun execute(command: UpdateLenderProfileCommand): LenderProfileResponse {
+        val profile = userDomainService.findLenderProfileByUserId(command.userId)
             ?: throw ResourceNotFoundException(ErrorCode.LENDER_PROFILE_NOT_FOUND)
+
+        profile.updateProfile(
+            settlementAccountBank = command.settlementAccountBank,
+            settlementAccountNumber = command.settlementAccountNumber,
+        )
 
         return LenderProfileResponse.from(profile)
     }

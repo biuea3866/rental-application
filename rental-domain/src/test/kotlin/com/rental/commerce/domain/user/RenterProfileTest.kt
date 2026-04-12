@@ -94,4 +94,31 @@ class RenterProfileTest : BehaviorSpec({
             }
         }
     }
+
+    Given("updateProfile") {
+
+        When("배송지 주소를 변경하면") {
+            val profile = RenterProfile(
+                userId = 1L,
+                shippingAddress = "서울시 강남구",
+            )
+            profile.updateProfile(shippingAddress = "서울시 서초구")
+
+            Then("배송지 주소가 변경된다") {
+                profile.shippingAddress shouldBe "서울시 서초구"
+            }
+        }
+
+        When("null을 전달하면") {
+            val profile = RenterProfile(
+                userId = 1L,
+                shippingAddress = "서울시 강남구",
+            )
+            profile.updateProfile(shippingAddress = null)
+
+            Then("배송지 주소가 유지된다") {
+                profile.shippingAddress shouldBe "서울시 강남구"
+            }
+        }
+    }
 })
