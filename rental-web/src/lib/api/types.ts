@@ -164,7 +164,7 @@ export interface CreateDraftRequest {
   location?: string;
 }
 
-export interface UpdateDraftRequest extends CreateDraftRequest {}
+export type UpdateDraftRequest = CreateDraftRequest;
 
 // ========================================
 // 이미지 업로드 (Presigned URL) 타입
