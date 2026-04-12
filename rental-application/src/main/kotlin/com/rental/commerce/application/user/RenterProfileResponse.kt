@@ -7,6 +7,7 @@ data class RenterProfileResponse(
     val userId: Long,
     val trustGrade: String,
     val totalTransactionCount: Int,
+    val shippingAddress: String?,
 ) {
     companion object {
         fun from(entity: RenterProfile): RenterProfileResponse = RenterProfileResponse(
@@ -14,6 +15,7 @@ data class RenterProfileResponse(
             userId = entity.userId,
             trustGrade = entity.trustGrade.name,
             totalTransactionCount = entity.totalTransactionCount,
+            shippingAddress = entity.shippingAddress,
         )
     }
 }

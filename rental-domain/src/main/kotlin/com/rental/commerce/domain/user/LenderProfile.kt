@@ -44,4 +44,12 @@ class LenderProfile(
     fun verify() {
         this.verificationStatus = VerificationStatus.VERIFIED
     }
+
+    fun updateProfile(
+        settlementAccountBank: String?,
+        settlementAccountNumber: String?,
+    ) {
+        settlementAccountBank?.let { this.settlementAccountBank = it }
+        settlementAccountNumber?.let { this.settlementAccountNumber = it }
+    }
 }
