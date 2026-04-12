@@ -1,5 +1,6 @@
 package com.rental.commerce.presentation.api.auth
 
+import com.rental.commerce.application.auth.SocialLoginUseCase
 import com.rental.commerce.application.user.AuthTokenResponse
 import com.rental.commerce.application.user.RegisterUserResponse
 import com.rental.commerce.application.user.RegisterUserUseCase
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuthApiController(
     private val registerUserUseCase: RegisterUserUseCase,
     private val verifyPhoneAndCompleteSignupUseCase: VerifyPhoneAndCompleteSignupUseCase,
+    private val socialLoginUseCase: SocialLoginUseCase,
 ) {
 
     @PostMapping("/signup")
@@ -31,6 +33,14 @@ class AuthApiController(
         @Valid @RequestBody request: VerifyPhoneRequest,
     ): ResponseEntity<AuthTokenResponse> {
         val response = verifyPhoneAndCompleteSignupUseCase.execute(request.toCommand())
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/social-login")
+    fun socialLogin(
+        @Valid @RequestBody request: SocialLoginRequest,
+    ): ResponseEntity<AuthTokenResponse> {
+        val response = socialLoginUseCase.execute(request.toCommand())
         return ResponseEntity.ok(response)
     }
 }

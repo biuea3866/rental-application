@@ -33,6 +33,7 @@ enum class ErrorCode(
     RENTER_PROFILE_NOT_FOUND(404, "RENTER_PROFILE_NOT_FOUND", "대여자 프로필을 찾을 수 없습니다"),
 
     // 409
+    SOCIAL_ACCOUNT_ALREADY_LINKED(409, "SOCIAL_ACCOUNT_ALREADY_LINKED", "이미 소셜 계정이 연결되어 있습니다"),
     CONFLICT(409, "CONFLICT", "이미 존재하는 리소스입니다"),
     DUPLICATE_EMAIL(409, "DUPLICATE_EMAIL", "이미 가입된 이메일입니다"),
     DUPLICATE_PHONE(409, "DUPLICATE_PHONE", "이미 등록된 전화번호입니다"),
