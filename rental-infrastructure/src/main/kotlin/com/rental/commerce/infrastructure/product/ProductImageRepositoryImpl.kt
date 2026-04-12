@@ -23,6 +23,15 @@ class ProductImageRepositoryImpl(
             .fetch()
     }
 
+    override fun findByProductIdIn(productIds: List<Long>): List<ProductImage> {
+        if (productIds.isEmpty()) return emptyList()
+        return queryFactory
+            .selectFrom(productImage)
+            .where(productImage.productId.`in`(productIds))
+            .orderBy(productImage.sortOrder.asc())
+            .fetch()
+    }
+
     override fun saveAll(images: List<ProductImage>): List<ProductImage> {
         return productImageJpaRepository.saveAll(images)
     }

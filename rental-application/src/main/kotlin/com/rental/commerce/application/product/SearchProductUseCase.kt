@@ -14,11 +14,28 @@ class SearchProductUseCase(
 ) {
 
     @Transactional(readOnly = true)
-    fun execute(condition: ProductSearchCondition): Page<ProductSummaryResponse> {
+    fun execute(command: SearchProductCommand): Page<ProductSummaryResponse> {
+        val condition = ProductSearchCondition(
+            keyword = command.keyword,
+            categoryCode = command.categoryCode,
+            status = command.status,
+            minPrice = command.minPrice,
+            maxPrice = command.maxPrice,
+            rentalUnit = command.rentalUnit,
+            page = command.page,
+            size = command.size,
+            sortBy = command.sortBy,
+            sortDirection = command.sortDirection,
+        )
+
         val productPage = productRepository.search(condition)
 
+        val productIds = productPage.content.map { it.productId }
+        val imagesByProductId = productImageRepository.findByProductIdIn(productIds)
+            .groupBy { it.productId }
+
         return productPage.map { product ->
-            val images = productImageRepository.findByProductId(product.productId)
+            val images = imagesByProductId[product.productId] ?: emptyList()
             ProductSummaryResponse.from(product, images)
         }
     }

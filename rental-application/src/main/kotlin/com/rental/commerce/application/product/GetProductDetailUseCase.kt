@@ -6,7 +6,6 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.ProductImageRepository
 import com.rental.commerce.domain.product.ProductPriceRepository
 import com.rental.commerce.domain.product.ProductRepository
-import com.rental.commerce.domain.product.ProductStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,13 +16,6 @@ class GetProductDetailUseCase(
     private val productImageRepository: ProductImageRepository,
 ) {
 
-    companion object {
-        private val PUBLICLY_VISIBLE_STATUSES = setOf(
-            ProductStatus.AVAILABLE,
-            ProductStatus.RENTED,
-        )
-    }
-
     @Transactional(readOnly = true)
     fun execute(productId: Long, requestUserId: Long?): ProductDetailResponse {
         val product = productRepository.findById(productId)
@@ -33,9 +25,8 @@ class GetProductDetailUseCase(
             )
 
         val isOwner = requestUserId != null && product.userId == requestUserId
-        val isPubliclyVisible = product.status in PUBLICLY_VISIBLE_STATUSES
 
-        if (!isPubliclyVisible && !isOwner) {
+        if (!product.isPubliclyVisible() && !isOwner) {
             throw BusinessException(
                 errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
                 message = "해당 상품에 접근할 권한이 없습니다 (productId=$productId)",

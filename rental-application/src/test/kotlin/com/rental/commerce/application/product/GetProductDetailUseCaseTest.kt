@@ -94,7 +94,7 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
             val result = useCase.execute(productId = 1L, requestUserId = null)
 
             Then("상품 기본 정보가 반환된다") {
-                result.productId shouldBe 1L
+                result.id shouldBe 1L
                 result.name shouldBe "맥북 프로"
                 result.description shouldBe "최신형 맥북 프로입니다"
                 result.categoryCode shouldBe "ELECTRONICS"
@@ -137,7 +137,7 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
             val result = useCase.execute(productId = 2L, requestUserId = null)
 
             Then("정상적으로 조회된다") {
-                result.productId shouldBe 2L
+                result.id shouldBe 2L
                 result.status shouldBe ProductStatus.RENTED
             }
         }
@@ -160,7 +160,7 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
             val result = useCase.execute(productId = 3L, requestUserId = 100L)
 
             Then("소유자는 정상적으로 조회할 수 있다") {
-                result.productId shouldBe 3L
+                result.id shouldBe 3L
                 result.status shouldBe ProductStatus.DRAFT
             }
         }
@@ -225,7 +225,7 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
             val result = useCase.execute(productId = 6L, requestUserId = 100L)
 
             Then("소유자는 정상적으로 조회할 수 있다") {
-                result.productId shouldBe 6L
+                result.id shouldBe 6L
                 result.status shouldBe ProductStatus.UNDER_REVIEW
             }
         }

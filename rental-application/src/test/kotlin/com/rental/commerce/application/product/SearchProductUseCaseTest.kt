@@ -28,7 +28,7 @@ class SearchProductUseCaseTest : BehaviorSpec({
     Given("상품 검색을 요청할 때") {
 
         When("키워드 없이 기본 조건으로 검색하면") {
-            val condition = ProductSearchCondition()
+            val command = SearchProductCommand()
 
             val products = listOf(
                 Product(
@@ -51,8 +51,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 2L)
 
-            every { productRepository.search(condition) } returns page
-            every { productImageRepository.findByProductId(1L) } returns listOf(
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(listOf(1L, 2L)) } returns listOf(
                 ProductImage(
                     productImageId = 100L,
                     productId = 1L,
@@ -61,17 +61,16 @@ class SearchProductUseCaseTest : BehaviorSpec({
                     sortOrder = 1,
                 ),
             )
-            every { productImageRepository.findByProductId(2L) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
-            Then("AVAILABLE 상태의 상품 목록이 반환된다") {
+            Then("상품 목록이 반환된다") {
                 result.totalElements shouldBe 2L
                 result.content shouldHaveSize 2
             }
 
             Then("각 상품의 요약 정보가 포함된다") {
-                result.content[0].productId shouldBe 1L
+                result.content[0].id shouldBe 1L
                 result.content[0].name shouldBe "맥북 프로"
                 result.content[0].categoryCode shouldBe "ELECTRONICS"
                 result.content[0].status shouldBe ProductStatus.AVAILABLE
@@ -85,7 +84,7 @@ class SearchProductUseCaseTest : BehaviorSpec({
         }
 
         When("키워드로 검색하면") {
-            val condition = ProductSearchCondition(keyword = "맥북")
+            val command = SearchProductCommand(keyword = "맥북")
 
             val products = listOf(
                 Product(
@@ -100,10 +99,10 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(condition) } returns page
-            every { productImageRepository.findByProductId(1L) } returns emptyList()
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(listOf(1L)) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
             Then("키워드에 매칭되는 상품만 반환된다") {
                 result.totalElements shouldBe 1L
@@ -113,7 +112,7 @@ class SearchProductUseCaseTest : BehaviorSpec({
         }
 
         When("카테고리 코드로 필터링하면") {
-            val condition = ProductSearchCondition(categoryCode = "FASHION")
+            val command = SearchProductCommand(categoryCode = "FASHION")
 
             val products = listOf(
                 Product(
@@ -128,10 +127,10 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(condition) } returns page
-            every { productImageRepository.findByProductId(3L) } returns emptyList()
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(listOf(3L)) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
             Then("해당 카테고리의 상품만 반환된다") {
                 result.totalElements shouldBe 1L
@@ -140,13 +139,14 @@ class SearchProductUseCaseTest : BehaviorSpec({
         }
 
         When("검색 결과가 없으면") {
-            val condition = ProductSearchCondition(keyword = "존재하지않는상품")
+            val command = SearchProductCommand(keyword = "존재하지않는상품")
 
             val page = PageImpl<Product>(emptyList(), PageRequest.of(0, 20), 0L)
 
-            every { productRepository.search(condition) } returns page
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
             Then("빈 페이지가 반환된다") {
                 result.totalElements shouldBe 0L
@@ -155,13 +155,14 @@ class SearchProductUseCaseTest : BehaviorSpec({
         }
 
         When("페이지네이션을 적용하면") {
-            val condition = ProductSearchCondition(page = 1, size = 10)
+            val command = SearchProductCommand(page = 1, size = 10)
 
             val page = PageImpl<Product>(emptyList(), PageRequest.of(1, 10), 30L)
 
-            every { productRepository.search(condition) } returns page
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
             Then("요청한 페이지 정보가 반영된다") {
                 result.totalElements shouldBe 30L
@@ -171,7 +172,7 @@ class SearchProductUseCaseTest : BehaviorSpec({
         }
 
         When("가격 범위로 필터링하면") {
-            val condition = ProductSearchCondition(
+            val command = SearchProductCommand(
                 minPrice = 10000L,
                 maxPrice = 50000L,
                 rentalUnit = RentalUnit.DAILY,
@@ -190,10 +191,10 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(condition) } returns page
-            every { productImageRepository.findByProductId(4L) } returns emptyList()
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(listOf(4L)) } returns emptyList()
 
-            val result = useCase.execute(condition)
+            val result = useCase.execute(command)
 
             Then("가격 범위에 맞는 상품만 반환된다") {
                 result.totalElements shouldBe 1L
@@ -201,7 +202,7 @@ class SearchProductUseCaseTest : BehaviorSpec({
             }
 
             Then("productRepository.search가 조건과 함께 호출된다") {
-                verify { productRepository.search(condition) }
+                verify { productRepository.search(any<ProductSearchCondition>()) }
             }
         }
     }

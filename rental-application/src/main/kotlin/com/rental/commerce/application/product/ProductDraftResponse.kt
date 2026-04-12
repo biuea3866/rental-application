@@ -4,7 +4,7 @@ import com.rental.commerce.domain.product.Product
 import com.rental.commerce.domain.product.ProductStatus
 
 data class ProductDraftResponse(
-    val productId: Long,
+    val id: Long,
     val status: ProductStatus,
     val currentDraftStep: Int?,
     val name: String?,
@@ -12,7 +12,7 @@ data class ProductDraftResponse(
 ) {
     companion object {
         fun from(product: Product): ProductDraftResponse = ProductDraftResponse(
-            productId = product.productId,
+            id = product.productId,
             status = product.status,
             currentDraftStep = product.currentDraftStep,
             name = product.name,

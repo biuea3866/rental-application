@@ -9,7 +9,7 @@ import com.rental.commerce.domain.product.RentalUnit
 import java.time.ZonedDateTime
 
 data class ProductDetailResponse(
-    val productId: Long,
+    val id: Long,
     val userId: Long,
     val name: String?,
     val description: String?,
@@ -24,13 +24,13 @@ data class ProductDetailResponse(
 ) {
 
     data class PriceResponse(
-        val productPriceId: Long,
+        val id: Long,
         val rentalUnit: RentalUnit,
         val priceAmount: Long,
     ) {
         companion object {
             fun from(productPrice: ProductPrice): PriceResponse = PriceResponse(
-                productPriceId = productPrice.productPriceId,
+                id = productPrice.productPriceId,
                 rentalUnit = productPrice.rentalUnit,
                 priceAmount = productPrice.priceAmount,
             )
@@ -38,14 +38,14 @@ data class ProductDetailResponse(
     }
 
     data class ImageResponse(
-        val productImageId: Long,
+        val id: Long,
         val objectKey: String,
         val originalFilename: String,
         val sortOrder: Short,
     ) {
         companion object {
             fun from(productImage: ProductImage): ImageResponse = ImageResponse(
-                productImageId = productImage.productImageId,
+                id = productImage.productImageId,
                 objectKey = productImage.objectKey,
                 originalFilename = productImage.originalFilename,
                 sortOrder = productImage.sortOrder,
@@ -59,7 +59,7 @@ data class ProductDetailResponse(
             prices: List<ProductPrice>,
             images: List<ProductImage>,
         ): ProductDetailResponse = ProductDetailResponse(
-            productId = product.productId,
+            id = product.productId,
             userId = product.userId,
             name = product.name,
             description = product.description,

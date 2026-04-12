@@ -6,7 +6,7 @@ import com.rental.commerce.domain.product.ProductStatus
 import java.time.ZonedDateTime
 
 data class ProductSummaryResponse(
-    val productId: Long,
+    val id: Long,
     val name: String?,
     val categoryCode: String?,
     val status: ProductStatus,
@@ -22,7 +22,7 @@ data class ProductSummaryResponse(
                 ?.objectKey
 
             return ProductSummaryResponse(
-                productId = product.productId,
+                id = product.productId,
                 name = product.name,
                 categoryCode = product.categoryCode,
                 status = product.status,

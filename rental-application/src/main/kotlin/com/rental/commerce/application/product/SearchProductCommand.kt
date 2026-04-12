@@ -1,17 +1,11 @@
-package com.rental.commerce.domain.product
+package com.rental.commerce.application.product
 
-enum class ProductSortBy {
-    CREATED_AT,
-    NAME,
-    DEPOSIT_AMOUNT,
-}
+import com.rental.commerce.domain.product.ProductSortBy
+import com.rental.commerce.domain.product.ProductStatus
+import com.rental.commerce.domain.product.RentalUnit
+import com.rental.commerce.domain.product.SortDirection
 
-enum class SortDirection {
-    ASC,
-    DESC,
-}
-
-data class ProductSearchCondition(
+data class SearchProductCommand(
     val keyword: String? = null,
     val categoryCode: String? = null,
     val status: ProductStatus? = null,

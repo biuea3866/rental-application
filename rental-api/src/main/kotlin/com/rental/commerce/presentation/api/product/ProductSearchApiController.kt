@@ -3,10 +3,12 @@ package com.rental.commerce.presentation.api.product
 import com.rental.commerce.application.product.GetProductDetailUseCase
 import com.rental.commerce.application.product.ProductDetailResponse
 import com.rental.commerce.application.product.ProductSummaryResponse
+import com.rental.commerce.application.product.SearchProductCommand
 import com.rental.commerce.application.product.SearchProductUseCase
-import com.rental.commerce.domain.product.ProductSearchCondition
+import com.rental.commerce.domain.product.ProductSortBy
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
+import com.rental.commerce.domain.product.SortDirection
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -33,10 +35,10 @@ class ProductSearchApiController(
         @RequestParam(required = false) rentalUnit: RentalUnit?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-        @RequestParam(defaultValue = "createdAt") sortBy: String,
-        @RequestParam(defaultValue = "DESC") sortDirection: String,
+        @RequestParam(defaultValue = "CREATED_AT") sortBy: ProductSortBy,
+        @RequestParam(defaultValue = "DESC") sortDirection: SortDirection,
     ): ResponseEntity<Page<ProductSummaryResponse>> {
-        val condition = ProductSearchCondition(
+        val command = SearchProductCommand(
             keyword = keyword,
             categoryCode = category,
             status = status ?: ProductStatus.AVAILABLE,
@@ -49,7 +51,7 @@ class ProductSearchApiController(
             sortDirection = sortDirection,
         )
 
-        val result = searchProductUseCase.execute(condition)
+        val result = searchProductUseCase.execute(command)
         return ResponseEntity.ok(result)
     }
 
