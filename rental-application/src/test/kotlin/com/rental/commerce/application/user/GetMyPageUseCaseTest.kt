@@ -2,13 +2,11 @@ package com.rental.commerce.application.user
 
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.user.LenderProfile
-import com.rental.commerce.domain.user.LenderProfileRepository
 import com.rental.commerce.domain.user.LenderType
 import com.rental.commerce.domain.user.RenterProfile
-import com.rental.commerce.domain.user.RenterProfileRepository
 import com.rental.commerce.domain.user.TrustGrade
 import com.rental.commerce.domain.user.User
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole
 import com.rental.commerce.domain.user.VerificationStatus
 import io.kotest.assertions.throwables.shouldThrow
@@ -20,14 +18,8 @@ import io.mockk.mockk
 
 class GetMyPageUseCaseTest : BehaviorSpec({
 
-    val userRepository = mockk<UserRepository>()
-    val lenderProfileRepository = mockk<LenderProfileRepository>()
-    val renterProfileRepository = mockk<RenterProfileRepository>()
-    val useCase = GetMyPageUseCase(
-        userRepository = userRepository,
-        lenderProfileRepository = lenderProfileRepository,
-        renterProfileRepository = renterProfileRepository,
-    )
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = GetMyPageUseCase(userDomainService)
 
     Given("마이페이지 조회 시") {
 
@@ -57,9 +49,9 @@ class GetMyPageUseCaseTest : BehaviorSpec({
                 shippingAddress = "서울시 강남구",
             )
 
-            every { userRepository.findById(userId) } returns user
-            every { lenderProfileRepository.findByUserId(userId) } returns lenderProfile
-            every { renterProfileRepository.findByUserId(userId) } returns renterProfile
+            every { userDomainService.findById(userId) } returns user
+            every { userDomainService.findLenderProfileByUserId(userId) } returns lenderProfile
+            every { userDomainService.findRenterProfileByUserId(userId) } returns renterProfile
 
             val result = useCase.execute(userId)
 
@@ -99,9 +91,9 @@ class GetMyPageUseCaseTest : BehaviorSpec({
                 totalTransactionCount = 0,
             )
 
-            every { userRepository.findById(userId) } returns user
-            every { lenderProfileRepository.findByUserId(userId) } returns null
-            every { renterProfileRepository.findByUserId(userId) } returns renterProfile
+            every { userDomainService.findById(userId) } returns user
+            every { userDomainService.findLenderProfileByUserId(userId) } returns null
+            every { userDomainService.findRenterProfileByUserId(userId) } returns renterProfile
 
             val result = useCase.execute(userId)
 
@@ -117,7 +109,9 @@ class GetMyPageUseCaseTest : BehaviorSpec({
         When("존재하지 않는 사용자로 조회하면") {
             val userId = 999L
 
-            every { userRepository.findById(userId) } returns null
+            every { userDomainService.findById(userId) } throws ResourceNotFoundException(
+                com.rental.commerce.domain.common.ErrorCode.USER_NOT_FOUND
+            )
 
             Then("ResourceNotFoundException이 발생한다") {
                 shouldThrow<ResourceNotFoundException> {

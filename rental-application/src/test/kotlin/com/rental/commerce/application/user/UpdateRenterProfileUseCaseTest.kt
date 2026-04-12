@@ -1,9 +1,10 @@
 package com.rental.commerce.application.user
 
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.user.RenterProfile
-import com.rental.commerce.domain.user.RenterProfileRepository
 import com.rental.commerce.domain.user.TrustGrade
+import com.rental.commerce.domain.user.UserDomainService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -12,8 +13,8 @@ import io.mockk.mockk
 
 class UpdateRenterProfileUseCaseTest : BehaviorSpec({
 
-    val renterProfileRepository = mockk<RenterProfileRepository>()
-    val useCase = UpdateRenterProfileUseCase(renterProfileRepository)
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = UpdateRenterProfileUseCase(userDomainService)
 
     Given("임차인 프로필 수정 시") {
 
@@ -31,7 +32,7 @@ class UpdateRenterProfileUseCaseTest : BehaviorSpec({
                 shippingAddress = "서울시 서초구",
             )
 
-            every { renterProfileRepository.findByUserId(userId) } returns profile
+            every { userDomainService.findRenterProfileByUserId(userId) } returns profile
 
             val result = useCase.execute(command)
 
@@ -54,7 +55,7 @@ class UpdateRenterProfileUseCaseTest : BehaviorSpec({
                 shippingAddress = null,
             )
 
-            every { renterProfileRepository.findByUserId(userId) } returns profile
+            every { userDomainService.findRenterProfileByUserId(userId) } returns profile
 
             val result = useCase.execute(command)
 
@@ -69,7 +70,7 @@ class UpdateRenterProfileUseCaseTest : BehaviorSpec({
                 shippingAddress = "서울시 서초구",
             )
 
-            every { renterProfileRepository.findByUserId(999L) } returns null
+            every { userDomainService.findRenterProfileByUserId(999L) } returns null
 
             Then("ResourceNotFoundException이 발생한다") {
                 shouldThrow<ResourceNotFoundException> {

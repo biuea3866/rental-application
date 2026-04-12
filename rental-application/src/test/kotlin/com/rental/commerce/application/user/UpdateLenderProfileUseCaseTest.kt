@@ -1,9 +1,10 @@
 package com.rental.commerce.application.user
 
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.user.LenderProfile
-import com.rental.commerce.domain.user.LenderProfileRepository
 import com.rental.commerce.domain.user.LenderType
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.VerificationStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -13,8 +14,8 @@ import io.mockk.mockk
 
 class UpdateLenderProfileUseCaseTest : BehaviorSpec({
 
-    val lenderProfileRepository = mockk<LenderProfileRepository>()
-    val useCase = UpdateLenderProfileUseCase(lenderProfileRepository)
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = UpdateLenderProfileUseCase(userDomainService)
 
     Given("대여자 프로필 수정 시") {
 
@@ -34,7 +35,7 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
                 settlementAccountNumber = "999-888-777666",
             )
 
-            every { lenderProfileRepository.findByUserId(userId) } returns profile
+            every { userDomainService.findLenderProfileByUserId(userId) } returns profile
 
             val result = useCase.execute(command)
 
@@ -63,7 +64,7 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
                 settlementAccountNumber = null,
             )
 
-            every { lenderProfileRepository.findByUserId(userId) } returns profile
+            every { userDomainService.findLenderProfileByUserId(userId) } returns profile
 
             val result = useCase.execute(command)
 
@@ -80,7 +81,7 @@ class UpdateLenderProfileUseCaseTest : BehaviorSpec({
                 settlementAccountNumber = null,
             )
 
-            every { lenderProfileRepository.findByUserId(999L) } returns null
+            every { userDomainService.findLenderProfileByUserId(999L) } returns null
 
             Then("ResourceNotFoundException이 발생한다") {
                 shouldThrow<ResourceNotFoundException> {

@@ -1,8 +1,9 @@
 package com.rental.commerce.application.user
 
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.user.User
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -12,8 +13,8 @@ import io.mockk.mockk
 
 class UpdateUserProfileUseCaseTest : BehaviorSpec({
 
-    val userRepository = mockk<UserRepository>()
-    val useCase = UpdateUserProfileUseCase(userRepository)
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = UpdateUserProfileUseCase(userDomainService)
 
     Given("사용자 기본 정보 수정 시") {
 
@@ -33,7 +34,7 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
                 phone = "010-9999-8888",
             )
 
-            every { userRepository.findById(userId) } returns user
+            every { userDomainService.findById(userId) } returns user
 
             useCase.execute(command)
 
@@ -62,7 +63,7 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
                 phone = null,
             )
 
-            every { userRepository.findById(userId) } returns user
+            every { userDomainService.findById(userId) } returns user
 
             useCase.execute(command)
 
@@ -79,7 +80,7 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
                 phone = null,
             )
 
-            every { userRepository.findById(999L) } returns null
+            every { userDomainService.findById(999L) } throws ResourceNotFoundException(ErrorCode.USER_NOT_FOUND)
 
             Then("ResourceNotFoundException이 발생한다") {
                 shouldThrow<ResourceNotFoundException> {

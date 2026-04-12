@@ -1,27 +1,19 @@
 package com.rental.commerce.application.user
 
-import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.ResourceNotFoundException
-import com.rental.commerce.domain.user.LenderProfileRepository
-import com.rental.commerce.domain.user.RenterProfileRepository
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GetMyPageUseCase(
-    private val userRepository: UserRepository,
-    private val lenderProfileRepository: LenderProfileRepository,
-    private val renterProfileRepository: RenterProfileRepository,
+    private val userDomainService: UserDomainService,
 ) {
 
     @Transactional(readOnly = true)
     fun execute(userId: Long): MyPageResponse {
-        val user = userRepository.findById(userId)
-            ?: throw ResourceNotFoundException(ErrorCode.USER_NOT_FOUND)
-
-        val lenderProfile = lenderProfileRepository.findByUserId(userId)
-        val renterProfile = renterProfileRepository.findByUserId(userId)
+        val user = userDomainService.findById(userId)
+        val lenderProfile = userDomainService.findLenderProfileByUserId(userId)
+        val renterProfile = userDomainService.findRenterProfileByUserId(userId)
 
         return MyPageResponse.from(
             user = user,

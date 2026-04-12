@@ -1,20 +1,17 @@
 package com.rental.commerce.application.user
 
-import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.ResourceNotFoundException
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UpdateUserProfileUseCase(
-    private val userRepository: UserRepository,
+    private val userDomainService: UserDomainService,
 ) {
 
     @Transactional
     fun execute(command: UpdateUserProfileCommand) {
-        val user = userRepository.findById(command.userId)
-            ?: throw ResourceNotFoundException(ErrorCode.USER_NOT_FOUND)
+        val user = userDomainService.findById(command.userId)
 
         user.updateProfile(
             name = command.name,
