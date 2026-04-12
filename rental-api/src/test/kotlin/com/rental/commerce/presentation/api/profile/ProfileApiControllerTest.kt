@@ -9,13 +9,11 @@ import com.rental.commerce.application.user.GetLenderProfileUseCase
 import com.rental.commerce.application.user.GetRenterProfileUseCase
 import com.rental.commerce.application.user.LenderProfileResponse
 import com.rental.commerce.application.user.RenterProfileResponse
+import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
@@ -33,26 +31,15 @@ class ProfileApiControllerTest : BehaviorSpec({
         getLenderProfileUseCase,
         getRenterProfileUseCase,
     )
-    val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
+    val mockMvc: MockMvc = MockMvcBuilders
+        .standaloneSetup(controller)
+        .setCustomArgumentResolvers(MemberIdArgumentResolver())
+        .build()
     val objectMapper = ObjectMapper()
-
-    fun setSecurityContext() {
-        val authentication = UsernamePasswordAuthenticationToken(
-            1L,
-            null,
-            listOf(SimpleGrantedAuthority("ROLE_RENTER")),
-        )
-        SecurityContextHolder.getContext().authentication = authentication
-    }
-
-    afterEach {
-        SecurityContextHolder.clearContext()
-    }
 
     Given("POST /api/v1/users/me/lender-profile") {
 
         When("유효한 요청으로 대여자 프로필을 생성하면") {
-            setSecurityContext()
             val request = CreateLenderProfileRequest(lenderType = "INDIVIDUAL")
             val response = LenderProfileResponse(
                 lenderProfileId = 1L,
@@ -68,6 +55,7 @@ class ProfileApiControllerTest : BehaviorSpec({
             val result = mockMvc.post("/api/v1/users/me/lender-profile") {
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(request)
+                requestAttr("X-Member-Id", 1L)
             }
 
             Then("201 Created가 반환된다") {
@@ -89,7 +77,6 @@ class ProfileApiControllerTest : BehaviorSpec({
     Given("POST /api/v1/users/me/renter-profile") {
 
         When("유효한 요청으로 임차인 프로필을 생성하면") {
-            setSecurityContext()
             val response = RenterProfileResponse(
                 renterProfileId = 1L,
                 userId = 1L,
@@ -101,6 +88,7 @@ class ProfileApiControllerTest : BehaviorSpec({
 
             val result = mockMvc.post("/api/v1/users/me/renter-profile") {
                 contentType = MediaType.APPLICATION_JSON
+                requestAttr("X-Member-Id", 1L)
             }
 
             Then("201 Created가 반환된다") {
@@ -122,7 +110,6 @@ class ProfileApiControllerTest : BehaviorSpec({
     Given("GET /api/v1/users/me/lender-profile") {
 
         When("대여자 프로필을 조회하면") {
-            setSecurityContext()
             val response = LenderProfileResponse(
                 lenderProfileId = 1L,
                 userId = 1L,
@@ -136,6 +123,7 @@ class ProfileApiControllerTest : BehaviorSpec({
 
             val result = mockMvc.get("/api/v1/users/me/lender-profile") {
                 accept = MediaType.APPLICATION_JSON
+                requestAttr("X-Member-Id", 1L)
             }
 
             Then("200 OK가 반환된다") {
@@ -158,7 +146,6 @@ class ProfileApiControllerTest : BehaviorSpec({
     Given("GET /api/v1/users/me/renter-profile") {
 
         When("임차인 프로필을 조회하면") {
-            setSecurityContext()
             val response = RenterProfileResponse(
                 renterProfileId = 1L,
                 userId = 1L,
@@ -170,6 +157,7 @@ class ProfileApiControllerTest : BehaviorSpec({
 
             val result = mockMvc.get("/api/v1/users/me/renter-profile") {
                 accept = MediaType.APPLICATION_JSON
+                requestAttr("X-Member-Id", 1L)
             }
 
             Then("200 OK가 반환된다") {
