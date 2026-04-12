@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useAuthStore } from "@/stores/auth-store";
 import { clearTokens } from "@/lib/auth/token";

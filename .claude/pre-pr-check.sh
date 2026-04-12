@@ -84,12 +84,24 @@ fi
 
 # 6. UseCase에서 Repository 직접 호출 검사
 echo ""
-echo "[6/6] UseCase → Repository 직접 호출 검사..."
+echo "[6/7] UseCase → Repository 직접 호출 검사..."
 REPO_IN_UC=$(git diff dev --name-only -- '*UseCase*.kt' | grep -v build | grep -v Test | xargs grep -l 'Repository' 2>/dev/null || true)
 if [ -n "$REPO_IN_UC" ]; then
     echo "  ⚠️  WARN: UseCase에서 Repository 직접 참조 — DomainService 경유 권장"
     echo "$REPO_IN_UC" | while read f; do echo "    - $f"; done
     # WARNING only, not blocking for now (gradual migration)
+else
+    echo "  ✅ PASS"
+fi
+
+# 7. @Transactional이 RepositoryImpl에 있는지 검사
+echo ""
+echo "[7/7] @Transactional 위치 검사..."
+TXNAL_FILES=$(git diff dev --name-only -- '*RepositoryImpl*.kt' '*Impl*.kt' | grep -v build | xargs grep -l '@Transactional' 2>/dev/null || true)
+if [ -n "$TXNAL_FILES" ]; then
+    echo "  ❌ FAIL: @Transactional이 Infrastructure 레이어에 있음 — UseCase/DomainService로 이동"
+    echo "$TXNAL_FILES" | while read f; do echo "    - $f"; done
+    ERRORS=$((ERRORS + 1))
 else
     echo "  ✅ PASS"
 fi
