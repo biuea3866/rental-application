@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { useAuthStore } from "@/stores/auth-store";
 import type { User, AuthTokens } from "@/lib/api/types";
 

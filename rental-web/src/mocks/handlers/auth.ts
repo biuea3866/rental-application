@@ -15,6 +15,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 let currentUser: User | null = null;
 
+/** 테스트 간 상태 격리를 위한 리셋 함수 */
+export function resetAuthHandlerState(): void {
+  currentUser = null;
+}
+
 export const authHandlers = [
   // 로그인
   http.post(`${BASE_URL}/api/v1/auth/login`, async ({ request }) => {
