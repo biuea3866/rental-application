@@ -46,7 +46,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.KAKAO,
                 socialProviderId = "kakao_123",
-                userId = 1L,
+                id = 1L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "valid_auth_code") } returns "kakao_access_token"
@@ -63,7 +63,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(1L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_abc",
                 tokenFamily = "family_abc",
-                userId = 1L,
+                id = 1L,
             )
 
             val result = useCase.execute(command)
@@ -95,7 +95,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.KAKAO,
                 socialProviderId = "kakao_new_456",
-                userId = 2L,
+                id = 2L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "new_user_auth_code") } returns "new_kakao_token"
@@ -114,7 +114,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(2L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_new",
                 tokenFamily = "family_new",
-                userId = 2L,
+                id = 2L,
             )
 
             val result = useCase.execute(command)
@@ -148,7 +148,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 phone = "01012345678",
                 passwordHash = "hashed_pw",
                 role = UserRole.RENTER,
-                userId = 3L,
+                id = 3L,
             )
 
             val linkedUser = User(
@@ -159,7 +159,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.NAVER,
                 socialProviderId = "naver_789",
-                userId = 3L,
+                id = 3L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.NAVER, "existing_email_code") } returns "naver_token"
@@ -178,7 +178,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             every { refreshTokenService.issueRefreshToken(3L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_linked",
                 tokenFamily = "family_linked",
-                userId = 3L,
+                id = 3L,
             )
 
             val result = useCase.execute(command)
