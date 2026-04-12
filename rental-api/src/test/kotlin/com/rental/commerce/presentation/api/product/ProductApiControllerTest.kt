@@ -5,9 +5,13 @@ import com.rental.commerce.application.product.CreateProductDraftUseCase
 import com.rental.commerce.application.product.GetProductDraftUseCase
 import com.rental.commerce.application.product.ProductDraftDetailResponse
 import com.rental.commerce.application.product.ProductDraftResponse
+import com.rental.commerce.application.product.ProductSubmitResponse
+import com.rental.commerce.application.product.SubmitProductCommand
+import com.rental.commerce.application.product.SubmitProductUseCase
 import com.rental.commerce.application.product.UpdateProductDraftUseCase
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.ProductCondition
 import com.rental.commerce.domain.product.ProductStatus
@@ -31,10 +35,12 @@ class ProductApiControllerTest : BehaviorSpec({
     val createProductDraftUseCase = mockk<CreateProductDraftUseCase>()
     val updateProductDraftUseCase = mockk<UpdateProductDraftUseCase>()
     val getProductDraftUseCase = mockk<GetProductDraftUseCase>()
+    val submitProductUseCase = mockk<SubmitProductUseCase>()
     val controller = ProductApiController(
         createProductDraftUseCase = createProductDraftUseCase,
         updateProductDraftUseCase = updateProductDraftUseCase,
         getProductDraftUseCase = getProductDraftUseCase,
+        submitProductUseCase = submitProductUseCase,
     )
     val mockMvc: MockMvc = MockMvcBuilders
         .standaloneSetup(controller)
@@ -47,7 +53,7 @@ class ProductApiControllerTest : BehaviorSpec({
     }
 
     beforeEach {
-        clearMocks(createProductDraftUseCase, updateProductDraftUseCase, getProductDraftUseCase)
+        clearMocks(createProductDraftUseCase, updateProductDraftUseCase, getProductDraftUseCase, submitProductUseCase)
     }
 
     afterEach {
@@ -310,6 +316,131 @@ class ProductApiControllerTest : BehaviorSpec({
                 result.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("PRODUCT_NOT_FOUND") }
+                }
+            }
+        }
+    }
+
+    Given("POST /api/v1/products/drafts/{productId}/submit") {
+
+        When("정상적인 상품 제출 요청을 보내면") {
+            Then("200 OK와 UNDER_REVIEW 상태의 상품 정보가 반환된다") {
+                setAuthentication()
+
+                val response = ProductSubmitResponse(
+                    productId = 1L,
+                    status = ProductStatus.UNDER_REVIEW,
+                    name = "맥북 프로 16인치",
+                    description = "2024년형 M3 Max",
+                    categoryCode = "ELECTRONICS",
+                    condition = ProductCondition.LIKE_NEW,
+                    depositAmount = 500000L,
+                )
+
+                every {
+                    submitProductUseCase.execute(
+                        SubmitProductCommand(userId = 1L, productId = 1L)
+                    )
+                } returns response
+
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+
+                result.andExpect {
+                    status { isOk() }
+                    jsonPath("$.productId") { value(1) }
+                    jsonPath("$.status") { value("UNDER_REVIEW") }
+                    jsonPath("$.name") { value("맥북 프로 16인치") }
+                    jsonPath("$.description") { value("2024년형 M3 Max") }
+                    jsonPath("$.categoryCode") { value("ELECTRONICS") }
+                    jsonPath("$.condition") { value("LIKE_NEW") }
+                    jsonPath("$.depositAmount") { value(500000) }
+                }
+            }
+        }
+
+        When("존재하지 않는 상품을 제출하면") {
+            Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
+                setAuthentication()
+
+                every {
+                    submitProductUseCase.execute(
+                        SubmitProductCommand(userId = 1L, productId = 999L)
+                    )
+                } throws ResourceNotFoundException(
+                    errorCode = ErrorCode.PRODUCT_NOT_FOUND,
+                    message = "상품을 찾을 수 없습니다 (id=999)",
+                )
+
+                val result = mockMvc.post("/api/v1/products/drafts/999/submit")
+
+                result.andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.code") { value("PRODUCT_NOT_FOUND") }
+                }
+            }
+        }
+
+        When("소유자가 아닌 사용자가 상품을 제출하면") {
+            Then("403 PRODUCT_OWNERSHIP_DENIED 에러가 반환된다") {
+                setAuthentication()
+
+                every {
+                    submitProductUseCase.execute(
+                        SubmitProductCommand(userId = 1L, productId = 1L)
+                    )
+                } throws BusinessException(
+                    errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
+                    message = "해당 상품의 소유자가 아닙니다 (productId=1)",
+                )
+
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+
+                result.andExpect {
+                    status { isForbidden() }
+                    jsonPath("$.code") { value("PRODUCT_OWNERSHIP_DENIED") }
+                }
+            }
+        }
+
+        When("DRAFT가 아닌 상태의 상품을 제출하면") {
+            Then("400 INVALID_STATE_TRANSITION 에러가 반환된다") {
+                setAuthentication()
+
+                every {
+                    submitProductUseCase.execute(
+                        SubmitProductCommand(userId = 1L, productId = 1L)
+                    )
+                } throws InvalidStateTransitionException(
+                    "UNDER_REVIEW에서 UNDER_REVIEW(으)로 전이할 수 없습니다",
+                )
+
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+
+                result.andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("INVALID_STATE_TRANSITION") }
+                }
+            }
+        }
+
+        When("필수 필드가 누락된 상품을 제출하면") {
+            Then("400 INVALID_INPUT 에러가 반환된다") {
+                setAuthentication()
+
+                every {
+                    submitProductUseCase.execute(
+                        SubmitProductCommand(userId = 1L, productId = 1L)
+                    )
+                } throws BusinessException(
+                    errorCode = ErrorCode.INVALID_INPUT,
+                    message = "상품명은 필수입니다",
+                )
+
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+
+                result.andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("INVALID_INPUT") }
                 }
             }
         }
