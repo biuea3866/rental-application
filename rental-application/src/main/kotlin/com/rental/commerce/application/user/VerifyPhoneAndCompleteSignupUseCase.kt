@@ -50,6 +50,7 @@ class VerifyPhoneAndCompleteSignupUseCase(
         return AuthTokenResponse(
             accessToken = accessToken,
             refreshToken = refreshTokenResult.refreshToken,
+            tokenFamily = refreshTokenResult.tokenFamily,
             userId = userId,
         )
     }

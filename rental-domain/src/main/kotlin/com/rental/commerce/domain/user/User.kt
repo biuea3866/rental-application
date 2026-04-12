@@ -1,6 +1,9 @@
 package com.rental.commerce.domain.user
 
 import com.rental.commerce.domain.common.BaseEntity
+import com.rental.commerce.domain.common.PasswordHasher
+import com.rental.commerce.domain.common.UnauthorizedException
+import com.rental.commerce.domain.common.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -59,6 +62,14 @@ class User(
     fun updateProfile(name: String?, phone: String?) {
         name?.let { this.name = it }
         phone?.let { this.phone = it }
+    }
+
+    fun verifyPassword(rawPassword: String, passwordHasher: PasswordHasher) {
+        if (!passwordHasher.matches(rawPassword, passwordHash)) {
+            throw UnauthorizedException(
+                errorCode = ErrorCode.INVALID_PASSWORD,
+            )
+        }
     }
 
     fun isSocialUser(): Boolean = socialProvider != null
