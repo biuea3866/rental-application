@@ -40,21 +40,12 @@ class SubmitProductUseCaseTest : BehaviorSpec({
             every { productRepository.findById(1L) } returns product
             every { productRepository.save(any()) } answers { firstArg() }
 
-            val result = useCase.execute(command)
+            Then("상품 상태가 UNDER_REVIEW로 변경되고 올바른 응답이 반환된다") {
+                val result = useCase.execute(command)
 
-            Then("상품 상태가 UNDER_REVIEW로 변경된다") {
                 result.status shouldBe ProductStatus.UNDER_REVIEW
-            }
-
-            Then("응답에 올바른 productId가 포함된다") {
                 result.productId shouldBe 1L
-            }
-
-            Then("응답에 올바른 상품명이 포함된다") {
                 result.name shouldBe "맥북 프로 16인치"
-            }
-
-            Then("ProductRepository.save가 정확히 한 번 호출된다") {
                 verify(exactly = 1) { productRepository.save(any()) }
             }
         }
@@ -206,6 +197,30 @@ class SubmitProductUseCaseTest : BehaviorSpec({
             val command = SubmitProductCommand(userId = 100L, productId = 7L)
 
             every { productRepository.findById(7L) } returns product
+
+            Then("INVALID_INPUT 예외가 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    useCase.execute(command)
+                }
+                exception.errorCode shouldBe ErrorCode.INVALID_INPUT
+            }
+        }
+
+        When("상품 상태(condition)가 없는 상품을 제출하면") {
+            val product = Product(
+                productId = 8L,
+                userId = 100L,
+                name = "맥북 프로",
+                description = "설명",
+                categoryCode = "ELECTRONICS",
+                condition = null,
+                depositAmount = 500000L,
+                status = ProductStatus.DRAFT,
+            )
+
+            val command = SubmitProductCommand(userId = 100L, productId = 8L)
+
+            every { productRepository.findById(8L) } returns product
 
             Then("INVALID_INPUT 예외가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
