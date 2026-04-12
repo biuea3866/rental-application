@@ -1,26 +1,26 @@
 package com.rental.commerce.application.product
 
+import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.common.ResourceNotFoundException
-import com.rental.commerce.domain.product.Product
-import com.rental.commerce.domain.product.ProductRepository
-import com.rental.commerce.domain.product.ProductStatus
+import com.rental.commerce.domain.product.ProductDomainService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 
 class ApproveProductUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
-    val useCase = ApproveProductUseCase(productRepository)
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = ApproveProductUseCase(productDomainService)
 
     beforeEach {
-        clearMocks(productRepository)
+        clearMocks(productDomainService)
     }
 
     Given("상품 승인 요청을 할 때") {
@@ -29,7 +29,10 @@ class ApproveProductUseCaseTest : BehaviorSpec({
             Then("PRODUCT_NOT_FOUND 에러가 발생한다") {
                 val command = ApproveProductCommand(productId = 999L)
 
-                every { productRepository.findById(999L) } returns null
+                every { productDomainService.approve(999L) } throws ResourceNotFoundException(
+                    errorCode = ErrorCode.PRODUCT_NOT_FOUND,
+                    message = "상품을 찾을 수 없습니다 (id=999)",
+                )
 
                 val exception = shouldThrow<ResourceNotFoundException> {
                     useCase.execute(command)
@@ -40,17 +43,14 @@ class ApproveProductUseCaseTest : BehaviorSpec({
 
         When("UNDER_REVIEW 상태가 아닌 상품을 승인하려고 하면") {
             Then("PRODUCT_NOT_UNDER_REVIEW 에러가 발생한다") {
-                val product = Product(
-                    productId = 1L,
-                    userId = 1L,
-                    status = ProductStatus.DRAFT,
-                )
-
                 val command = ApproveProductCommand(productId = 1L)
 
-                every { productRepository.findById(1L) } returns product
+                every { productDomainService.approve(1L) } throws BusinessException(
+                    errorCode = ErrorCode.PRODUCT_NOT_UNDER_REVIEW,
+                    message = "검수 중인 상품만 승인할 수 있습니다",
+                )
 
-                val exception = shouldThrow<com.rental.commerce.domain.common.BusinessException> {
+                val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_UNDER_REVIEW
@@ -58,47 +58,14 @@ class ApproveProductUseCaseTest : BehaviorSpec({
         }
 
         When("UNDER_REVIEW 상태의 상품을 승인하면") {
-            Then("상품 상태가 APPROVED로 변경되고 저장된다") {
-                val product = Product(
-                    productId = 2L,
-                    userId = 1L,
-                    status = ProductStatus.UNDER_REVIEW,
-                )
-
+            Then("productDomainService.approve()가 호출된다") {
                 val command = ApproveProductCommand(productId = 2L)
 
-                every { productRepository.findById(2L) } returns product
-                every { productRepository.save(any()) } answers { firstArg() }
+                every { productDomainService.approve(2L) } just runs
 
                 useCase.execute(command)
 
-                product.status shouldBe ProductStatus.APPROVED
-                verify(exactly = 1) { productRepository.save(product) }
-            }
-        }
-
-        When("UNDER_REVIEW 상태의 상품을 승인하면 이벤트가 발행된다") {
-            Then("ProductApprovedEvent가 발행된다") {
-                val product = Product(
-                    productId = 3L,
-                    userId = 10L,
-                    status = ProductStatus.UNDER_REVIEW,
-                )
-
-                val command = ApproveProductCommand(productId = 3L)
-
-                every { productRepository.findById(3L) } returns product
-                every { productRepository.save(any()) } answers { firstArg() }
-
-                useCase.execute(command)
-
-                val events = product.pullEvents()
-                events.size shouldBe 1
-                events.first() shouldBe com.rental.commerce.domain.product.event.ProductApprovedEvent(
-                    productId = 3L,
-                    userId = 10L,
-                    occurredAt = events.first().occurredAt,
-                )
+                verify(exactly = 1) { productDomainService.approve(2L) }
             }
         }
     }

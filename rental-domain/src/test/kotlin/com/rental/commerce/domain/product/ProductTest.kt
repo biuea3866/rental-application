@@ -232,10 +232,11 @@ class ProductTest : BehaviorSpec({
         When("UNDER_REVIEW가 아닌 상태에서 approve하면") {
             val product = createDraftProduct()
 
-            Then("InvalidStateTransitionException이 발생한다") {
-                shouldThrow<InvalidStateTransitionException> {
+            Then("BusinessException(PRODUCT_NOT_UNDER_REVIEW)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
                     product.approve()
                 }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_UNDER_REVIEW
             }
         }
     }
@@ -268,10 +269,11 @@ class ProductTest : BehaviorSpec({
         When("UNDER_REVIEW가 아닌 상태에서 reject하면") {
             val product = createDraftProduct()
 
-            Then("InvalidStateTransitionException이 발생한다") {
-                shouldThrow<InvalidStateTransitionException> {
+            Then("BusinessException(PRODUCT_NOT_UNDER_REVIEW)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
                     product.reject("사유")
                 }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_UNDER_REVIEW
             }
         }
     }

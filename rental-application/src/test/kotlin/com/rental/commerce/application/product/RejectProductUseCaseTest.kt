@@ -3,26 +3,24 @@ package com.rental.commerce.application.product
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
-import com.rental.commerce.domain.product.Product
-import com.rental.commerce.domain.product.ProductRepository
-import com.rental.commerce.domain.product.ProductStatus
-import com.rental.commerce.domain.product.event.ProductRejectedEvent
+import com.rental.commerce.domain.product.ProductDomainService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 
 class RejectProductUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
-    val useCase = RejectProductUseCase(productRepository)
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = RejectProductUseCase(productDomainService)
 
     beforeEach {
-        clearMocks(productRepository)
+        clearMocks(productDomainService)
     }
 
     Given("상품 반려 요청을 할 때") {
@@ -31,7 +29,10 @@ class RejectProductUseCaseTest : BehaviorSpec({
             Then("PRODUCT_NOT_FOUND 에러가 발생한다") {
                 val command = RejectProductCommand(productId = 999L, reason = "반려 사유")
 
-                every { productRepository.findById(999L) } returns null
+                every { productDomainService.reject(999L, "반려 사유") } throws ResourceNotFoundException(
+                    errorCode = ErrorCode.PRODUCT_NOT_FOUND,
+                    message = "상품을 찾을 수 없습니다 (id=999)",
+                )
 
                 val exception = shouldThrow<ResourceNotFoundException> {
                     useCase.execute(command)
@@ -42,15 +43,12 @@ class RejectProductUseCaseTest : BehaviorSpec({
 
         When("UNDER_REVIEW 상태가 아닌 상품을 반려하려고 하면") {
             Then("PRODUCT_NOT_UNDER_REVIEW 에러가 발생한다") {
-                val product = Product(
-                    productId = 1L,
-                    userId = 1L,
-                    status = ProductStatus.DRAFT,
-                )
-
                 val command = RejectProductCommand(productId = 1L, reason = "반려 사유")
 
-                every { productRepository.findById(1L) } returns product
+                every { productDomainService.reject(1L, "반려 사유") } throws BusinessException(
+                    errorCode = ErrorCode.PRODUCT_NOT_UNDER_REVIEW,
+                    message = "검수 중인 상품만 반려할 수 있습니다",
+                )
 
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
@@ -60,48 +58,14 @@ class RejectProductUseCaseTest : BehaviorSpec({
         }
 
         When("UNDER_REVIEW 상태의 상품을 반려하면") {
-            Then("상품 상태가 REJECTED로 변경되고 저장된다") {
-                val product = Product(
-                    productId = 2L,
-                    userId = 1L,
-                    status = ProductStatus.UNDER_REVIEW,
-                )
-
+            Then("productDomainService.reject()가 호출된다") {
                 val command = RejectProductCommand(productId = 2L, reason = "상품 설명이 부족합니다")
 
-                every { productRepository.findById(2L) } returns product
-                every { productRepository.save(any()) } answers { firstArg() }
+                every { productDomainService.reject(2L, "상품 설명이 부족합니다") } just runs
 
                 useCase.execute(command)
 
-                product.status shouldBe ProductStatus.REJECTED
-                product.rejectReason shouldBe "상품 설명이 부족합니다"
-                verify(exactly = 1) { productRepository.save(product) }
-            }
-        }
-
-        When("UNDER_REVIEW 상태의 상품을 반려하면 이벤트가 발행된다") {
-            Then("ProductRejectedEvent가 발행되고 반려 사유가 포함된다") {
-                val product = Product(
-                    productId = 3L,
-                    userId = 20L,
-                    status = ProductStatus.UNDER_REVIEW,
-                )
-
-                val command = RejectProductCommand(productId = 3L, reason = "이미지가 불명확합니다")
-
-                every { productRepository.findById(3L) } returns product
-                every { productRepository.save(any()) } answers { firstArg() }
-
-                useCase.execute(command)
-
-                val events = product.pullEvents()
-                events.size shouldBe 1
-                val event = events.first()
-                event.shouldBeInstanceOf<ProductRejectedEvent>()
-                (event as ProductRejectedEvent).reason shouldBe "이미지가 불명확합니다"
-                event.productId shouldBe 3L
-                event.userId shouldBe 20L
+                verify(exactly = 1) { productDomainService.reject(2L, "상품 설명이 부족합니다") }
             }
         }
     }
