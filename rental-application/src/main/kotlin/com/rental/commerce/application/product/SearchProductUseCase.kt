@@ -3,6 +3,7 @@ package com.rental.commerce.application.product
 import com.rental.commerce.domain.product.ProductImageRepository
 import com.rental.commerce.domain.product.ProductRepository
 import com.rental.commerce.domain.product.ProductSearchCondition
+import com.rental.commerce.domain.product.ProductStatus
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,7 +19,7 @@ class SearchProductUseCase(
         val condition = ProductSearchCondition(
             keyword = command.keyword,
             categoryCode = command.categoryCode,
-            status = command.status,
+            status = command.status ?: ProductStatus.AVAILABLE,
             minPrice = command.minPrice,
             maxPrice = command.maxPrice,
             rentalUnit = command.rentalUnit,

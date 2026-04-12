@@ -41,7 +41,7 @@ class ProductSearchApiController(
         val command = SearchProductCommand(
             keyword = keyword,
             categoryCode = category,
-            status = status ?: ProductStatus.AVAILABLE,
+            status = status,
             minPrice = minPrice,
             maxPrice = maxPrice,
             rentalUnit = rentalUnit,

@@ -100,7 +100,7 @@ class ProductSearchApiControllerTest : BehaviorSpec({
                         SearchProductCommand(
                             keyword = null,
                             categoryCode = null,
-                            status = ProductStatus.AVAILABLE,
+                            status = null,
                             minPrice = null,
                             maxPrice = null,
                             rentalUnit = null,
@@ -138,7 +138,7 @@ class ProductSearchApiControllerTest : BehaviorSpec({
                         SearchProductCommand(
                             keyword = "맥북",
                             categoryCode = "ELECTRONICS",
-                            status = ProductStatus.AVAILABLE,
+                            status = null,
                             minPrice = 10000L,
                             maxPrice = 500000L,
                             rentalUnit = RentalUnit.DAILY,

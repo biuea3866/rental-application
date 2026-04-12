@@ -27,6 +27,25 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
     Given("상품 검색을 요청할 때") {
 
+        When("status를 지정하지 않으면") {
+            val command = SearchProductCommand()
+
+            val page = PageImpl<Product>(emptyList(), PageRequest.of(0, 20), 0L)
+
+            every { productRepository.search(any<ProductSearchCondition>()) } returns page
+            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
+
+            useCase.execute(command)
+
+            Then("기본 status는 AVAILABLE로 처리된다") {
+                verify {
+                    productRepository.search(
+                        match { it.status == ProductStatus.AVAILABLE },
+                    )
+                }
+            }
+        }
+
         When("키워드 없이 기본 조건으로 검색하면") {
             val command = SearchProductCommand()
 
