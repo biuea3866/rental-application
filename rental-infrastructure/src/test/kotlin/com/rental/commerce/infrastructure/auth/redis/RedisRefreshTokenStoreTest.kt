@@ -1,7 +1,6 @@
 package com.rental.commerce.infrastructure.auth.redis
 
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
@@ -40,7 +39,7 @@ class RedisRefreshTokenStoreTest : BehaviorSpec({
     }
 
     fun flushRedis() {
-        requireNotNull(redisTemplate.connectionFactory).connection.serverCommands().flushAll()
+        redisTemplate.connectionFactory!!.connection.serverCommands().flushAll()
     }
 
     Given("RefreshToken 저장 및 조회") {
@@ -62,8 +61,8 @@ class RedisRefreshTokenStoreTest : BehaviorSpec({
             Then("동일한 tokenFamily로 조회하면 저장한 데이터가 반환된다") {
                 val result = store.findByTokenFamily(tokenFamily)
 
-                result.shouldNotBeNull()
-                result.userId shouldBe userId
+                result shouldNotBe null
+                result!!.userId shouldBe userId
                 result.refreshToken shouldBe refreshToken
                 result.tokenFamily shouldBe tokenFamily
             }
@@ -211,8 +210,8 @@ class RedisRefreshTokenStoreTest : BehaviorSpec({
 
             Then("최신 refreshToken이 조회된다") {
                 val result = store.findByTokenFamily(tokenFamily)
-                result.shouldNotBeNull()
-                result.refreshToken shouldBe newToken
+                result shouldNotBe null
+                result!!.refreshToken shouldBe newToken
                 result.userId shouldBe userId
             }
         }

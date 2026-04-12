@@ -2,7 +2,6 @@ package com.rental.commerce.infrastructure.auth
 
 import com.rental.commerce.domain.common.ExpiredTokenException
 import com.rental.commerce.domain.common.InvalidTokenException
-import com.rental.commerce.domain.common.TokenProvider
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
@@ -18,7 +17,7 @@ class JwtProvider(
     private val jwtProperties: JwtProperties,
     private val privateKey: PrivateKey,
     private val publicKey: PublicKey,
-) : TokenProvider {
+) {
 
     companion object {
         private const val CLAIM_USER_ID = "userId"
@@ -26,7 +25,7 @@ class JwtProvider(
         private val ZONE_ID = ZoneId.of("Asia/Seoul")
     }
 
-    override fun createAccessToken(userId: Long, role: String): String {
+    fun createAccessToken(userId: Long, role: String): String {
         val now = ZonedDateTime.now(ZONE_ID)
         val expiration = now.plus(jwtProperties.accessTokenExpiry)
 

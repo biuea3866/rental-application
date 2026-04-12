@@ -60,17 +60,16 @@ class UserRepositoryImplTest(
             val savedUser = userRepository.save(user)
 
             Then("저장된 유저의 ID가 생성된다") {
-                savedUser.id shouldNotBe null
-                savedUser.id shouldNotBe 0L
+                savedUser.userId shouldNotBe null
+                savedUser.userId shouldNotBe 0L
             }
 
             Then("ID로 조회할 수 있다") {
-                val found = userRepository.findById(savedUser.requireId())
+                val found = userRepository.findById(savedUser.userId!!)
                 found shouldNotBe null
-                val result = requireNotNull(found)
-                result.email shouldBe "test@example.com"
-                result.name shouldBe "홍길동"
-                result.role shouldBe UserRole.RENTER
+                found!!.email shouldBe "test@example.com"
+                found.name shouldBe "홍길동"
+                found.role shouldBe UserRole.RENTER
             }
         }
 
@@ -90,8 +89,7 @@ class UserRepositoryImplTest(
             Then("해당 유저가 반환된다") {
                 val found = userRepository.findByEmail("findbyemail@example.com")
                 found shouldNotBe null
-                val result = requireNotNull(found)
-                result.email shouldBe "findbyemail@example.com"
+                found!!.email shouldBe "findbyemail@example.com"
             }
         }
 
@@ -118,10 +116,9 @@ class UserRepositoryImplTest(
                     "kakao_99999",
                 )
                 found shouldNotBe null
-                val result = requireNotNull(found)
-                result.email shouldBe "social@example.com"
-                result.socialProvider shouldBe SocialProvider.KAKAO
-                result.socialProviderId shouldBe "kakao_99999"
+                found!!.email shouldBe "social@example.com"
+                found.socialProvider shouldBe SocialProvider.KAKAO
+                found.socialProviderId shouldBe "kakao_99999"
             }
         }
 
@@ -164,10 +161,9 @@ class UserRepositoryImplTest(
             val updatedUser = userRepository.save(savedUser)
 
             Then("역할이 BOTH로 저장된다") {
-                val found = userRepository.findById(updatedUser.requireId())
+                val found = userRepository.findById(updatedUser.userId!!)
                 found shouldNotBe null
-                val result = requireNotNull(found)
-                result.role shouldBe UserRole.BOTH
+                found!!.role shouldBe UserRole.BOTH
             }
         }
     }
