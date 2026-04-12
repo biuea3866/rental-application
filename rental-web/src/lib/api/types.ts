@@ -122,3 +122,89 @@ export interface GuidePriceRange {
   maxPricePerDay: number;
   averagePricePerDay: number;
 }
+
+// ========================================
+// 상품 드래프트 (Draft) 타입
+// ========================================
+
+export type DraftStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+
+export type ProductCondition = "NEW" | "LIKE_NEW" | "GOOD" | "FAIR" | "POOR";
+
+export interface ProductDraft {
+  id: string;
+  title: string;
+  description: string;
+  category: ProductCategory;
+  deposit: number;
+  pricePerDay: number;
+  pricePerWeek?: number;
+  pricePerMonth?: number;
+  imageUrls: string[];
+  condition: ProductCondition;
+  conditionNote: string;
+  location: string;
+  status: DraftStatus;
+  lenderId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDraftRequest {
+  title?: string;
+  description?: string;
+  category?: ProductCategory;
+  deposit?: number;
+  pricePerDay?: number;
+  pricePerWeek?: number;
+  pricePerMonth?: number;
+  imageUrls?: string[];
+  condition?: ProductCondition;
+  conditionNote?: string;
+  location?: string;
+}
+
+export type UpdateDraftRequest = CreateDraftRequest;
+
+// ========================================
+// 이미지 업로드 (Presigned URL) 타입
+// ========================================
+
+export interface PresignedUrlRequest {
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+}
+
+export interface PresignedUrlResponse {
+  presignedUrl: string;
+  fileUrl: string;
+  expiresIn: number;
+}
+
+// ========================================
+// 내 상품 목록 타입
+// ========================================
+
+export type MyProductStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "AVAILABLE"
+  | "RENTED"
+  | "UNAVAILABLE";
+
+export interface MyProduct {
+  id: string;
+  title: string;
+  description: string;
+  category: ProductCategory;
+  pricePerDay: number;
+  deposit: number;
+  imageUrls: string[];
+  status: MyProductStatus;
+  location: string;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -1,0 +1,46 @@
+# =============================================================================
+# ArgoCD AppProject: rental-commerce
+# =============================================================================
+# 프로젝트 단위 RBAC — 허용된 소스/대상만 배포 가능
+# default 프로젝트 대신 전용 프로젝트를 사용하면 보안이 강화됩니다.
+#
+# 설치:
+#   kubectl apply -f deploy/argocd/project.yml
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: rental-commerce
+  namespace: argocd
+spec:
+  description: Rental Commerce 프로젝트 — API 서버 및 관련 인프라
+
+  # 허용된 Git 소스
+  sourceRepos:
+    - https://github.com/biuea3866/rental-application.git
+
+  # 허용된 배포 대상
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: rental-commerce
+    - server: https://kubernetes.default.svc
+      namespace: rental-commerce-dev
+
+  # 배포 가능한 리소스 종류 제한
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: networking.k8s.io
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+
+  # Orphaned 리소스 경고
+  orphanedResources:
+    warn: true
