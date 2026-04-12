@@ -44,21 +44,4 @@ export const ENDPOINTS = {
     BY_ID: (id: string) => `${API_VERSION}/rentals/${id}`,
     MY_RENTALS: `${API_VERSION}/rentals/mine`,
   },
-
-  // 상품 드래프트
-  DRAFTS: {
-    BASE: `${API_VERSION}/products/drafts`,
-    BY_ID: (id: string) => `${API_VERSION}/products/drafts/${id}`,
-    SUBMIT: (id: string) => `${API_VERSION}/products/drafts/${id}/submit`,
-  },
-
-  // 이미지
-  IMAGES: {
-    PRESIGNED_URL: `${API_VERSION}/images/presigned-url`,
-  },
-
-  // 내 상품
-  MY_PRODUCTS: {
-    BASE: `${API_VERSION}/my-products`,
-  },
 } as const;

@@ -1,5 +1,4 @@
 import type { AuthTokens } from "@/lib/api/types";
-import { BASE_URL } from "@/lib/api/client";
 
 // ========================================
 // JWT 토큰 관리
@@ -109,8 +108,11 @@ export async function refreshAccessToken(): Promise<AuthTokens | null> {
 }
 
 async function doRefresh(refreshToken: string): Promise<AuthTokens | null> {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+    const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
