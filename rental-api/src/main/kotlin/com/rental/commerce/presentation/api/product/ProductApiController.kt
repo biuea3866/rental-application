@@ -4,6 +4,9 @@ import com.rental.commerce.application.product.CreateProductDraftUseCase
 import com.rental.commerce.application.product.GetProductDraftUseCase
 import com.rental.commerce.application.product.ProductDraftDetailResponse
 import com.rental.commerce.application.product.ProductDraftResponse
+import com.rental.commerce.application.product.ProductSubmitResponse
+import com.rental.commerce.application.product.SubmitProductCommand
+import com.rental.commerce.application.product.SubmitProductUseCase
 import com.rental.commerce.application.product.UpdateProductDraftUseCase
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -23,6 +26,7 @@ class ProductApiController(
     private val createProductDraftUseCase: CreateProductDraftUseCase,
     private val updateProductDraftUseCase: UpdateProductDraftUseCase,
     private val getProductDraftUseCase: GetProductDraftUseCase,
+    private val submitProductUseCase: SubmitProductUseCase,
 ) {
 
     @PostMapping
@@ -50,6 +54,16 @@ class ProductApiController(
     ): ResponseEntity<ProductDraftDetailResponse> {
         val userId = extractUserId()
         val response = getProductDraftUseCase.execute(userId = userId, productId = productId)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{productId}/submit")
+    fun submitProduct(
+        @PathVariable productId: Long,
+    ): ResponseEntity<ProductSubmitResponse> {
+        val userId = extractUserId()
+        val command = SubmitProductCommand(userId = userId, productId = productId)
+        val response = submitProductUseCase.execute(command)
         return ResponseEntity.ok(response)
     }
 

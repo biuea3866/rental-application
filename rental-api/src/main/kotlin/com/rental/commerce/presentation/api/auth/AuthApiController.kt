@@ -1,6 +1,7 @@
 package com.rental.commerce.presentation.api.auth
 
 import com.rental.commerce.application.auth.RefreshTokenUseCase
+import com.rental.commerce.application.auth.SocialLoginUseCase
 import com.rental.commerce.application.user.AuthTokenResponse
 import com.rental.commerce.application.user.LoginUseCase
 import com.rental.commerce.application.user.RegisterUserResponse
@@ -20,6 +21,7 @@ class AuthApiController(
     private val verifyPhoneAndCompleteSignupUseCase: VerifyPhoneAndCompleteSignupUseCase,
     private val loginUseCase: LoginUseCase,
     private val refreshTokenUseCase: RefreshTokenUseCase,
+    private val socialLoginUseCase: SocialLoginUseCase,
 ) {
 
     @PostMapping("/signup")
@@ -51,6 +53,14 @@ class AuthApiController(
         @Valid @RequestBody request: RefreshTokenRequest,
     ): ResponseEntity<AuthTokenResponse> {
         val response = refreshTokenUseCase.execute(request.toCommand())
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/social-login")
+    fun socialLogin(
+        @Valid @RequestBody request: SocialLoginRequest,
+    ): ResponseEntity<AuthTokenResponse> {
+        val response = socialLoginUseCase.execute(request.toCommand())
         return ResponseEntity.ok(response)
     }
 }

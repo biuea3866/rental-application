@@ -230,4 +230,76 @@ class UserTest : BehaviorSpec({
             }
         }
     }
+
+    Given("linkSocialAccount - 소셜 계정 연결") {
+        When("소셜 정보가 없는 유저에게 소셜 계정을 연결하면") {
+            val user = createDefaultUser()
+            user.linkSocialAccount(SocialProvider.KAKAO, "kakao_99999")
+
+            Then("소셜 제공자가 설정된다") {
+                user.socialProvider shouldBe SocialProvider.KAKAO
+            }
+
+            Then("소셜 제공자 ID가 설정된다") {
+                user.socialProviderId shouldBe "kakao_99999"
+            }
+
+            Then("소셜 유저로 인식된다") {
+                user.isSocialUser() shouldBe true
+            }
+        }
+
+        When("이미 소셜 계정이 연결된 유저에게 다시 연결하면") {
+            val user = createDefaultUser(
+                socialProvider = SocialProvider.KAKAO,
+                socialProviderId = "kakao_12345",
+            )
+
+            Then("SOCIAL_ACCOUNT_ALREADY_LINKED 에러가 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    user.linkSocialAccount(SocialProvider.NAVER, "naver_99999")
+                }
+                exception.errorCode shouldBe com.rental.commerce.domain.common.ErrorCode.SOCIAL_ACCOUNT_ALREADY_LINKED
+            }
+        }
+    }
+
+    Given("registerSocial - 소셜 회원가입") {
+        When("유효한 소셜 정보로 유저를 생성하면") {
+            val user = User.registerSocial(
+                email = "social@example.com",
+                name = "소셜유저",
+                socialProvider = SocialProvider.NAVER,
+                socialProviderId = "naver_12345",
+            )
+
+            Then("이메일이 올바르게 설정된다") {
+                user.email shouldBe "social@example.com"
+            }
+
+            Then("이름이 올바르게 설정된다") {
+                user.name shouldBe "소셜유저"
+            }
+
+            Then("소셜 제공자가 올바르게 설정된다") {
+                user.socialProvider shouldBe SocialProvider.NAVER
+            }
+
+            Then("소셜 제공자 ID가 올바르게 설정된다") {
+                user.socialProviderId shouldBe "naver_12345"
+            }
+
+            Then("역할이 RENTER로 기본 설정된다") {
+                user.role shouldBe UserRole.RENTER
+            }
+
+            Then("비밀번호는 소셜 로그인 마커로 설정된다") {
+                user.passwordHash shouldBe "SOCIAL_LOGIN"
+            }
+
+            Then("전화번호는 빈 문자열로 설정된다") {
+                user.phone shouldBe ""
+            }
+        }
+    }
 })

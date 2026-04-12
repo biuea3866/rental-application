@@ -1,0 +1,29 @@
+# =============================================================================
+# ConfigMap: rental-api-config
+# =============================================================================
+# 애플리케이션의 비민감 설정값을 관리합니다.
+# 민감한 값(DB 비밀번호, JWT 시크릿 등)은 Secret에서 관리합니다.
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rental-api-config
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: rental-api
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: rental-commerce
+data:
+  # Spring Boot 프로파일
+  SPRING_PROFILES_ACTIVE: "prod"
+  # 서버 포트
+  SERVER_PORT: "8080"
+  # JVM 옵션 (컨테이너 메모리에 맞춰 조정)
+  JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+  # 로깅 레벨
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_DOODLIN: "DEBUG"
+  # MinIO 엔드포인트 (클러스터 내부)
+  MINIO_ENDPOINT: "http://minio.rental-commerce.svc.cluster.local:9000"
+  # Redis 포트
+  SPRING_DATA_REDIS_PORT: "6379"

@@ -1,6 +1,7 @@
 package com.rental.commerce.presentation.api.auth
 
 import com.rental.commerce.application.auth.RefreshTokenUseCase
+import com.rental.commerce.application.auth.SocialLoginUseCase
 import com.rental.commerce.application.user.AuthTokenResponse
 import com.rental.commerce.application.user.LoginUseCase
 import com.rental.commerce.application.user.RegisterUserResponse
@@ -27,7 +28,8 @@ class AuthApiControllerTest : BehaviorSpec({
     val verifyPhoneAndCompleteSignupUseCase = mockk<VerifyPhoneAndCompleteSignupUseCase>()
     val loginUseCase = mockk<LoginUseCase>()
     val refreshTokenUseCase = mockk<RefreshTokenUseCase>()
-    val controller = AuthApiController(registerUserUseCase, verifyPhoneAndCompleteSignupUseCase, loginUseCase, refreshTokenUseCase)
+    val socialLoginUseCase = mockk<SocialLoginUseCase>()
+    val controller = AuthApiController(registerUserUseCase, verifyPhoneAndCompleteSignupUseCase, loginUseCase, refreshTokenUseCase, socialLoginUseCase)
     val mockMvc: MockMvc = MockMvcBuilders
         .standaloneSetup(controller)
         .setControllerAdvice(GlobalExceptionHandler())
@@ -407,6 +409,87 @@ class AuthApiControllerTest : BehaviorSpec({
             Then("400 Validation Error가 반환된다") {
                 result.andExpect {
                     status { isBadRequest() }
+                }
+            }
+        }
+    }
+
+    Given("POST /api/v1/auth/social-login") {
+
+        When("유효한 소셜 로그인 요청이면") {
+            every { socialLoginUseCase.execute(any()) } returns AuthTokenResponse(
+                accessToken = "social_access_token",
+                refreshToken = "social_refresh_token",
+                userId = 10L,
+            )
+
+            val result = mockMvc.post("/api/v1/auth/social-login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{
+                    "provider":"KAKAO",
+                    "authorizationCode":"valid_code_123"
+                }"""
+            }
+
+            Then("200 OK와 JWT 토큰이 반환된다") {
+                result.andExpect {
+                    status { isOk() }
+                    jsonPath("$.accessToken") { value("social_access_token") }
+                    jsonPath("$.refreshToken") { value("social_refresh_token") }
+                    jsonPath("$.userId") { value(10) }
+                }
+            }
+        }
+
+        When("provider가 비어있으면") {
+            val result = mockMvc.post("/api/v1/auth/social-login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{
+                    "provider":"",
+                    "authorizationCode":"valid_code_123"
+                }"""
+            }
+
+            Then("400 Validation Error가 반환된다") {
+                result.andExpect {
+                    status { isBadRequest() }
+                }
+            }
+        }
+
+        When("authorizationCode가 비어있으면") {
+            val result = mockMvc.post("/api/v1/auth/social-login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{
+                    "provider":"KAKAO",
+                    "authorizationCode":""
+                }"""
+            }
+
+            Then("400 Validation Error가 반환된다") {
+                result.andExpect {
+                    status { isBadRequest() }
+                }
+            }
+        }
+
+        When("외부 API 호출에 실패하면") {
+            every { socialLoginUseCase.execute(any()) } throws BusinessException(
+                errorCode = ErrorCode.EXTERNAL_API_ERROR,
+            )
+
+            val result = mockMvc.post("/api/v1/auth/social-login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{
+                    "provider":"NAVER",
+                    "authorizationCode":"invalid_code"
+                }"""
+            }
+
+            Then("500 EXTERNAL_API_ERROR가 반환된다") {
+                result.andExpect {
+                    status { isInternalServerError() }
+                    jsonPath("$.code") { value("EXTERNAL_API_ERROR") }
                 }
             }
         }
