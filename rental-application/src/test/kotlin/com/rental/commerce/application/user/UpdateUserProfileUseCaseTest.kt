@@ -26,7 +26,7 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
                 phone = "010-1234-5678",
                 passwordHash = "hashed",
                 role = UserRole.RENTER,
-                userId = userId,
+                id = userId,
             )
             val command = UpdateUserProfileCommand(
                 userId = userId,
@@ -55,7 +55,7 @@ class UpdateUserProfileUseCaseTest : BehaviorSpec({
                 phone = "010-1111-2222",
                 passwordHash = "hashed",
                 role = UserRole.RENTER,
-                userId = userId,
+                id = userId,
             )
             val command = UpdateUserProfileCommand(
                 userId = userId,

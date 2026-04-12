@@ -19,7 +19,7 @@ data class MyPageResponse(
             lenderProfile: LenderProfile?,
             renterProfile: RenterProfile?,
         ): MyPageResponse = MyPageResponse(
-            userId = requireNotNull(user.userId) { "persisted User must have a non-null PK" },
+            userId = user.requireId(),
             email = user.email,
             name = user.name,
             phone = user.phone,

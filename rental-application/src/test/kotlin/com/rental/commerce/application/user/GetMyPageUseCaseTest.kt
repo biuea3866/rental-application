@@ -31,7 +31,7 @@ class GetMyPageUseCaseTest : BehaviorSpec({
                 phone = "010-1234-5678",
                 passwordHash = "hashed",
                 role = UserRole.BOTH,
-                userId = userId,
+                id = userId,
             )
             val lenderProfile = LenderProfile(
                 lenderProfileId = 1L,
@@ -82,7 +82,7 @@ class GetMyPageUseCaseTest : BehaviorSpec({
                 phone = "010-5555-6666",
                 passwordHash = "hashed",
                 role = UserRole.RENTER,
-                userId = userId,
+                id = userId,
             )
             val renterProfile = RenterProfile(
                 renterProfileId = 2L,
