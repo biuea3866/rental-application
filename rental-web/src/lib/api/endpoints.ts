@@ -44,4 +44,21 @@ export const ENDPOINTS = {
     BY_ID: (id: string) => `${API_VERSION}/rentals/${id}`,
     MY_RENTALS: `${API_VERSION}/rentals/mine`,
   },
+
+  // 마이페이지
+  MYPAGE: {
+    BASE: `${API_VERSION}/mypage`,
+    PROFILE: `${API_VERSION}/mypage/profile`,
+    LENDER_PROFILE: `${API_VERSION}/mypage/lender-profile`,
+    RENTER_PROFILE: `${API_VERSION}/mypage/renter-profile`,
+  },
+
+  // 알림
+  NOTIFICATIONS: {
+    BASE: `${API_VERSION}/notifications`,
+    BY_ID: (id: string) => `${API_VERSION}/notifications/${id}`,
+    READ: (id: string) => `${API_VERSION}/notifications/${id}/read`,
+    READ_ALL: `${API_VERSION}/notifications/read-all`,
+    UNREAD_COUNT: `${API_VERSION}/notifications/unread-count`,
+  },
 } as const;

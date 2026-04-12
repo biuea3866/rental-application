@@ -1,7 +1,26 @@
 import "@testing-library/jest-dom/vitest";
 import { server } from "@/mocks/server";
 import { resetAuthHandlerState } from "@/mocks/handlers/auth";
-import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
+import { resetMyPageHandlerState } from "@/mocks/handlers/mypage";
+import { resetNotificationHandlerState } from "@/mocks/handlers/notification";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
+
+// ========================================
+// IntersectionObserver 폴리필 (jsdom 호환)
+// ========================================
+
+class IntersectionObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+  constructor() {}
+}
+
+Object.defineProperty(globalThis, "IntersectionObserver", {
+  writable: true,
+  configurable: true,
+  value: IntersectionObserverMock,
+});
 
 // ========================================
 // localStorage 폴리필 (jsdom 호환)
@@ -43,6 +62,8 @@ Object.defineProperty(globalThis, "localStorage", {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 beforeEach(() => {
   resetAuthHandlerState();
+  resetMyPageHandlerState();
+  resetNotificationHandlerState();
 });
 afterEach(() => {
   server.resetHandlers();

@@ -105,6 +105,29 @@ export const productHandlers = [
     });
   }),
 
+  // 내 등록 상품 조회 (등록자용)
+  http.get(`${BASE_URL}/api/v1/products/mine`, async () => {
+    await delay(200);
+
+    // 등록자 001 소유 상품 반환
+    const myProducts = STUB_PRODUCTS.filter(
+      (p) => p.lenderId === "user-lender-001"
+    );
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content: myProducts,
+        page: 0,
+        size: 20,
+        totalElements: myProducts.length,
+        totalPages: 1,
+        hasNext: false,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
   // 가이드 가격 전체 조회
   http.get(`${BASE_URL}/api/v1/guide-prices`, async () => {
     await delay(100);
