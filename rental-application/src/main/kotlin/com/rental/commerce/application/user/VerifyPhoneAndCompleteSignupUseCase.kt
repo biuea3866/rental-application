@@ -40,16 +40,17 @@ class VerifyPhoneAndCompleteSignupUseCase(
             role = command.role,
         )
         val savedUser = userRepository.save(user)
-        val userId = requireNotNull(savedUser.userId) { "저장된 사용자의 ID가 없습니다" }
+        val userId = savedUser.requireId()
 
         phoneVerificationStore.delete(command.phone)
 
-        val accessToken = tokenProvider.createAccessToken(userId, savedUser.role.name)
+        val accessToken = tokenProvider.createAccessToken(userId, savedUser.roleName())
         val refreshTokenResult = refreshTokenService.issueRefreshToken(userId)
 
         return AuthTokenResponse(
             accessToken = accessToken,
             refreshToken = refreshTokenResult.refreshToken,
+            tokenFamily = refreshTokenResult.tokenFamily,
             userId = userId,
         )
     }

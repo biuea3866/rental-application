@@ -22,7 +22,7 @@ class UserRepositoryImpl(
     override fun findById(userId: Long): User? {
         return queryFactory
             .selectFrom(user)
-            .where(user.userId.eq(userId))
+            .where(user.id.eq(userId))
             .fetchOne()
     }
 

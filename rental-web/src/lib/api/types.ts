@@ -54,6 +54,23 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
+export interface VerifyPhoneRequest {
+  phone: string;
+  code: string;
+}
+
+export type SocialProvider = "KAKAO" | "NAVER";
+
+export interface SocialLoginRequest {
+  provider: SocialProvider;
+  code: string;
+  redirectUri: string;
+}
+
+export interface SendVerificationCodeRequest {
+  phone: string;
+}
+
 // ========================================
 // 유저 관련 타입
 // ========================================

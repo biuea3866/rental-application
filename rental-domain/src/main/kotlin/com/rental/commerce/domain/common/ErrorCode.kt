@@ -16,6 +16,7 @@ enum class ErrorCode(
 
     // 401
     UNAUTHORIZED(401, "UNAUTHORIZED", "인증이 필요합니다"),
+    INVALID_PASSWORD(401, "INVALID_PASSWORD", "비밀번호가 일치하지 않습니다"),
     EXPIRED_TOKEN(401, "EXPIRED_TOKEN", "토큰이 만료되었습니다"),
     INVALID_TOKEN(401, "INVALID_TOKEN", "유효하지 않은 토큰입니다"),
     TOKEN_FAMILY_COMPROMISED(401, "TOKEN_FAMILY_COMPROMISED", "토큰이 탈취된 것으로 감지되었습니다"),

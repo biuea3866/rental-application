@@ -31,7 +31,7 @@ class AddRenterProfileUseCaseTest : BehaviorSpec({
         When("유효한 요청으로 등록하면") {
             val userId = 1L
             val command = AddRenterProfileCommand(userId = userId)
-            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.LENDER, userId = userId)
+            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.LENDER, id = userId)
 
             every { userRepository.findById(userId) } returns user
             every { userDomainService.checkRenterProfileNotDuplicate(userId) } just runs
@@ -68,7 +68,7 @@ class AddRenterProfileUseCaseTest : BehaviorSpec({
         When("이미 대여자 프로필이 존재하면") {
             val userId = 1L
             val command = AddRenterProfileCommand(userId = userId)
-            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.LENDER, userId = userId)
+            val user = User(email = "test@example.com", name = "테스트", phone = "010-1234-5678", passwordHash = "hashed", role = UserRole.LENDER, id = userId)
 
             every { userRepository.findById(userId) } returns user
             every { userDomainService.checkRenterProfileNotDuplicate(userId) } throws DuplicateResourceException()
