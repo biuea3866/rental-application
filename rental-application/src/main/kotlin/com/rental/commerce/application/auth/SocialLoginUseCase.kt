@@ -22,7 +22,7 @@ class SocialLoginUseCase(
         val socialUserInfo = socialLoginGateway.getUserInfo(command.provider, providerAccessToken)
 
         val user = findOrCreateUser(socialUserInfo)
-        val userId = requireNotNull(user.userId) { "저장된 사용자의 ID가 없습니다" }
+        val userId = requireNotNull(user.id) { "저장된 사용자의 ID가 없습니다" }
 
         val accessToken = tokenProvider.createAccessToken(userId, user.role.name)
         val refreshTokenResult = refreshTokenService.issueRefreshToken(userId)
@@ -30,6 +30,7 @@ class SocialLoginUseCase(
         return AuthTokenResponse(
             accessToken = accessToken,
             refreshToken = refreshTokenResult.refreshToken,
+            tokenFamily = refreshTokenResult.tokenFamily,
             userId = userId,
         )
     }
