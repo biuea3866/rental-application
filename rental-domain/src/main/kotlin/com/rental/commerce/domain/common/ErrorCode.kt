@@ -31,6 +31,7 @@ enum class ErrorCode(
     BUCKET_NOT_FOUND(404, "BUCKET_NOT_FOUND", "존재하지 않는 버킷입니다"),
     LENDER_PROFILE_NOT_FOUND(404, "LENDER_PROFILE_NOT_FOUND", "등록자 프로필을 찾을 수 없습니다"),
     RENTER_PROFILE_NOT_FOUND(404, "RENTER_PROFILE_NOT_FOUND", "대여자 프로필을 찾을 수 없습니다"),
+    NOTIFICATION_NOT_FOUND(404, "NOTIFICATION_NOT_FOUND", "알림을 찾을 수 없습니다"),
 
     // 409
     CONFLICT(409, "CONFLICT", "이미 존재하는 리소스입니다"),
