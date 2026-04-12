@@ -6,18 +6,21 @@ import com.rental.commerce.domain.product.ProductImage
 import com.rental.commerce.domain.product.ProductPrice
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
+import java.time.ZonedDateTime
 
-data class ProductDraftDetailResponse(
+data class ProductDetailResponse(
     val id: Long,
-    val status: ProductStatus,
-    val currentDraftStep: Int?,
+    val userId: Long,
     val name: String?,
     val description: String?,
     val categoryCode: String?,
     val condition: ProductCondition?,
+    val status: ProductStatus,
     val depositAmount: Long?,
     val prices: List<PriceResponse>,
     val images: List<ImageResponse>,
+    val createdAt: ZonedDateTime,
+    val updatedAt: ZonedDateTime,
 ) {
 
     data class PriceResponse(
@@ -55,17 +58,19 @@ data class ProductDraftDetailResponse(
             product: Product,
             prices: List<ProductPrice>,
             images: List<ProductImage>,
-        ): ProductDraftDetailResponse = ProductDraftDetailResponse(
+        ): ProductDetailResponse = ProductDetailResponse(
             id = product.productId,
-            status = product.status,
-            currentDraftStep = product.currentDraftStep,
+            userId = product.userId,
             name = product.name,
             description = product.description,
             categoryCode = product.categoryCode,
             condition = product.condition,
+            status = product.status,
             depositAmount = product.depositAmount,
             prices = prices.map { PriceResponse.from(it) },
             images = images.map { ImageResponse.from(it) },
+            createdAt = product.createdAt,
+            updatedAt = product.updatedAt,
         )
     }
 }
