@@ -1,7 +1,6 @@
 package com.rental.commerce.presentation.api.common
 
 import com.rental.commerce.infrastructure.auth.JwtProvider
-import com.rental.commerce.presentation.api.IntegrationTestBase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -14,6 +13,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MySQLContainer
@@ -21,7 +21,7 @@ import org.testcontainers.containers.MySQLContainer
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class SecurityConfigTest(
+class AuthorizationIntegrationTest(
     private val mockMvc: MockMvc,
     private val jwtProvider: JwtProvider,
 ) : BehaviorSpec({
@@ -109,6 +109,19 @@ class SecurityConfigTest(
                 }
             }
         }
+
+        When("GET /api/v1/protected 에 X-Member-Id 헤더를 직접 위조하면") {
+            val result = mockMvc.get("/api/v1/protected") {
+                header("X-Member-Id", "999")
+                contentType = MediaType.APPLICATION_JSON
+            }
+
+            Then("401 Unauthorized가 반환된다 (외부 헤더 위조 방어)") {
+                result.andExpect {
+                    status { isUnauthorized() }
+                }
+            }
+        }
     }
 
     Given("관리자 전용 경로") {
@@ -175,16 +188,14 @@ class SecurityConfigTest(
 }) {
 
     @TestConfiguration
-    class TestSecurityControllers {
+    class TestAuthControllers {
 
+        @Public
         @RestController
         class AuthTestController {
             @GetMapping("/api/v1/auth/test")
             fun authTest(): Map<String, String> = mapOf("status" to "ok")
-        }
 
-        @RestController
-        class PriceGuideTestController {
             @GetMapping("/api/v1/price-guides/test")
             fun priceGuideTest(): Map<String, String> = mapOf("status" to "ok")
         }
@@ -192,13 +203,18 @@ class SecurityConfigTest(
         @RestController
         class ProtectedTestController {
             @GetMapping("/api/v1/protected")
-            fun protectedEndpoint(): Map<String, String> = mapOf("status" to "ok")
+            fun protectedEndpoint(
+                @RequestHeader(AuthenticatedRequestWrapper.HEADER_USER_ID) userId: Long,
+            ): Map<String, String> = mapOf("status" to "ok")
         }
 
+        @RoleRequired("ADMIN")
         @RestController
         class AdminTestController {
             @GetMapping("/api/admin/dashboard")
-            fun adminDashboard(): Map<String, String> = mapOf("status" to "ok")
+            fun adminDashboard(
+                @RequestHeader(AuthenticatedRequestWrapper.HEADER_USER_ID) userId: Long,
+            ): Map<String, String> = mapOf("status" to "ok")
         }
     }
 
