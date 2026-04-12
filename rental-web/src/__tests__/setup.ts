@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { server } from "@/mocks/server";
 import { resetAuthHandlerState } from "@/mocks/handlers/auth";
+import { resetDraftHandlerState } from "@/mocks/handlers/draft";
 import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
 // ========================================
@@ -43,6 +44,7 @@ Object.defineProperty(globalThis, "localStorage", {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 beforeEach(() => {
   resetAuthHandlerState();
+  resetDraftHandlerState();
 });
 afterEach(() => {
   server.resetHandlers();
