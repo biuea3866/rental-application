@@ -37,3 +37,13 @@ minio:
     inspections: inspections
     documents: documents
     chat: chat
+
+social:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:test-kakao-client-id}
+    client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-client-secret}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:3000/auth/kakao/callback}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:test-naver-client-id}
+    client-secret: ${NAVER_CLIENT_SECRET:test-naver-client-secret}
+    redirect-uri: ${NAVER_REDIRECT_URI:http://localhost:3000/auth/naver/callback}

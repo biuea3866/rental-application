@@ -8,7 +8,7 @@ import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
 
 data class ProductDraftDetailResponse(
-    val productId: Long,
+    val id: Long,
     val status: ProductStatus,
     val currentDraftStep: Int?,
     val name: String?,
@@ -21,13 +21,13 @@ data class ProductDraftDetailResponse(
 ) {
 
     data class PriceResponse(
-        val productPriceId: Long,
+        val id: Long,
         val rentalUnit: RentalUnit,
         val priceAmount: Long,
     ) {
         companion object {
             fun from(productPrice: ProductPrice): PriceResponse = PriceResponse(
-                productPriceId = productPrice.productPriceId,
+                id = productPrice.productPriceId,
                 rentalUnit = productPrice.rentalUnit,
                 priceAmount = productPrice.priceAmount,
             )
@@ -35,14 +35,14 @@ data class ProductDraftDetailResponse(
     }
 
     data class ImageResponse(
-        val productImageId: Long,
+        val id: Long,
         val objectKey: String,
         val originalFilename: String,
         val sortOrder: Short,
     ) {
         companion object {
             fun from(productImage: ProductImage): ImageResponse = ImageResponse(
-                productImageId = productImage.productImageId,
+                id = productImage.productImageId,
                 objectKey = productImage.objectKey,
                 originalFilename = productImage.originalFilename,
                 sortOrder = productImage.sortOrder,
@@ -56,7 +56,7 @@ data class ProductDraftDetailResponse(
             prices: List<ProductPrice>,
             images: List<ProductImage>,
         ): ProductDraftDetailResponse = ProductDraftDetailResponse(
-            productId = product.productId,
+            id = product.productId,
             status = product.status,
             currentDraftStep = product.currentDraftStep,
             name = product.name,

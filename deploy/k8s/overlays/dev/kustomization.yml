@@ -1,0 +1,44 @@
+# =============================================================================
+# Kustomize Overlay: Dev Environment
+# =============================================================================
+# ArgoCD가 이 경로를 참조하여 dev 환경에 배포합니다.
+#   argocd app sync rental-commerce-dev
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: rental-commerce-dev
+
+resources:
+  - ../../base  # base 참조 (kustomize v5 compatible)
+
+# dev 환경 이미지 태그 — ArgoCD Image Updater 또는 CD 파이프라인이 갱신
+images:
+  - name: ghcr.io/biuea3866/rental-commerce
+    newTag: dev-b985429c8df70fa682fc31111a6d3810d2485b17
+
+# dev 환경 레플리카 수 축소 + ConfigMap 오버라이드
+patches:
+  - target:
+      kind: Deployment
+      name: rental-api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: ConfigMap
+      name: rental-api-config
+    patch: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: rental-api-config
+      data:
+        SPRING_PROFILES_ACTIVE: "dev"
+        LOG_LEVEL: "DEBUG"
+
+# dev 환경 라벨
+commonLabels:
+  app.kubernetes.io/instance: rental-commerce-dev
+  environment: dev

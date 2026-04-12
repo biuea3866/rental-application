@@ -17,6 +17,7 @@ enum class ErrorCode(
 
     // 401
     UNAUTHORIZED(401, "UNAUTHORIZED", "인증이 필요합니다"),
+    INVALID_PASSWORD(401, "INVALID_PASSWORD", "비밀번호가 일치하지 않습니다"),
     EXPIRED_TOKEN(401, "EXPIRED_TOKEN", "토큰이 만료되었습니다"),
     INVALID_TOKEN(401, "INVALID_TOKEN", "유효하지 않은 토큰입니다"),
     TOKEN_FAMILY_COMPROMISED(401, "TOKEN_FAMILY_COMPROMISED", "토큰이 탈취된 것으로 감지되었습니다"),
@@ -32,8 +33,10 @@ enum class ErrorCode(
     BUCKET_NOT_FOUND(404, "BUCKET_NOT_FOUND", "존재하지 않는 버킷입니다"),
     LENDER_PROFILE_NOT_FOUND(404, "LENDER_PROFILE_NOT_FOUND", "등록자 프로필을 찾을 수 없습니다"),
     RENTER_PROFILE_NOT_FOUND(404, "RENTER_PROFILE_NOT_FOUND", "대여자 프로필을 찾을 수 없습니다"),
+    NOTIFICATION_NOT_FOUND(404, "NOTIFICATION_NOT_FOUND", "알림을 찾을 수 없습니다"),
 
     // 409
+    SOCIAL_ACCOUNT_ALREADY_LINKED(409, "SOCIAL_ACCOUNT_ALREADY_LINKED", "이미 소셜 계정이 연결되어 있습니다"),
     CONFLICT(409, "CONFLICT", "이미 존재하는 리소스입니다"),
     DUPLICATE_EMAIL(409, "DUPLICATE_EMAIL", "이미 가입된 이메일입니다"),
     DUPLICATE_PHONE(409, "DUPLICATE_PHONE", "이미 등록된 전화번호입니다"),

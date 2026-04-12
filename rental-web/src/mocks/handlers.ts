@@ -25,6 +25,11 @@ import type {
 
 let currentUser: User | null = null;
 
+/** 테스트 간 상태 격리를 위한 리셋 함수 */
+export function resetStubHandlerState(): void {
+  currentUser = null;
+}
+
 export function registerStubHandlers(): void {
   const client = getStubClient();
   if (!client) return;

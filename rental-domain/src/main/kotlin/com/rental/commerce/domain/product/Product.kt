@@ -64,6 +64,10 @@ class Product(
     @Transient
     private val domainEvents: MutableList<DomainEvent> = mutableListOf()
 
+    fun isPubliclyVisible(): Boolean {
+        return status == ProductStatus.AVAILABLE || status == ProductStatus.RENTED
+    }
+
     fun pullEvents(): List<DomainEvent> {
         val events = domainEvents.toList()
         domainEvents.clear()

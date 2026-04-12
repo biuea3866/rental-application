@@ -16,4 +16,6 @@ interface ProductRepository {
         excludeStatus: ProductStatus,
         pageable: Pageable,
     ): Page<Product>
+
+    fun search(condition: ProductSearchCondition): Page<Product>
 }

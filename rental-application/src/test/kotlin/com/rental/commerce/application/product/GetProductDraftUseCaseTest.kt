@@ -103,7 +103,7 @@ class GetProductDraftUseCaseTest : BehaviorSpec({
             val result = useCase.execute(userId = 1L, productId = 1L)
 
             Then("상품 기본 정보가 반환된다") {
-                result.productId shouldBe 1L
+                result.id shouldBe 1L
                 result.name shouldBe "맥북 프로"
                 result.description shouldBe "최신형 맥북 프로입니다"
                 result.categoryCode shouldBe "ELECTRONICS"
