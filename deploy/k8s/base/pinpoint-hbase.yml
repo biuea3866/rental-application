@@ -35,6 +35,16 @@ spec:
         - name: pinpoint-hbase
           image: pinpointdocker/pinpoint-hbase:3.0.0
           imagePullPolicy: IfNotPresent
+          # configure-hbase.sh은 TTL sed만 처리 → HBASE_CONF_ 계열 env var이 hbase-site.xml에 반영되지 않음.
+          # 직접 sed로 hbase.zookeeper.session.timeout 주입 후 기존 initialize-hbase.sh 실행.
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              CONF=$(find /opt /usr/local /home -name hbase-site.xml 2>/dev/null | head -1) &&
+              echo "[init] patching hbase-site.xml at $CONF" &&
+              sed -i 's|</configuration>|<property><name>hbase.zookeeper.session.timeout</name><value>300000</value></property></configuration>|' "$CONF" &&
+              /usr/local/bin/initialize-hbase.sh &&
+              tail -f /dev/null
           ports:
             - name: hbase-master
               containerPort: 60000
