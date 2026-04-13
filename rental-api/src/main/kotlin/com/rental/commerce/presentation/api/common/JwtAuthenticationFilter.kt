@@ -47,7 +47,11 @@ class JwtAuthenticationFilter(
                     authorities,
                 )
                 SecurityContextHolder.getContext().authentication = authentication
-                request.setAttribute(ATTRIBUTE_AUTHENTICATED, true)
+                // AuthorizationInterceptor가 X-Member-Id / X-Member-Role 헤더를 읽을 수 있도록 래핑
+                val wrappedRequest = AuthenticatedRequestWrapper(request, claims.userId, claims.role)
+                wrappedRequest.setAttribute(ATTRIBUTE_AUTHENTICATED, true)
+                filterChain.doFilter(wrappedRequest, response)
+                return
             } catch (exception: BusinessException) {
                 log.warn("JWT 인증 실패: [${exception.errorCode.code}] ${exception.message}")
                 writeErrorResponse(response, exception.errorCode)
