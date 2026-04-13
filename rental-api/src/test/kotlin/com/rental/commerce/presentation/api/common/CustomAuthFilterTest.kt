@@ -1,7 +1,6 @@
 package com.rental.commerce.presentation.api.common
 
 import com.rental.commerce.infrastructure.auth.JwtProvider
-import com.rental.commerce.presentation.api.IntegrationTestBase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -9,8 +8,12 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.MySQLContainer
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -168,7 +171,35 @@ class CustomAuthFilterTest(
             }
         }
     }
-}) : IntegrationTestBase() {
+) {
+
+    companion object {
+        val mysqlContainer: MySQLContainer<*> = MySQLContainer("mysql:8.0").apply {
+            withDatabaseName("rental_commerce_test")
+            withUsername("test")
+            withPassword("test")
+        }
+
+        val redisContainer: GenericContainer<*> = GenericContainer("redis:7-alpine").apply {
+            withExposedPorts(6379)
+        }
+
+        init {
+            mysqlContainer.start()
+            redisContainer.start()
+        }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun properties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { mysqlContainer.jdbcUrl }
+            registry.add("spring.datasource.username") { mysqlContainer.username }
+            registry.add("spring.datasource.password") { mysqlContainer.password }
+            registry.add("spring.datasource.driver-class-name") { mysqlContainer.driverClassName }
+            registry.add("spring.data.redis.host") { redisContainer.host }
+            registry.add("spring.data.redis.port") { redisContainer.getMappedPort(6379) }
+        }
+    }
 
     @TestConfiguration
     class TestControllers {
