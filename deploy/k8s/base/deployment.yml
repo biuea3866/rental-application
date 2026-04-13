@@ -27,6 +27,10 @@ spec:
         app.kubernetes.io/name: rental-api
         app.kubernetes.io/component: api
         app.kubernetes.io/part-of: rental-commerce
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       # Non-root 보안 컨텍스트
       securityContext:
@@ -95,25 +99,25 @@ spec:
               memory: "512Mi"
               cpu: "500m"
 
-          # Liveness 프로브: 컨테이너가 살아있는지 확인
+          # Liveness 프로브: actuator health check
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 5
-            failureThreshold: 3
+            failureThreshold: 5
 
-          # Readiness 프로브: 트래픽 수신 준비 확인
+          # Readiness 프로브: actuator health check
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 3
+            failureThreshold: 5
 
       # GHCR 프라이빗 이미지 접근 시 필요 (공개 이미지면 생략 가능)
       imagePullSecrets:
