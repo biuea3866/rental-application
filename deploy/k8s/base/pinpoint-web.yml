@@ -28,7 +28,7 @@ spec:
       initContainers:
         - name: wait-hbase
           image: busybox:1.36
-          command: ['sh', '-c', 'until nc -z pinpoint-hbase 2181; do echo waiting for HBase ZooKeeper; sleep 5; done']
+          command: ['sh', '-c', 'until nc -z zoo1 2181; do echo waiting for ZooKeeper; sleep 5; done && until nc -z pinpoint-hbase 16000; do echo waiting for HBase master; sleep 5; done']
       containers:
         - name: pinpoint-web
           image: pinpointdocker/pinpoint-web:3.0.0
@@ -41,7 +41,7 @@ spec:
             - name: ACCEPT_EULA
               value: "true"
             - name: PINPOINT_ZOOKEEPER_ADDRESS
-              value: "pinpoint-hbase"
+              value: "zoo1"
             - name: CLUSTER_ENABLE
               value: "true"
             - name: HBASE_HOST
