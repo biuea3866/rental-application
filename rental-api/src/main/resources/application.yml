@@ -34,6 +34,16 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket: ${MINIO_BUCKET:rental-commerce}
 
+social:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:dev-placeholder}
+    client-secret: ${KAKAO_CLIENT_SECRET:dev-placeholder}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:3000/auth/kakao/callback}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:dev-placeholder}
+    client-secret: ${NAVER_CLIENT_SECRET:dev-placeholder}
+    redirect-uri: ${NAVER_REDIRECT_URI:http://localhost:3000/auth/naver/callback}
+
 management:
   endpoints:
     web:
