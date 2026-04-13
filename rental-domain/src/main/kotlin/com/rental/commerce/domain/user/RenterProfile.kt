@@ -27,6 +27,9 @@ class RenterProfile(
 
     @Column(name = "total_transaction_count", nullable = false)
     var totalTransactionCount: Int = 0,
+
+    @Column(name = "shipping_address", length = 255)
+    var shippingAddress: String? = null,
 ) : BaseEntity() {
 
     fun incrementTransactionCount() {
@@ -42,5 +45,9 @@ class RenterProfile(
                 trustGrade = TrustGrade.SILVER
             }
         }
+    }
+
+    fun updateProfile(shippingAddress: String?) {
+        shippingAddress?.let { this.shippingAddress = it }
     }
 }
