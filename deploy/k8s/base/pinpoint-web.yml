@@ -1,6 +1,8 @@
 # =============================================================================
 # Pinpoint Web - Deployment + Service
 # =============================================================================
+# PINPOINT_ZOOKEEPER_ADDRESS: pinpoint-hbase 내장 ZooKeeper(2181) 사용
+# =============================================================================
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -23,6 +25,10 @@ spec:
         app.kubernetes.io/component: monitoring
         app.kubernetes.io/part-of: rental-commerce
     spec:
+      initContainers:
+        - name: wait-hbase
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z zoo1 2181; do echo waiting for ZooKeeper; sleep 5; done && until nc -z pinpoint-hbase 60000; do echo waiting for HBase master; sleep 5; done']
       containers:
         - name: pinpoint-web
           image: pinpointdocker/pinpoint-web:3.0.0
@@ -35,13 +41,13 @@ spec:
             - name: ACCEPT_EULA
               value: "true"
             - name: PINPOINT_ZOOKEEPER_ADDRESS
-              value: "zookeeper"
+              value: "zoo1"
             - name: CLUSTER_ENABLE
               value: "true"
             - name: HBASE_HOST
               value: "pinpoint-hbase"
             - name: HBASE_PORT
-              value: "16010"
+              value: "60000"
           resources:
             requests:
               memory: "512Mi"
