@@ -69,14 +69,7 @@ spec:
             initialDelaySeconds: 120
             periodSeconds: 30
             timeoutSeconds: 15
-            failureThreshold: 20
-          livenessProbe:
-            tcpSocket:
-              port: 60000
-            initialDelaySeconds: 600
-            periodSeconds: 30
-            timeoutSeconds: 15
-            failureThreshold: 5
+            failureThreshold: 40
 ---
 apiVersion: v1
 kind: Service
