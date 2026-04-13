@@ -9,6 +9,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 class ProductTest : BehaviorSpec({
@@ -328,6 +329,79 @@ class ProductTest : BehaviorSpec({
                 shouldThrow<InvalidStateTransitionException> {
                     product.revertToDraft()
                 }
+            }
+        }
+    }
+
+    Given("delete - DRAFT/REJECTED 상태에서 삭제") {
+
+        When("DRAFT 상태에서 delete하면") {
+            val product = createDraftProduct()
+            product.delete()
+
+            Then("상태가 DELETED로 변경된다") {
+                product.status shouldBe ProductStatus.DELETED
+            }
+
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
+            }
+        }
+
+        When("REJECTED 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.reject("사유")
+            product.pullEvents()
+            product.delete()
+
+            Then("상태가 DELETED로 변경된다") {
+                product.status shouldBe ProductStatus.DELETED
+            }
+
+            Then("deletedAt이 설정된다") {
+                product.deletedAt shouldNotBe null
+            }
+        }
+
+        When("UNDER_REVIEW 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+
+        When("APPROVED 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.approve()
+            product.pullEvents()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+
+        When("AVAILABLE 상태에서 delete하면") {
+            val product = createFullDraftProduct()
+            product.submit()
+            product.approve()
+            product.pullEvents()
+            product.makeAvailable()
+
+            Then("BusinessException(PRODUCT_NOT_DELETABLE)이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    product.delete()
+                }
+                exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
             }
         }
     }
