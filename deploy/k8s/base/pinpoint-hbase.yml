@@ -56,6 +56,9 @@ spec:
               value: "zoo1"
             - name: HBASE_CONF_hbase_zookeeper_property_clientPort
               value: "2181"
+            # ZK 세션 타임아웃 5분 — AgentStatV2 63 region split 중 GC pause 대응
+            - name: HBASE_CONF_zookeeper_session_timeout
+              value: "300000"
           resources:
             requests:
               memory: "2Gi"

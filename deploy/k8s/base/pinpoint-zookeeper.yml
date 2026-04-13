@@ -40,6 +40,9 @@ spec:
               value: "1"
             - name: ZOO_SERVERS
               value: "server.1=0.0.0.0:2888:3888;2181"
+            # HBase AgentStatV2 63 region 생성 중 GC pause 대응 — 기본 40초 제한 해제
+            - name: ZOO_CFG_EXTRA
+              value: "maxSessionTimeout=600000"
           resources:
             requests:
               memory: "256Mi"
