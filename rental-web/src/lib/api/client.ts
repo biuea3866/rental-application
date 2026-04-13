@@ -209,39 +209,44 @@ class StubApiClient implements ApiClient {
 
   async get<T>(
     endpoint: string,
-    _options?: RequestOptions
+    options?: RequestOptions
   ): Promise<ApiResponse<T>> {
+    void options;
     return this.handleRequest<T>(endpoint);
   }
 
   async post<T>(
     endpoint: string,
     body?: unknown,
-    _options?: RequestOptions
+    options?: RequestOptions
   ): Promise<ApiResponse<T>> {
+    void options;
     return this.handleRequest<T>(endpoint, body);
   }
 
   async put<T>(
     endpoint: string,
     body?: unknown,
-    _options?: RequestOptions
+    options?: RequestOptions
   ): Promise<ApiResponse<T>> {
+    void options;
     return this.handleRequest<T>(endpoint, body);
   }
 
   async patch<T>(
     endpoint: string,
     body?: unknown,
-    _options?: RequestOptions
+    options?: RequestOptions
   ): Promise<ApiResponse<T>> {
+    void options;
     return this.handleRequest<T>(endpoint, body);
   }
 
   async delete<T>(
     endpoint: string,
-    _options?: RequestOptions
+    options?: RequestOptions
   ): Promise<ApiResponse<T>> {
+    void options;
     return this.handleRequest<T>(endpoint);
   }
 }

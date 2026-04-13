@@ -96,6 +96,7 @@ class ProfileApiControllerTest : BehaviorSpec({
                 userId = 1L,
                 trustGrade = "BRONZE",
                 totalTransactionCount = 0,
+                shippingAddress = null,
             )
             every { addRenterProfileUseCase.execute(any<AddRenterProfileCommand>()) } returns response
 
@@ -165,6 +166,7 @@ class ProfileApiControllerTest : BehaviorSpec({
                 userId = 1L,
                 trustGrade = "SILVER",
                 totalTransactionCount = 15,
+                shippingAddress = "서울시 강남구",
             )
             every { getRenterProfileUseCase.execute(1L) } returns response
 

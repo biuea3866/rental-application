@@ -1,0 +1,8 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY rental-web/package*.json ./
+RUN npm ci
+COPY rental-web/ .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]

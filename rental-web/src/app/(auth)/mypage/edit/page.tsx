@@ -80,7 +80,11 @@ export default function ProfileEditPage() {
         myPageInfo={data}
         onSubmit={async (formData) => {
           setSubmitError(null);
-          await mutation.mutateAsync(formData);
+          try {
+            await mutation.mutateAsync(formData);
+          } catch {
+            // onError callback handles the error UI; suppress re-throw from mutateAsync
+          }
         }}
         isSubmitting={mutation.isPending}
       />
