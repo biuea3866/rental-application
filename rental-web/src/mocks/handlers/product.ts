@@ -15,38 +15,67 @@ import type { ProductCategory } from "@/lib/api/types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export const productHandlers = [
-  // 상품 목록 조회
+  // 상품 목록 조회 (검색/필터/페이지네이션 지원)
   http.get(`${BASE_URL}/api/v1/products`, async ({ request }) => {
     await delay(200);
 
     const url = new URL(request.url);
-    const category = url.searchParams.get("category");
+    const category = url.searchParams.get("category") as ProductCategory | null;
+    const keyword = url.searchParams.get("keyword");
+    const minPrice = url.searchParams.get("minPrice");
+    const maxPrice = url.searchParams.get("maxPrice");
+    const sort = url.searchParams.get("sort") ?? "latest";
+    const page = parseInt(url.searchParams.get("page") ?? "0", 10);
+    const size = parseInt(url.searchParams.get("size") ?? "20", 10);
 
-    if (category) {
-      const products = findProductsByCategory(category as ProductCategory);
-      return HttpResponse.json({
-        success: true,
-        data: {
-          content: products,
-          page: 0,
-          size: 20,
-          totalElements: products.length,
-          totalPages: 1,
-          hasNext: false,
-        },
-        timestamp: new Date().toISOString(),
-      });
+    let products = category
+      ? findProductsByCategory(category)
+      : [...STUB_PRODUCTS];
+
+    // 키워드 필터
+    if (keyword) {
+      const q = keyword.toLowerCase();
+      products = products.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+      );
     }
+
+    // 가격 필터
+    if (minPrice) {
+      products = products.filter((p) => p.pricePerDay >= Number(minPrice));
+    }
+    if (maxPrice) {
+      products = products.filter((p) => p.pricePerDay <= Number(maxPrice));
+    }
+
+    // 정렬
+    if (sort === "price_asc") {
+      products = [...products].sort((a, b) => a.pricePerDay - b.pricePerDay);
+    } else if (sort === "price_desc") {
+      products = [...products].sort((a, b) => b.pricePerDay - a.pricePerDay);
+    } else {
+      products = [...products].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
+    // 페이지네이션
+    const totalElements = products.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const content = products.slice(start, start + size);
 
     return HttpResponse.json({
       success: true,
       data: {
-        content: STUB_PRODUCTS,
-        page: 0,
-        size: 20,
-        totalElements: STUB_PRODUCTS.length,
-        totalPages: 1,
-        hasNext: false,
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        hasNext: page < totalPages - 1,
       },
       timestamp: new Date().toISOString(),
     });
