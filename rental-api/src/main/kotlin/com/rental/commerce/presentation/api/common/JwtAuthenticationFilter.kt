@@ -27,6 +27,7 @@ class JwtAuthenticationFilter(
 
     companion object {
         private const val BEARER_PREFIX = "Bearer "
+        const val ATTRIBUTE_AUTHENTICATED = "authenticated"
     }
 
     override fun doFilterInternal(
@@ -46,6 +47,7 @@ class JwtAuthenticationFilter(
                     authorities,
                 )
                 SecurityContextHolder.getContext().authentication = authentication
+                request.setAttribute(ATTRIBUTE_AUTHENTICATED, true)
             } catch (exception: BusinessException) {
                 log.warn("JWT 인증 실패: [${exception.errorCode.code}] ${exception.message}")
                 writeErrorResponse(response, exception.errorCode)
