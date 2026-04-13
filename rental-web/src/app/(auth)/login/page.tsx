@@ -13,6 +13,7 @@ import {
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthStore } from "@/stores/auth-store";
 import type { LoginFormValues } from "@/components/auth/LoginForm";
 import type { SocialProvider } from "@/lib/api/types";
 
@@ -27,7 +28,15 @@ export default function LoginPage() {
   const handleLogin = async (values: LoginFormValues) => {
     const result = await login({ email: values.email, password: values.password });
     if (result.success) {
-      router.push("/");
+      // role에 따라 적절한 페이지로 이동
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role === "LENDER") {
+        router.push("/lender");
+      } else if (currentUser?.role === "RENTER") {
+        router.push("/products");
+      } else {
+        router.push("/");
+      }
     }
   };
 

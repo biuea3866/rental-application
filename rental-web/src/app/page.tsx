@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,8 +11,22 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function HomePage() {
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === "LENDER") {
+        router.replace("/lender");
+      } else if (user.role === "RENTER") {
+        router.replace("/products");
+      }
+    }
+  }, [isAuthenticated, user, router]);
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
       <div className="text-center">
