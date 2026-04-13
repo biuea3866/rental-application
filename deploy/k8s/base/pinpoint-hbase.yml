@@ -37,16 +37,16 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: hbase-master
-              containerPort: 16000
+              containerPort: 60000
               protocol: TCP
             - name: hbase-master-ui
-              containerPort: 16010
+              containerPort: 60010
               protocol: TCP
             - name: hbase-region
-              containerPort: 16020
+              containerPort: 60020
               protocol: TCP
             - name: hbase-region-ui
-              containerPort: 16030
+              containerPort: 60030
               protocol: TCP
           env:
             - name: ACCEPT_EULA
@@ -65,15 +65,15 @@ spec:
               cpu: "2000m"
           readinessProbe:
             tcpSocket:
-              port: 16000
-            initialDelaySeconds: 60
+              port: 60000
+            initialDelaySeconds: 90
             periodSeconds: 20
             timeoutSeconds: 15
-            failureThreshold: 10
+            failureThreshold: 15
           livenessProbe:
             tcpSocket:
-              port: 16000
-            initialDelaySeconds: 120
+              port: 60000
+            initialDelaySeconds: 300
             periodSeconds: 30
             timeoutSeconds: 15
             failureThreshold: 5
@@ -91,20 +91,20 @@ spec:
   type: ClusterIP
   ports:
     - name: hbase-master
-      port: 16000
-      targetPort: 16000
+      port: 60000
+      targetPort: 60000
       protocol: TCP
     - name: hbase-master-ui
-      port: 16010
-      targetPort: 16010
+      port: 60010
+      targetPort: 60010
       protocol: TCP
     - name: hbase-region
-      port: 16020
-      targetPort: 16020
+      port: 60020
+      targetPort: 60020
       protocol: TCP
     - name: hbase-region-ui
-      port: 16030
-      targetPort: 16030
+      port: 60030
+      targetPort: 60030
       protocol: TCP
   selector:
     app.kubernetes.io/name: pinpoint-hbase
