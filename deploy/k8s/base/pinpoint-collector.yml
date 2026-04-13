@@ -1,0 +1,119 @@
+# =============================================================================
+# Pinpoint Collector - Deployment + Service
+# =============================================================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-collector
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-collector
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pinpoint-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pinpoint-collector
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: rental-commerce
+    spec:
+      containers:
+        - name: pinpoint-collector
+          image: pinpointdocker/pinpoint-collector:3.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: agent-grpc
+              containerPort: 9991
+              protocol: TCP
+            - name: stat-grpc
+              containerPort: 9992
+              protocol: TCP
+            - name: span-grpc
+              containerPort: 9993
+              protocol: TCP
+            - name: profiler-thrift
+              containerPort: 9994
+              protocol: TCP
+            - name: agent-thrift
+              containerPort: 9995
+              protocol: TCP
+            - name: stat-thrift
+              containerPort: 9996
+              protocol: TCP
+          env:
+            - name: ACCEPT_EULA
+              value: "true"
+            - name: PINPOINT_ZOOKEEPER_ADDRESS
+              value: "zookeeper"
+            - name: CLUSTER_ENABLE
+              value: "true"
+            - name: HBASE_HOST
+              value: "pinpoint-hbase"
+            - name: HBASE_PORT
+              value: "16010"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            tcpSocket:
+              port: 9991
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            tcpSocket:
+              port: 9991
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinpoint-collector
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-collector
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: ClusterIP
+  ports:
+    - name: agent-grpc
+      port: 9991
+      targetPort: 9991
+      protocol: TCP
+    - name: stat-grpc
+      port: 9992
+      targetPort: 9992
+      protocol: TCP
+    - name: span-grpc
+      port: 9993
+      targetPort: 9993
+      protocol: TCP
+    - name: profiler-thrift
+      port: 9994
+      targetPort: 9994
+      protocol: TCP
+    - name: agent-thrift
+      port: 9995
+      targetPort: 9995
+      protocol: TCP
+    - name: stat-thrift
+      port: 9996
+      targetPort: 9996
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-collector
