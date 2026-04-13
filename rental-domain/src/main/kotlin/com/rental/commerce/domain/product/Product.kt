@@ -16,6 +16,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
+import java.time.ZonedDateTime
 
 @Entity
 @Table(name = "product")
@@ -54,6 +55,9 @@ class Product(
 
     @Column(name = "reject_reason", length = 500)
     var rejectReason: String? = null,
+
+    @Column(name = "deleted_at")
+    var deletedAt: ZonedDateTime? = null,
 
 ) : BaseEntity() {
 
@@ -165,6 +169,17 @@ class Product(
 
         this.status = ProductStatus.DRAFT
         this.rejectReason = null
+    }
+
+    fun delete() {
+        if (!status.canTransitTo(ProductStatus.DELETED)) {
+            throw BusinessException(
+                errorCode = ErrorCode.PRODUCT_NOT_DELETABLE,
+                message = "삭제할 수 없는 상태의 상품입니다 (현재 상태: $status)",
+            )
+        }
+        this.status = ProductStatus.DELETED
+        this.deletedAt = ZonedDateTime.now()
     }
 
     private fun validateTransition(target: ProductStatus) {

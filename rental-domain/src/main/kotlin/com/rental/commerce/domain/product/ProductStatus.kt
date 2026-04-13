@@ -7,6 +7,7 @@ enum class ProductStatus {
     REJECTED,
     AVAILABLE,
     RENTED,
+    DELETED,
     ;
 
     fun canTransitTo(target: ProductStatus): Boolean {
@@ -15,10 +16,10 @@ enum class ProductStatus {
 
     companion object {
         private val allowedTransitions: Map<ProductStatus, Set<ProductStatus>> = mapOf(
-            DRAFT to setOf(UNDER_REVIEW),
+            DRAFT to setOf(UNDER_REVIEW, DELETED),
             UNDER_REVIEW to setOf(APPROVED, REJECTED),
             APPROVED to setOf(AVAILABLE),
-            REJECTED to setOf(DRAFT),
+            REJECTED to setOf(DRAFT, DELETED),
             AVAILABLE to setOf(RENTED),
             RENTED to setOf(AVAILABLE),
         )
