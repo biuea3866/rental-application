@@ -8,10 +8,10 @@ import com.rental.commerce.application.product.ProductSubmitResponse
 import com.rental.commerce.application.product.SubmitProductCommand
 import com.rental.commerce.application.product.SubmitProductUseCase
 import com.rental.commerce.application.product.UpdateProductDraftUseCase
+import com.rental.commerce.presentation.api.common.AuthenticatedMember
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -31,46 +31,39 @@ class ProductApiController(
 
     @PostMapping
     fun createDraft(
+        @AuthenticatedMember userId: Long,
         @RequestBody request: CreateProductDraftRequest,
     ): ResponseEntity<ProductDraftResponse> {
-        val userId = extractUserId()
         val response = createProductDraftUseCase.execute(request.toCommand(userId))
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
     @PatchMapping("/{productId}")
     fun updateDraft(
+        @AuthenticatedMember userId: Long,
         @PathVariable productId: Long,
         @Valid @RequestBody request: UpdateProductDraftRequest,
     ): ResponseEntity<ProductDraftResponse> {
-        val userId = extractUserId()
         val response = updateProductDraftUseCase.execute(request.toCommand(userId, productId))
         return ResponseEntity.ok(response)
     }
 
     @GetMapping("/{productId}")
     fun getDraft(
+        @AuthenticatedMember userId: Long,
         @PathVariable productId: Long,
     ): ResponseEntity<ProductDraftDetailResponse> {
-        val userId = extractUserId()
         val response = getProductDraftUseCase.execute(userId = userId, productId = productId)
         return ResponseEntity.ok(response)
     }
 
     @PostMapping("/{productId}/submit")
     fun submitProduct(
+        @AuthenticatedMember userId: Long,
         @PathVariable productId: Long,
     ): ResponseEntity<ProductSubmitResponse> {
-        val userId = extractUserId()
         val command = SubmitProductCommand(userId = userId, productId = productId)
         val response = submitProductUseCase.execute(command)
         return ResponseEntity.ok(response)
-    }
-
-    private fun extractUserId(): Long {
-        val authentication = SecurityContextHolder.getContext().authentication
-        return requireNotNull(authentication?.principal as? Long) {
-            "인증 정보에서 사용자 ID를 추출할 수 없습니다"
-        }
     }
 }

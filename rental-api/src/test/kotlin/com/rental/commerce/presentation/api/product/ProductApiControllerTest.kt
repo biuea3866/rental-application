@@ -17,13 +17,16 @@ import com.rental.commerce.domain.product.ProductCondition
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
+import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.context.SecurityContextImpl
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -44,16 +47,14 @@ class ProductApiControllerTest : BehaviorSpec({
     )
     val mockMvc: MockMvc = MockMvcBuilders
         .standaloneSetup(controller)
+        .setCustomArgumentResolvers(MemberIdArgumentResolver())
         .setControllerAdvice(GlobalExceptionHandler())
         .build()
 
-    fun setAuthentication(userId: Long = 1L) {
-        val authentication = UsernamePasswordAuthenticationToken(userId, null, emptyList())
-        SecurityContextHolder.getContext().authentication = authentication
-    }
-
     beforeEach {
         clearMocks(createProductDraftUseCase, updateProductDraftUseCase, getProductDraftUseCase, submitProductUseCase)
+        val auth = UsernamePasswordAuthenticationToken(1L, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
+        SecurityContextHolder.setContext(SecurityContextImpl(auth))
     }
 
     afterEach {
@@ -64,8 +65,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("정상적인 DRAFT 생성 요청을 보내면") {
             Then("201 Created와 상품 정보가 반환된다") {
-                setAuthentication()
-
                 val response = ProductDraftResponse(
                     id = 1L,
                     status = ProductStatus.DRAFT,
@@ -87,6 +86,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"name":"맥북 프로","categoryCode":"ELECTRONICS"}"""
+
                 }
 
                 result.andExpect {
@@ -102,8 +102,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("빈 요청 바디로 DRAFT 생성 요청을 보내면") {
             Then("201 Created가 반환된다") {
-                setAuthentication()
-
                 val response = ProductDraftResponse(
                     id = 2L,
                     status = ProductStatus.DRAFT,
@@ -121,6 +119,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{}"""
+
                 }
 
                 result.andExpect {
@@ -136,8 +135,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("정상적인 DRAFT 업데이트 요청을 보내면") {
             Then("200 OK와 업데이트된 상품 정보가 반환된다") {
-                setAuthentication()
-
                 val response = ProductDraftResponse(
                     id = 1L,
                     status = ProductStatus.DRAFT,
@@ -160,6 +157,7 @@ class ProductApiControllerTest : BehaviorSpec({
                         "condition": "LIKE_NEW",
                         "depositAmount": 500000
                     }"""
+
                 }
 
                 result.andExpect {
@@ -173,11 +171,10 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("step 값이 1 미만인 요청을 보내면") {
             Then("400 Validation Error가 반환된다") {
-                setAuthentication()
-
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 0}"""
+
                 }
 
                 result.andExpect {
@@ -188,11 +185,10 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("step 값이 10 초과인 요청을 보내면") {
             Then("400 Validation Error가 반환된다") {
-                setAuthentication()
-
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 11}"""
+
                 }
 
                 result.andExpect {
@@ -203,8 +199,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("존재하지 않는 상품을 업데이트하려고 하면") {
             Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     updateProductDraftUseCase.execute(any())
                 } throws ResourceNotFoundException(
@@ -214,6 +208,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/999") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
+
                 }
 
                 result.andExpect {
@@ -225,8 +220,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("권한이 없는 상품을 업데이트하려고 하면") {
             Then("403 PRODUCT_OWNERSHIP_DENIED 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     updateProductDraftUseCase.execute(any())
                 } throws BusinessException(
@@ -236,6 +229,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
+
                 }
 
                 result.andExpect {
@@ -250,8 +244,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("정상적으로 DRAFT 상품 상세를 조회하면") {
             Then("200 OK와 상세 정보가 반환된다") {
-                setAuthentication()
-
                 val response = ProductDraftDetailResponse(
                     id = 1L,
                     status = ProductStatus.DRAFT,
@@ -282,7 +274,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     getProductDraftUseCase.execute(userId = 1L, productId = 1L)
                 } returns response
 
-                val result = mockMvc.get("/api/v1/products/drafts/1")
+                val result = mockMvc.get("/api/v1/products/drafts/1") {
+
+                }
 
                 result.andExpect {
                     status { isOk() }
@@ -303,15 +297,15 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("존재하지 않는 상품을 조회하면") {
             Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     getProductDraftUseCase.execute(userId = 1L, productId = 999L)
                 } throws ResourceNotFoundException(
                     errorCode = ErrorCode.PRODUCT_NOT_FOUND,
                 )
 
-                val result = mockMvc.get("/api/v1/products/drafts/999")
+                val result = mockMvc.get("/api/v1/products/drafts/999") {
+
+                }
 
                 result.andExpect {
                     status { isNotFound() }
@@ -325,8 +319,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("정상적인 상품 제출 요청을 보내면") {
             Then("200 OK와 UNDER_REVIEW 상태의 상품 정보가 반환된다") {
-                setAuthentication()
-
                 val response = ProductSubmitResponse(
                     productId = 1L,
                     status = ProductStatus.UNDER_REVIEW,
@@ -360,8 +352,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("존재하지 않는 상품을 제출하면") {
             Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 999L)
@@ -382,8 +372,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("소유자가 아닌 사용자가 상품을 제출하면") {
             Then("403 PRODUCT_OWNERSHIP_DENIED 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)
@@ -404,8 +392,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("DRAFT가 아닌 상태의 상품을 제출하면") {
             Then("400 INVALID_STATE_TRANSITION 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)
@@ -425,8 +411,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
         When("필수 필드가 누락된 상품을 제출하면") {
             Then("400 INVALID_INPUT 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     submitProductUseCase.execute(
                         SubmitProductCommand(userId = 1L, productId = 1L)
