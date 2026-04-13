@@ -66,14 +66,14 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 60000
-            initialDelaySeconds: 90
-            periodSeconds: 20
+            initialDelaySeconds: 120
+            periodSeconds: 30
             timeoutSeconds: 15
-            failureThreshold: 15
+            failureThreshold: 20
           livenessProbe:
             tcpSocket:
               port: 60000
-            initialDelaySeconds: 300
+            initialDelaySeconds: 600
             periodSeconds: 30
             timeoutSeconds: 15
             failureThreshold: 5
