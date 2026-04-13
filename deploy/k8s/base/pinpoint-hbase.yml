@@ -27,6 +27,14 @@ spec:
         app.kubernetes.io/component: monitoring
         app.kubernetes.io/part-of: rental-commerce
     spec:
+      # pinpoint-hbase:3.0.0 내장 ZooKeeper는 zoo1/zoo2/zoo3 호스트명으로 쿼럼 구성
+      # K8s 단일 파드에서는 이 호스트명이 미해석 → 127.0.0.1 alias 필요
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - "zoo1"
+            - "zoo2"
+            - "zoo3"
       containers:
         - name: pinpoint-hbase
           image: pinpointdocker/pinpoint-hbase:3.0.0
