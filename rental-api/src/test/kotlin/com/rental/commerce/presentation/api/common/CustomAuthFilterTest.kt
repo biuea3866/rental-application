@@ -3,6 +3,7 @@ package com.rental.commerce.presentation.api.common
 import com.rental.commerce.infrastructure.auth.JwtProvider
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -12,166 +13,171 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.MySQLContainer
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.MySQLContainer
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class CustomAuthFilterTest(
-    private val mockMvc: MockMvc,
-    private val jwtProvider: JwtProvider,
-) : BehaviorSpec({
+class CustomAuthFilterTest : BehaviorSpec() {
 
-    extensions(SpringExtension)
+    override fun extensions() = listOf(SpringExtension)
 
-    Given("@Public 어노테이션이 붙은 경로") {
+    @Autowired
+    private lateinit var mockMvc: MockMvc
 
-        When("GET /api/v1/auth/test 에 토큰 없이 요청하면") {
-            val result = mockMvc.get("/api/v1/auth/test") {
-                contentType = MediaType.APPLICATION_JSON
+    @Autowired
+    private lateinit var jwtProvider: JwtProvider
+
+    init {
+
+        Given("@Public 어노테이션이 붙은 경로") {
+
+            When("GET /api/v1/auth/test 에 토큰 없이 요청하면") {
+                val result = mockMvc.get("/api/v1/auth/test") {
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("200 OK가 반환된다") {
+                    result.andExpect {
+                        status { isOk() }
+                    }
+                }
             }
 
-            Then("200 OK가 반환된다") {
-                result.andExpect {
-                    status { isOk() }
+            When("GET /api/v1/price-guides/test 에 토큰 없이 요청하면") {
+                val result = mockMvc.get("/api/v1/price-guides/test") {
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("200 OK가 반환된다") {
+                    result.andExpect {
+                        status { isOk() }
+                    }
                 }
             }
         }
 
-        When("GET /api/v1/price-guides/test 에 토큰 없이 요청하면") {
-            val result = mockMvc.get("/api/v1/price-guides/test") {
-                contentType = MediaType.APPLICATION_JSON
-            }
+        Given("인증이 필요한 경로") {
 
-            Then("200 OK가 반환된다") {
-                result.andExpect {
-                    status { isOk() }
+            When("GET /api/v1/protected 에 토큰 없이 요청하면") {
+                val result = mockMvc.get("/api/v1/protected") {
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("401 Unauthorized가 반환된다") {
+                    result.andExpect {
+                        status { isUnauthorized() }
+                    }
                 }
             }
-        }
-    }
 
-    Given("인증이 필요한 경로") {
+            When("GET /api/v1/protected 에 유효한 토큰으로 요청하면") {
+                val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
+                val result = mockMvc.get("/api/v1/protected") {
+                    header("Authorization", "Bearer $token")
+                    contentType = MediaType.APPLICATION_JSON
+                }
 
-        When("GET /api/v1/protected 에 토큰 없이 요청하면") {
-            val result = mockMvc.get("/api/v1/protected") {
-                contentType = MediaType.APPLICATION_JSON
-            }
-
-            Then("401 Unauthorized가 반환된다") {
-                result.andExpect {
-                    status { isUnauthorized() }
+                Then("200 OK가 반환된다") {
+                    result.andExpect {
+                        status { isOk() }
+                    }
                 }
             }
-        }
 
-        When("GET /api/v1/protected 에 유효한 토큰으로 요청하면") {
-            val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
-            val result = mockMvc.get("/api/v1/protected") {
-                header("Authorization", "Bearer $token")
-                contentType = MediaType.APPLICATION_JSON
-            }
+            When("GET /api/v1/protected 에 잘못된 토큰으로 요청하면") {
+                val result = mockMvc.get("/api/v1/protected") {
+                    header("Authorization", "Bearer invalid.token.value")
+                    contentType = MediaType.APPLICATION_JSON
+                }
 
-            Then("200 OK가 반환된다") {
-                result.andExpect {
-                    status { isOk() }
+                Then("401 Unauthorized가 반환된다") {
+                    result.andExpect {
+                        status { isUnauthorized() }
+                    }
                 }
             }
-        }
 
-        When("GET /api/v1/protected 에 잘못된 토큰으로 요청하면") {
-            val result = mockMvc.get("/api/v1/protected") {
-                header("Authorization", "Bearer invalid.token.value")
-                contentType = MediaType.APPLICATION_JSON
-            }
-
-            Then("401 Unauthorized가 반환된다") {
-                result.andExpect {
-                    status { isUnauthorized() }
+            When("GET /api/v1/protected 에 Bearer 접두사 없이 토큰을 전달하면") {
+                val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
+                val result = mockMvc.get("/api/v1/protected") {
+                    header("Authorization", token)
+                    contentType = MediaType.APPLICATION_JSON
                 }
-            }
-        }
 
-        When("GET /api/v1/protected 에 Bearer 접두사 없이 토큰을 전달하면") {
-            val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
-            val result = mockMvc.get("/api/v1/protected") {
-                header("Authorization", token)
-                contentType = MediaType.APPLICATION_JSON
-            }
-
-            Then("401 Unauthorized가 반환된다") {
-                result.andExpect {
-                    status { isUnauthorized() }
-                }
-            }
-        }
-    }
-
-    Given("관리자 전용 경로 (@RoleRequired)") {
-
-        When("GET /api/admin/dashboard 에 ADMIN 역할로 요청하면") {
-            val token = jwtProvider.createAccessToken(userId = 1L, role = "ADMIN")
-            val result = mockMvc.get("/api/admin/dashboard") {
-                header("Authorization", "Bearer $token")
-                contentType = MediaType.APPLICATION_JSON
-            }
-
-            Then("200 OK가 반환된다") {
-                result.andExpect {
-                    status { isOk() }
+                Then("401 Unauthorized가 반환된다") {
+                    result.andExpect {
+                        status { isUnauthorized() }
+                    }
                 }
             }
         }
 
-        When("GET /api/admin/dashboard 에 일반 USER 역할로 요청하면") {
-            val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
-            val result = mockMvc.get("/api/admin/dashboard") {
-                header("Authorization", "Bearer $token")
-                contentType = MediaType.APPLICATION_JSON
+        Given("관리자 전용 경로 (@RoleRequired)") {
+
+            When("GET /api/admin/dashboard 에 ADMIN 역할로 요청하면") {
+                val token = jwtProvider.createAccessToken(userId = 1L, role = "ADMIN")
+                val result = mockMvc.get("/api/admin/dashboard") {
+                    header("Authorization", "Bearer $token")
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("200 OK가 반환된다") {
+                    result.andExpect {
+                        status { isOk() }
+                    }
+                }
             }
 
-            Then("403 Forbidden이 반환된다") {
-                result.andExpect {
-                    status { isForbidden() }
+            When("GET /api/admin/dashboard 에 일반 USER 역할로 요청하면") {
+                val token = jwtProvider.createAccessToken(userId = 1L, role = "USER")
+                val result = mockMvc.get("/api/admin/dashboard") {
+                    header("Authorization", "Bearer $token")
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("403 Forbidden이 반환된다") {
+                    result.andExpect {
+                        status { isForbidden() }
+                    }
+                }
+            }
+
+            When("GET /api/admin/dashboard 에 토큰 없이 요청하면") {
+                val result = mockMvc.get("/api/admin/dashboard") {
+                    contentType = MediaType.APPLICATION_JSON
+                }
+
+                Then("401 Unauthorized가 반환된다") {
+                    result.andExpect {
+                        status { isUnauthorized() }
+                    }
                 }
             }
         }
 
-        When("GET /api/admin/dashboard 에 토큰 없이 요청하면") {
-            val result = mockMvc.get("/api/admin/dashboard") {
-                contentType = MediaType.APPLICATION_JSON
-            }
+        Given("CORS 설정") {
 
-            Then("401 Unauthorized가 반환된다") {
-                result.andExpect {
-                    status { isUnauthorized() }
+            When("다른 Origin에서 요청하면") {
+                val result = mockMvc.get("/api/v1/auth/test") {
+                    header("Origin", "http://localhost:3000")
+                    contentType = MediaType.APPLICATION_JSON
                 }
-            }
-        }
-    }
 
-    Given("CORS 설정") {
-
-        When("다른 Origin에서 요청하면") {
-            val result = mockMvc.get("/api/v1/auth/test") {
-                header("Origin", "http://localhost:3000")
-                contentType = MediaType.APPLICATION_JSON
-            }
-
-            Then("CORS 헤더가 포함된다") {
-                result.andExpect {
-                    status { isOk() }
-                    header {
-                        string("Access-Control-Allow-Origin", "http://localhost:3000")
+                Then("CORS 헤더가 포함된다") {
+                    result.andExpect {
+                        status { isOk() }
+                        header {
+                            string("Access-Control-Allow-Origin", "http://localhost:3000")
+                        }
                     }
                 }
             }
         }
     }
-) {
 
     companion object {
         val mysqlContainer: MySQLContainer<*> = MySQLContainer("mysql:8.0").apply {
