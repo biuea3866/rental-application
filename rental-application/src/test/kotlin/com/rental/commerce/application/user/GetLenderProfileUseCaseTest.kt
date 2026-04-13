@@ -2,8 +2,8 @@ package com.rental.commerce.application.user
 
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.user.LenderProfile
-import com.rental.commerce.domain.user.LenderProfileRepository
 import com.rental.commerce.domain.user.LenderType
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.VerificationStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -13,8 +13,8 @@ import io.mockk.mockk
 
 class GetLenderProfileUseCaseTest : BehaviorSpec({
 
-    val lenderProfileRepository = mockk<LenderProfileRepository>()
-    val useCase = GetLenderProfileUseCase(lenderProfileRepository)
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = GetLenderProfileUseCase(userDomainService)
 
     Given("대여자 프로필 조회 시") {
 
@@ -29,7 +29,7 @@ class GetLenderProfileUseCaseTest : BehaviorSpec({
                 settlementAccountNumber = "110-123-456789",
             )
 
-            every { lenderProfileRepository.findByUserId(userId) } returns profile
+            every { userDomainService.findLenderProfileByUserId(userId) } returns profile
 
             val result = useCase.execute(userId)
 
@@ -45,7 +45,7 @@ class GetLenderProfileUseCaseTest : BehaviorSpec({
         When("프로필이 존재하지 않으면") {
             val userId = 999L
 
-            every { lenderProfileRepository.findByUserId(userId) } returns null
+            every { userDomainService.findLenderProfileByUserId(userId) } returns null
 
             Then("ResourceNotFoundException이 발생한다") {
                 shouldThrow<ResourceNotFoundException> {

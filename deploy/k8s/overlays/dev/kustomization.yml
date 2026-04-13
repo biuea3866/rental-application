@@ -10,14 +10,14 @@ kind: Kustomization
 namespace: rental-commerce-dev
 
 resources:
-  - ../../  # base 참조
+  - ../../base  # base 참조 (kustomize v5 compatible)
 
 # dev 환경 이미지 태그 — ArgoCD Image Updater 또는 CD 파이프라인이 갱신
 images:
   - name: ghcr.io/biuea3866/rental-commerce
-    newTag: dev-7c4186ab0073ba4bbbac94ec82b01c843754ff40
+    newTag: dev-ccd7f9e0bb0a55d124f19c7db9b228a0ae172ec4
 
-# dev 환경 레플리카 수 축소
+# dev 환경 레플리카 수 축소 + ConfigMap 오버라이드
 patches:
   - target:
       kind: Deployment
@@ -26,14 +26,17 @@ patches:
       - op: replace
         path: /spec/replicas
         value: 1
-
-# dev 환경 ConfigMap 오버라이드
-configMapGenerator:
-  - name: rental-api-config
-    behavior: merge
-    literals:
-      - SPRING_PROFILES_ACTIVE=dev
-      - LOG_LEVEL=DEBUG
+  - target:
+      kind: ConfigMap
+      name: rental-api-config
+    patch: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: rental-api-config
+      data:
+        SPRING_PROFILES_ACTIVE: "dev"
+        LOG_LEVEL: "DEBUG"
 
 # dev 환경 라벨
 commonLabels:

@@ -5,7 +5,13 @@ import {
   generateStubTokens,
   STUB_PASSWORD,
 } from "../users";
-import type { LoginRequest, SignupRequest, User } from "@/lib/api/types";
+import type {
+  LoginRequest,
+  SignupRequest,
+  VerifyPhoneRequest,
+  SocialLoginRequest,
+  User,
+} from "@/lib/api/types";
 
 // ========================================
 // Auth MSW 핸들러
@@ -19,6 +25,9 @@ let currentUser: User | null = null;
 export function resetAuthHandlerState(): void {
   currentUser = null;
 }
+
+/** 유효한 인증코드 (테스트용) */
+export const STUB_VERIFICATION_CODE = "123456";
 
 export const authHandlers = [
   // 로그인
@@ -48,7 +57,7 @@ export const authHandlers = [
     });
   }),
 
-  // 회원가입
+  // 회원가입 (인증코드 발송)
   http.post(`${BASE_URL}/api/v1/auth/signup`, async ({ request }) => {
     await delay(200);
 
@@ -76,6 +85,58 @@ export const authHandlers = [
     };
 
     currentUser = newUser;
+    return HttpResponse.json({
+      success: true,
+      data: { message: "인증코드가 발송되었습니다." },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // 휴대폰 인증 완료
+  http.post(`${BASE_URL}/api/v1/auth/verify-phone`, async ({ request }) => {
+    await delay(200);
+
+    const body = (await request.json()) as VerifyPhoneRequest;
+
+    if (body.code !== STUB_VERIFICATION_CODE) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          message: "인증코드가 올바르지 않습니다.",
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: generateStubTokens(),
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // 소셜 로그인
+  http.post(`${BASE_URL}/api/v1/auth/social-login`, async ({ request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as SocialLoginRequest;
+
+    if (!body.code || !body.provider) {
+      return HttpResponse.json(
+        {
+          success: false,
+          data: null,
+          message: "소셜 로그인 정보가 올바르지 않습니다.",
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    // 소셜 로그인 성공 시 첫 번째 스텁 유저로 처리
+    currentUser = STUB_USERS[0];
     return HttpResponse.json({
       success: true,
       data: generateStubTokens(),

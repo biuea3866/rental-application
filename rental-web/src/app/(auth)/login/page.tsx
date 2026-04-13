@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardHeader,
@@ -13,20 +10,44 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthStore } from "@/stores/auth-store";
+import type { LoginFormValues } from "@/components/auth/LoginForm";
+import type { SocialProvider } from "@/lib/api/types";
+
+// ========================================
+// 로그인 페이지
+// ========================================
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = await login({ email, password });
+  const handleLogin = async (values: LoginFormValues) => {
+    const result = await login({ email: values.email, password: values.password });
     if (result.success) {
-      router.push("/");
+      // role에 따라 적절한 페이지로 이동
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role === "LENDER") {
+        router.push("/lender");
+      } else if (currentUser?.role === "RENTER") {
+        router.push("/products");
+      } else {
+        router.push("/");
+      }
     }
+  };
+
+  const handleSocialLogin = async (provider: SocialProvider) => {
+    const redirectUri = `${window.location.origin}/login/social/callback`;
+    const socialLoginUrls: Record<SocialProvider, string> = {
+      KAKAO: `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${provider}`,
+      NAVER: `https://nid.naver.com/oauth2.0/authorize?client_id=${process.env.NEXT_PUBLIC_NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${provider}`,
+    };
+
+    window.location.href = socialLoginUrls[provider];
   };
 
   return (
@@ -34,56 +55,30 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">로그인</CardTitle>
-          <CardDescription>
-            Rental Commerce에 로그인하세요
-          </CardDescription>
+          <CardDescription>Rental Commerce에 로그인하세요</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                이메일
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                비밀번호
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "로그인 중..." : "로그인"}
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              계정이 없으신가요?{" "}
-              <Link href="/signup" className="text-primary underline">
-                회원가입
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+
+        <CardContent className="space-y-6">
+          <LoginForm
+            onSubmit={handleLogin}
+            isLoading={isLoading}
+            serverError={error}
+          />
+
+          <SocialLoginButtons
+            onSocialLogin={handleSocialLogin}
+            isLoading={isLoading}
+          />
+        </CardContent>
+
+        <CardFooter className="justify-center">
+          <p className="text-sm text-muted-foreground">
+            계정이 없으신가요?{" "}
+            <Link href="/signup" className="text-primary underline underline-offset-4">
+              회원가입
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </main>
   );

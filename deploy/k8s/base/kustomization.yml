@@ -1,0 +1,23 @@
+# =============================================================================
+# Kustomize Base: rental-commerce (base wrapper)
+# =============================================================================
+# kustomize v5 requires overlays to reference a non-ancestor directory.
+# This base/ directory wraps the root manifests so overlays can reference
+# deploy/k8s/base/ safely without triggering cycle detection.
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: rental-commerce
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - namespace.yml
+  - configmap.yml
+  - secret.yml
+  - deployment.yml
+  - service.yml
+  - ingress.yml
+  - hpa.yml

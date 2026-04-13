@@ -67,7 +67,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 setAuthentication()
 
                 val response = ProductDraftResponse(
-                    productId = 1L,
+                    id = 1L,
                     status = ProductStatus.DRAFT,
                     currentDraftStep = 1,
                     name = "맥북 프로",
@@ -91,7 +91,7 @@ class ProductApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isCreated() }
-                    jsonPath("$.productId") { value(1) }
+                    jsonPath("$.id") { value(1) }
                     jsonPath("$.status") { value("DRAFT") }
                     jsonPath("$.currentDraftStep") { value(1) }
                     jsonPath("$.name") { value("맥북 프로") }
@@ -105,7 +105,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 setAuthentication()
 
                 val response = ProductDraftResponse(
-                    productId = 2L,
+                    id = 2L,
                     status = ProductStatus.DRAFT,
                     currentDraftStep = 1,
                     name = null,
@@ -125,7 +125,7 @@ class ProductApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isCreated() }
-                    jsonPath("$.productId") { value(2) }
+                    jsonPath("$.id") { value(2) }
                     jsonPath("$.status") { value("DRAFT") }
                 }
             }
@@ -139,7 +139,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 setAuthentication()
 
                 val response = ProductDraftResponse(
-                    productId = 1L,
+                    id = 1L,
                     status = ProductStatus.DRAFT,
                     currentDraftStep = 2,
                     name = "맥북 프로 16인치",
@@ -164,7 +164,7 @@ class ProductApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isOk() }
-                    jsonPath("$.productId") { value(1) }
+                    jsonPath("$.id") { value(1) }
                     jsonPath("$.currentDraftStep") { value(2) }
                     jsonPath("$.name") { value("맥북 프로 16인치") }
                 }
@@ -253,7 +253,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 setAuthentication()
 
                 val response = ProductDraftDetailResponse(
-                    productId = 1L,
+                    id = 1L,
                     status = ProductStatus.DRAFT,
                     currentDraftStep = 3,
                     name = "맥북 프로",
@@ -263,14 +263,14 @@ class ProductApiControllerTest : BehaviorSpec({
                     depositAmount = 500000L,
                     prices = listOf(
                         ProductDraftDetailResponse.PriceResponse(
-                            productPriceId = 10L,
+                            id = 10L,
                             rentalUnit = RentalUnit.DAILY,
                             priceAmount = 30000L,
                         ),
                     ),
                     images = listOf(
                         ProductDraftDetailResponse.ImageResponse(
-                            productImageId = 20L,
+                            id = 20L,
                             objectKey = "products/uuid-001.jpg",
                             originalFilename = "front.jpg",
                             sortOrder = 1,
@@ -286,7 +286,7 @@ class ProductApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isOk() }
-                    jsonPath("$.productId") { value(1) }
+                    jsonPath("$.id") { value(1) }
                     jsonPath("$.name") { value("맥북 프로") }
                     jsonPath("$.description") { value("최신형 맥북 프로입니다") }
                     jsonPath("$.categoryCode") { value("ELECTRONICS") }

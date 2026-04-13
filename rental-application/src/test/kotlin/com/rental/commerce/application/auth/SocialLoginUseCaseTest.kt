@@ -46,7 +46,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.KAKAO,
                 socialProviderId = "kakao_123",
-                userId = 1L,
+                id = 1L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "valid_auth_code") } returns "kakao_access_token"
@@ -95,7 +95,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.KAKAO,
                 socialProviderId = "kakao_new_456",
-                userId = 2L,
+                id = 2L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "new_user_auth_code") } returns "new_kakao_token"
@@ -148,7 +148,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 phone = "01012345678",
                 passwordHash = "hashed_pw",
                 role = UserRole.RENTER,
-                userId = 3L,
+                id = 3L,
             )
 
             val linkedUser = User(
@@ -159,7 +159,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 role = UserRole.RENTER,
                 socialProvider = SocialProvider.NAVER,
                 socialProviderId = "naver_789",
-                userId = 3L,
+                id = 3L,
             )
 
             every { socialLoginGateway.getAccessToken(SocialProvider.NAVER, "existing_email_code") } returns "naver_token"

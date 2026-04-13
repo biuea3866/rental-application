@@ -55,7 +55,7 @@ class SubmitProductApiIntegrationTest(
                         role = UserRole.LENDER,
                     )
                 )
-                val userId = requireNotNull(user.userId) { "저장된 User의 ID가 null입니다" }
+                val userId = requireNotNull(user.id) { "저장된 User의 ID가 null입니다" }
 
                 val product = productRepository.save(
                     Product(
@@ -105,7 +105,7 @@ class SubmitProductApiIntegrationTest(
                         role = UserRole.LENDER,
                     )
                 )
-                val userId = requireNotNull(user.userId) { "저장된 User의 ID가 null입니다" }
+                val userId = requireNotNull(user.id) { "저장된 User의 ID가 null입니다" }
                 val accessToken = jwtProvider.createAccessToken(userId = userId, role = "USER")
 
                 val result = mockMvc.post("/api/v1/products/drafts/99999/submit") {
@@ -130,7 +130,7 @@ class SubmitProductApiIntegrationTest(
                         role = UserRole.LENDER,
                     )
                 )
-                val ownerId = requireNotNull(owner.userId) { "저장된 Owner의 ID가 null입니다" }
+                val ownerId = requireNotNull(owner.id) { "저장된 Owner의 ID가 null입니다" }
 
                 val otherUser = userRepository.save(
                     User(
@@ -141,7 +141,7 @@ class SubmitProductApiIntegrationTest(
                         role = UserRole.LENDER,
                     )
                 )
-                val otherUserId = requireNotNull(otherUser.userId) { "저장된 Other User의 ID가 null입니다" }
+                val otherUserId = requireNotNull(otherUser.id) { "저장된 Other User의 ID가 null입니다" }
 
                 val product = productRepository.save(
                     Product(
@@ -179,7 +179,7 @@ class SubmitProductApiIntegrationTest(
                         role = UserRole.LENDER,
                     )
                 )
-                val userId = requireNotNull(user.userId) { "저장된 User의 ID가 null입니다" }
+                val userId = requireNotNull(user.id) { "저장된 User의 ID가 null입니다" }
 
                 val product = productRepository.save(
                     Product(
