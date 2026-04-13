@@ -38,7 +38,10 @@ patches:
         SPRING_PROFILES_ACTIVE: "dev"
         LOG_LEVEL: "DEBUG"
 
-# dev 환경 라벨
-commonLabels:
-  app.kubernetes.io/instance: rental-commerce-dev
-  environment: dev
+# dev 환경 라벨 — includeSelectors: false 로 Service selector 오염 방지
+# commonLabels는 Service spec.selector까지 변경하여 엔드포인트 불일치 버그 유발
+labels:
+  - pairs:
+      app.kubernetes.io/instance: rental-commerce-dev
+      environment: dev
+    includeSelectors: false
