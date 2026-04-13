@@ -71,31 +71,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ArgoCD GitOps: Kustomize overlay의 이미지 태그를 갱신하여 PR 생성
-      # dev 브랜치 보호 정책으로 직접 push 불가 → PR을 통해 갱신
-      - name: Update Kustomize image tag and create PR
+      # ArgoCD GitOps: gitops/dev 브랜치에 이미지 태그 직접 push
+      # gitops/dev는 branch protection 없음 → PR 없이 바로 반영
+      - name: Update Kustomize image tag on gitops/dev
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          BRANCH="chore/cd-dev-image-${{ github.sha }}"
-          git checkout -b "$BRANCH"
+          # gitops/dev 브랜치로 전환 (없으면 dev 기반으로 생성)
+          git fetch origin gitops/dev:gitops/dev 2>/dev/null || git checkout -b gitops/dev
+          git checkout gitops/dev
+          # dev 브랜치의 k8s 파일 동기화 (베이스 매니페스트 최신화)
+          git checkout origin/dev -- deploy/k8s/
 
           cd deploy/k8s/overlays/dev
-          cat kustomization.yml | sed "s/newTag: .*/newTag: dev-${{ github.sha }}/" > kustomization.tmp.yml
-          mv kustomization.tmp.yml kustomization.yml
+          sed -i "s/newTag: .*/newTag: dev-${{ github.sha }}/" kustomization.yml
 
-          git add kustomization.yml
+          git add deploy/k8s/
           git diff --staged --quiet && echo "No changes" && exit 0
 
-          git commit -m "chore(cd): dev 이미지 태그 갱신 — dev-${{ github.sha }}"
-          git push origin "$BRANCH"
-
-          gh pr create \
-            --base dev \
-            --head "$BRANCH" \
-            --title "chore(cd): dev 이미지 태그 갱신 — dev-${{ github.sha }}" \
-            --body "자동 생성된 PR입니다. CD 파이프라인이 빌드한 이미지 태그를 반영합니다." \
-            --label "automated" || true
+          git commit -m "chore(gitops): dev 이미지 태그 갱신 — dev-${{ github.sha }}"
+          git push origin gitops/dev
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
