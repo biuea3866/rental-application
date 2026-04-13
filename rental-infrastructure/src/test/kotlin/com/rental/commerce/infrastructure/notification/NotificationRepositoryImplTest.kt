@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -30,6 +32,7 @@ import org.springframework.test.context.DynamicPropertySource
 @ActiveProfiles("test")
 class NotificationRepositoryImplTest(
     private val notificationRepository: NotificationRepository,
+    private val transactionManager: PlatformTransactionManager,
 ) : BehaviorSpec({
 
     extensions(SpringExtension)
@@ -136,7 +139,8 @@ class NotificationRepositoryImplTest(
             notificationRepository.save(createNotification(userId = userId, isRead = false))
             notificationRepository.save(createNotification(userId = userId, isRead = false))
 
-            notificationRepository.markAllAsReadByUserId(userId)
+            val txTemplate = TransactionTemplate(transactionManager)
+            txTemplate.execute { notificationRepository.markAllAsReadByUserId(userId) }
 
             val unreadCount = notificationRepository.countUnreadByUserId(userId)
 

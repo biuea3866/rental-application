@@ -1,0 +1,39 @@
+# Build outputs
+build/
+out/
+.gradle/
+*.class
+*.jar
+*.war
+
+# Node.js
+node_modules/
+.next/
+.turbo/
+dist/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+docker-data/
+
+# Test outputs
+**/build/reports/
+**/build/test-results/
+**/build/generated/
+
+# Kotlin compiled
+.kotlin/
+
+# Coverage
+coverage/
+*.lcov
