@@ -8,6 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/__tests__/setup.ts"],
+    env: {
+      NEXT_PUBLIC_API_MODE: "real",
+      NEXT_PUBLIC_API_URL: "http://localhost:8080",
+    },
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
     coverage: {
