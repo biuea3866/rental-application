@@ -15,7 +15,7 @@ resources:
 # dev 환경 이미지 태그 — ArgoCD Image Updater 또는 CD 파이프라인이 갱신
 images:
   - name: ghcr.io/biuea3866/rental-commerce
-    newTag: dev-ccd7f9e0bb0a55d124f19c7db9b228a0ae172ec4
+    newTag: dev-760226fa1601f7a48513cc17b0d88b6a5fbaa267
 
 # dev 환경 레플리카 수 축소 + ConfigMap 오버라이드
 patches:
