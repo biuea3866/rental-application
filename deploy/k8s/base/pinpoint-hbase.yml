@@ -53,7 +53,9 @@ spec:
               echo "[init] wiping stale HBase data dir (ephemeral storage, dev only)" &&
               rm -rf /home/pinpoint/hbase/* &&
               /usr/local/bin/initialize-hbase.sh &&
-              tail -f /dev/null
+              HBASE_PID=$(pgrep -f "proc_master") &&
+              echo "[init] HBase master PID=$HBASE_PID, waiting for it to exit" &&
+              tail --pid=$HBASE_PID -f /dev/null
           ports:
             - name: hbase-master
               containerPort: 60000
