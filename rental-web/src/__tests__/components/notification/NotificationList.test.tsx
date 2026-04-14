@@ -251,4 +251,62 @@ describe("NotificationList", () => {
       expect(screen.getByRole("list", { name: "알림 목록" })).toBeInTheDocument();
     });
   });
+
+  it("API 오류 시 에러 메시지가 표시되어야 한다", async () => {
+    (mockApiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("알림 조회 실패")
+    );
+
+    renderWithQuery(<NotificationList />);
+
+    await waitFor(() => {
+      expect(screen.getByText("알림을 불러오지 못했습니다.")).toBeInTheDocument();
+    });
+  });
+
+  it("알림이 없을 때 '알림이 없습니다.' 메시지가 표시되어야 한다", async () => {
+    (mockApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      data: {
+        content: [],
+        page: 0,
+        size: 10,
+        totalElements: 0,
+        totalPages: 0,
+        hasNext: false,
+      },
+      timestamp: "",
+    });
+
+    renderWithQuery(<NotificationList />);
+
+    await waitFor(() => {
+      expect(screen.getByText("알림이 없습니다.")).toBeInTheDocument();
+    });
+  });
+
+  it("다음 페이지가 없으면 '전체 읽음' 버튼이 없어야 한다 (모두 읽음 상태)", async () => {
+    const allReadNotifications = STUB_NOTIFICATIONS.map((n) => ({ ...n, isRead: true }));
+
+    (mockApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      data: {
+        content: allReadNotifications,
+        page: 0,
+        size: 10,
+        totalElements: allReadNotifications.length,
+        totalPages: 1,
+        hasNext: false,
+      },
+      timestamp: "",
+    });
+
+    renderWithQuery(<NotificationList />);
+
+    await waitFor(() => {
+      expect(screen.getByText("모두 읽었습니다")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("button", { name: "전체 읽음" })).not.toBeInTheDocument();
+  });
 });

@@ -23,9 +23,10 @@ spec:
   project: default
 
   source:
-    # GitOps 소스 — 이 레포의 Kustomize overlay 경로
+    # GitOps 소스 — gitops/dev 브랜치의 Kustomize overlay 경로
+    # CD 파이프라인이 이미지 태그를 직접 push하는 전용 브랜치 (branch protection 없음)
     repoURL: https://github.com/biuea3866/rental-application.git
-    targetRevision: dev
+    targetRevision: gitops/dev
     path: deploy/k8s/overlays/dev
 
   destination:

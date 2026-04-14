@@ -1,0 +1,125 @@
+# =============================================================================
+# Pinpoint ZooKeeper - Deployment + Service
+# =============================================================================
+# pinpointdocker/pinpoint-hbase:3.0.0 이미지는 zoo1:2181 외부 ZK를 전제로 설계됨.
+# 단독 K8s 파드에서 embedded ZK를 사용하면 시작 타이밍 문제로 table creation 실패.
+# → Pinpoint 전용 ZooKeeper를 'zoo1' 서비스명으로 배포하여 외부 ZK로 사용.
+# =============================================================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-zookeeper
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-zookeeper
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pinpoint-zookeeper
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pinpoint-zookeeper
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: rental-commerce
+    spec:
+      containers:
+        - name: zookeeper
+          image: zookeeper:3.8
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: client
+              containerPort: 2181
+              protocol: TCP
+          env:
+            - name: ZOO_MY_ID
+              value: "1"
+            - name: ZOO_SERVERS
+              value: "server.1=0.0.0.0:2888:3888;2181"
+            # HBase AgentStatV2 63 region 생성 중 GC pause 대응 — 기본 40초 제한 해제
+            - name: ZOO_CFG_EXTRA
+              value: "maxSessionTimeout=600000"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+          readinessProbe:
+            tcpSocket:
+              port: 2181
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            tcpSocket:
+              port: 2181
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+---
+# zoo1/zoo2/zoo3 서비스 — pinpoint-hbase 이미지가 하드코딩된 ZK 쿼럼(zoo1,zoo2,zoo3)을 사용
+# 단일 ZooKeeper 파드로 모두 라우팅하여 클라이언트가 임의 서버에 연결 성공하도록 처리
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo1
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-zookeeper
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: ClusterIP
+  ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-zookeeper
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo2
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-zookeeper
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: ClusterIP
+  ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-zookeeper
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo3
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-zookeeper
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: ClusterIP
+  ports:
+    - name: client
+      port: 2181
+      targetPort: 2181
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-zookeeper

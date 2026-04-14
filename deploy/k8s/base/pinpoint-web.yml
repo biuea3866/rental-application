@@ -1,0 +1,94 @@
+# =============================================================================
+# Pinpoint Web - Deployment + Service
+# =============================================================================
+# PINPOINT_ZOOKEEPER_ADDRESS: pinpoint-hbase 내장 ZooKeeper(2181) 사용
+# =============================================================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-web
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-web
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pinpoint-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pinpoint-web
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: rental-commerce
+    spec:
+      initContainers:
+        - name: wait-hbase
+          image: alpine:3.19
+          command: ['sh', '-c', 'until nc -z -w3 zoo1 2181; do echo waiting for ZooKeeper; sleep 5; done && until nc -z -w3 pinpoint-hbase 60000; do echo waiting for HBase master; sleep 5; done']
+      containers:
+        - name: pinpoint-web
+          image: pinpointdocker/pinpoint-web:3.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ACCEPT_EULA
+              value: "true"
+            - name: PINPOINT_ZOOKEEPER_ADDRESS
+              value: "zoo1"
+            - name: CLUSTER_ENABLE
+              value: "true"
+            - name: HBASE_HOST
+              value: "pinpoint-hbase"
+            - name: HBASE_PORT
+              value: "60000"
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+          # HBase warmup 시간 고려 느슨한 probe (collector와 동일한 사유)
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 15
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinpoint-web
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-web
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30880
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-web

@@ -1,0 +1,126 @@
+# =============================================================================
+# Pinpoint Collector - Deployment + Service
+# =============================================================================
+# PINPOINT_ZOOKEEPER_ADDRESS: pinpoint-hbase 내장 ZooKeeper(2181) 사용
+# =============================================================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinpoint-collector
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-collector
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pinpoint-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pinpoint-collector
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: rental-commerce
+    spec:
+      initContainers:
+        - name: wait-hbase
+          image: alpine:3.19
+          command: ['sh', '-c', 'until nc -z -w3 zoo1 2181; do echo waiting for ZooKeeper; sleep 5; done && until nc -z -w3 pinpoint-hbase 60000; do echo waiting for HBase master; sleep 5; done']
+      containers:
+        - name: pinpoint-collector
+          image: pinpointdocker/pinpoint-collector:3.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: agent-grpc
+              containerPort: 9991
+              protocol: TCP
+            - name: stat-grpc
+              containerPort: 9992
+              protocol: TCP
+            - name: span-grpc
+              containerPort: 9993
+              protocol: TCP
+            - name: profiler-thrift
+              containerPort: 9994
+              protocol: TCP
+            - name: agent-thrift
+              containerPort: 9995
+              protocol: TCP
+            - name: stat-thrift
+              containerPort: 9996
+              protocol: TCP
+          env:
+            - name: ACCEPT_EULA
+              value: "true"
+            - name: PINPOINT_ZOOKEEPER_ADDRESS
+              value: "zoo1"
+            - name: CLUSTER_ENABLE
+              value: "true"
+            - name: HBASE_HOST
+              value: "pinpoint-hbase"
+            - name: HBASE_PORT
+              value: "60000"
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+          # HBase 11 tables warmup 중 SIGKILL 방지 — 충분히 느슨하게 (AgentStatV2 63 regions 대응)
+          readinessProbe:
+            tcpSocket:
+              port: 9991
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9991
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinpoint-collector
+  namespace: rental-commerce
+  labels:
+    app.kubernetes.io/name: pinpoint-collector
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: rental-commerce
+spec:
+  type: ClusterIP
+  ports:
+    - name: agent-grpc
+      port: 9991
+      targetPort: 9991
+      protocol: TCP
+    - name: stat-grpc
+      port: 9992
+      targetPort: 9992
+      protocol: TCP
+    - name: span-grpc
+      port: 9993
+      targetPort: 9993
+      protocol: TCP
+    - name: profiler-thrift
+      port: 9994
+      targetPort: 9994
+      protocol: TCP
+    - name: agent-thrift
+      port: 9995
+      targetPort: 9995
+      protocol: TCP
+    - name: stat-thrift
+      port: 9996
+      targetPort: 9996
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: pinpoint-collector

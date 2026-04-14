@@ -21,3 +21,7 @@ resources:
   - service.yml
   - ingress.yml
   - hpa.yml
+  - pinpoint-zookeeper.yml
+  - pinpoint-hbase.yml
+  - pinpoint-collector.yml
+  - pinpoint-web.yml

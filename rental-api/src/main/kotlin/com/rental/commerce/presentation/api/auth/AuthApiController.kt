@@ -7,6 +7,7 @@ import com.rental.commerce.application.user.LoginUseCase
 import com.rental.commerce.application.user.RegisterUserResponse
 import com.rental.commerce.application.user.RegisterUserUseCase
 import com.rental.commerce.application.user.VerifyPhoneAndCompleteSignupUseCase
+import com.rental.commerce.presentation.api.common.Public
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,6 +25,7 @@ class AuthApiController(
     private val socialLoginUseCase: SocialLoginUseCase,
 ) {
 
+    @Public
     @PostMapping("/signup")
     fun signup(
         @Valid @RequestBody request: SignupRequest,
@@ -32,6 +34,7 @@ class AuthApiController(
         return ResponseEntity.ok(response)
     }
 
+    @Public
     @PostMapping("/verify-phone")
     fun verifyPhone(
         @Valid @RequestBody request: VerifyPhoneRequest,
@@ -40,6 +43,7 @@ class AuthApiController(
         return ResponseEntity.ok(response)
     }
 
+    @Public
     @PostMapping("/login")
     fun login(
         @Valid @RequestBody request: LoginRequest,
@@ -48,6 +52,7 @@ class AuthApiController(
         return ResponseEntity.ok(response)
     }
 
+    @Public
     @PostMapping("/refresh")
     fun refresh(
         @Valid @RequestBody request: RefreshTokenRequest,
@@ -56,6 +61,7 @@ class AuthApiController(
         return ResponseEntity.ok(response)
     }
 
+    @Public
     @PostMapping("/social-login")
     fun socialLogin(
         @Valid @RequestBody request: SocialLoginRequest,
