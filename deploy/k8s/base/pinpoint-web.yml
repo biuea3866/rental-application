@@ -55,6 +55,7 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "500m"
+          # HBase warmup 시간 고려 느슨한 probe (collector와 동일한 사유)
           readinessProbe:
             httpGet:
               path: /
@@ -62,15 +63,15 @@ spec:
             initialDelaySeconds: 120
             periodSeconds: 20
             timeoutSeconds: 15
-            failureThreshold: 10
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /
               port: 8080
-            initialDelaySeconds: 180
+            initialDelaySeconds: 300
             periodSeconds: 30
             timeoutSeconds: 15
-            failureThreshold: 5
+            failureThreshold: 20
 ---
 apiVersion: v1
 kind: Service
