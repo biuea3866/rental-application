@@ -2,8 +2,8 @@ package com.rental.commerce.presentation.api.common
 
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
@@ -24,22 +24,13 @@ class MemberIdArgumentResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
     ): Long? {
-        val authentication = SecurityContextHolder.getContext().authentication
-        val memberId = authentication?.principal?.let { convertToLong(it) }
+        val httpRequest = webRequest.getNativeRequest(HttpServletRequest::class.java)
+        val memberId = httpRequest?.getHeader(AuthenticatedRequestWrapper.HEADER_USER_ID)?.toLongOrNull()
 
         if (memberId == null && !parameter.isOptional) {
             throw BusinessException(ErrorCode.UNAUTHORIZED)
         }
 
         return memberId
-    }
-
-    private fun convertToLong(value: Any): Long? {
-        return when (value) {
-            is Long -> value
-            is Number -> value.toLong()
-            is String -> value.toLongOrNull()
-            else -> null
-        }
     }
 }

@@ -3,9 +3,9 @@ package com.rental.commerce.presentation.api.product
 import com.rental.commerce.application.product.DeleteProductUseCase
 import com.rental.commerce.application.product.GetMyProductsUseCase
 import com.rental.commerce.application.product.MyProductSummaryResponse
+import com.rental.commerce.presentation.api.common.AuthenticatedMember
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -20,10 +20,10 @@ class ProductManagementApiController(
 
     @GetMapping("/api/v1/my-products")
     fun getMyProducts(
+        @AuthenticatedMember userId: Long,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): ResponseEntity<Page<MyProductSummaryResponse>> {
-        val userId = extractUserId()
         val result = getMyProductsUseCase.execute(
             userId = userId,
             page = page,
@@ -34,17 +34,10 @@ class ProductManagementApiController(
 
     @DeleteMapping("/api/v1/my-products/{productId}")
     fun deleteProduct(
+        @AuthenticatedMember userId: Long,
         @PathVariable productId: Long,
     ): ResponseEntity<Void> {
-        val userId = extractUserId()
         deleteProductUseCase.execute(userId = userId, productId = productId)
         return ResponseEntity.noContent().build()
-    }
-
-    private fun extractUserId(): Long {
-        val authentication = SecurityContextHolder.getContext().authentication
-        return requireNotNull(authentication?.principal as? Long) {
-            "인증 정보에서 사용자 ID를 추출할 수 없습니다"
-        }
     }
 }

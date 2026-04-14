@@ -11,6 +11,8 @@ import com.rental.commerce.application.user.UpdateRenterProfileCommand
 import com.rental.commerce.application.user.UpdateRenterProfileUseCase
 import com.rental.commerce.application.user.UpdateUserProfileCommand
 import com.rental.commerce.application.user.UpdateUserProfileUseCase
+import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
+import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.every
 import io.mockk.just
@@ -18,9 +20,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -38,26 +37,15 @@ class MyPageApiControllerTest : BehaviorSpec({
         updateLenderProfileUseCase = updateLenderProfileUseCase,
         updateRenterProfileUseCase = updateRenterProfileUseCase,
     )
-    val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
+    val mockMvc: MockMvc = MockMvcBuilders
+        .standaloneSetup(controller)
+        .setCustomArgumentResolvers(MemberIdArgumentResolver())
+        .build()
     val objectMapper = ObjectMapper()
-
-    fun setSecurityContext() {
-        val authentication = UsernamePasswordAuthenticationToken(
-            1L,
-            null,
-            listOf(SimpleGrantedAuthority("ROLE_BOTH")),
-        )
-        SecurityContextHolder.getContext().authentication = authentication
-    }
-
-    afterEach {
-        SecurityContextHolder.clearContext()
-    }
 
     Given("GET /api/v1/mypage") {
 
         When("인증된 사용자가 마이페이지를 조회하면") {
-            setSecurityContext()
             val response = MyPageResponse(
                 userId = 1L,
                 email = "test@example.com",
@@ -85,6 +73,7 @@ class MyPageApiControllerTest : BehaviorSpec({
 
             val result = mockMvc.get("/api/v1/mypage") {
                 accept = MediaType.APPLICATION_JSON
+                header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
             }
 
             Then("200 OK가 반환된다") {
@@ -122,7 +111,6 @@ class MyPageApiControllerTest : BehaviorSpec({
     Given("PATCH /api/v1/mypage/profile") {
 
         When("이름과 전화번호를 수정하면") {
-            setSecurityContext()
             val request = UpdateUserProfileRequest(
                 name = "김철수",
                 phone = "010-9999-8888",
@@ -133,6 +121,7 @@ class MyPageApiControllerTest : BehaviorSpec({
             val result = mockMvc.patch("/api/v1/mypage/profile") {
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(request)
+                header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
             }
 
             Then("204 No Content가 반환된다") {
@@ -150,7 +139,6 @@ class MyPageApiControllerTest : BehaviorSpec({
     Given("PATCH /api/v1/mypage/lender-profile") {
 
         When("정산 계좌 정보를 수정하면") {
-            setSecurityContext()
             val request = UpdateLenderProfileRequest(
                 settlementAccountBank = "국민은행",
                 settlementAccountNumber = "999-888-777666",
@@ -169,6 +157,7 @@ class MyPageApiControllerTest : BehaviorSpec({
             val result = mockMvc.patch("/api/v1/mypage/lender-profile") {
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(request)
+                header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
             }
 
             Then("200 OK가 반환된다") {
@@ -189,7 +178,6 @@ class MyPageApiControllerTest : BehaviorSpec({
     Given("PATCH /api/v1/mypage/renter-profile") {
 
         When("배송지 주소를 수정하면") {
-            setSecurityContext()
             val request = UpdateRenterProfileRequest(
                 shippingAddress = "서울시 서초구",
             )
@@ -206,6 +194,7 @@ class MyPageApiControllerTest : BehaviorSpec({
             val result = mockMvc.patch("/api/v1/mypage/renter-profile") {
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(request)
+                header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
             }
 
             Then("200 OK가 반환된다") {
