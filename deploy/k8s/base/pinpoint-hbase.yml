@@ -38,14 +38,14 @@ spec:
           # configure-hbase.sh은 TTL sed만 처리 → HBASE_CONF_ 계열 env var이 hbase-site.xml에 반영되지 않음.
           # 직접 sed로 3가지 핵심 프로퍼티 주입 후 기존 initialize-hbase.sh 실행:
           #   hbase.zookeeper.session.timeout=300000  — GC pause 대응 (기본 90s→300s)
-          #   hbase.master.hostname=pinpoint-hbase    — Pod hostname 대신 Service명 등록
-          #   hbase.regionserver.hostname=pinpoint-hbase — Collector가 Pod명 대신 Service로 접속
+          #   hbase.master.hostname=$POD_IP           — Pod IP로 ZK 등록 (Service ClusterIP bind 실패 회피)
+          #   hbase.regionserver.hostname=$POD_IP     — Pod IP는 Pod 자체 인터페이스 + 클러스터 라우팅 가능
           command: ["/bin/sh", "-c"]
           args:
             - |
               CONF=$(find /opt /usr/local /home -name hbase-site.xml 2>/dev/null | head -1) &&
-              echo "[init] patching hbase-site.xml at $CONF" &&
-              sed -i 's|</configuration>|<property><name>hbase.zookeeper.session.timeout</name><value>300000</value></property><property><name>hbase.master.hostname</name><value>pinpoint-hbase</value></property><property><name>hbase.regionserver.hostname</name><value>pinpoint-hbase</value></property></configuration>|' "$CONF" &&
+              echo "[init] patching hbase-site.xml at $CONF with POD_IP=$POD_IP" &&
+              sed -i "s|</configuration>|<property><name>hbase.zookeeper.session.timeout</name><value>300000</value></property><property><name>hbase.master.hostname</name><value>${POD_IP}</value></property><property><name>hbase.regionserver.hostname</name><value>${POD_IP}</value></property></configuration>|" "$CONF" &&
               /usr/local/bin/initialize-hbase.sh &&
               tail -f /dev/null
           ports:
@@ -62,6 +62,11 @@ spec:
               containerPort: 60030
               protocol: TCP
           env:
+            # Pod IP는 hbase.master.hostname / hbase.regionserver.hostname 주입에 사용
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: ACCEPT_EULA
               value: "true"
             # HBase가 외부 ZooKeeper(zoo1:2181)를 사용하도록 설정
