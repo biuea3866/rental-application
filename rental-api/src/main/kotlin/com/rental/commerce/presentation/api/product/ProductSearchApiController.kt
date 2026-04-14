@@ -9,9 +9,11 @@ import com.rental.commerce.domain.product.ProductSortBy
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
 import com.rental.commerce.domain.product.SortDirection
+import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
+import com.rental.commerce.presentation.api.common.Public
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -25,6 +27,7 @@ class ProductSearchApiController(
     private val getProductDetailUseCase: GetProductDetailUseCase,
 ) {
 
+    @Public
     @GetMapping
     fun searchProducts(
         @RequestParam(required = false) keyword: String?,
@@ -55,11 +58,13 @@ class ProductSearchApiController(
         return ResponseEntity.ok(result)
     }
 
+    @Public
     @GetMapping("/{productId}")
     fun getProductDetail(
         @PathVariable productId: Long,
+        request: HttpServletRequest,
     ): ResponseEntity<ProductDetailResponse> {
-        val requestUserId = extractUserIdOrNull()
+        val requestUserId = extractUserIdOrNull(request)
         val result = getProductDetailUseCase.execute(
             productId = productId,
             requestUserId = requestUserId,
@@ -67,9 +72,8 @@ class ProductSearchApiController(
         return ResponseEntity.ok(result)
     }
 
-    private fun extractUserIdOrNull(): Long? {
-        val authentication = SecurityContextHolder.getContext().authentication
-            ?: return null
-        return authentication.principal as? Long
+    private fun extractUserIdOrNull(request: HttpServletRequest): Long? {
+        val header = request.getHeader(AuthenticatedRequestWrapper.HEADER_USER_ID) ?: return null
+        return header.toLongOrNull()
     }
 }

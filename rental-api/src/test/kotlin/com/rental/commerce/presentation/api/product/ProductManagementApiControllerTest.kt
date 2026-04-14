@@ -8,7 +8,9 @@ import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.ProductCondition
 import com.rental.commerce.domain.product.ProductStatus
+import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
+import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearMocks
 import io.mockk.every
@@ -18,8 +20,6 @@ import io.mockk.verify
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -36,28 +36,18 @@ class ProductManagementApiControllerTest : BehaviorSpec({
     )
     val mockMvc: MockMvc = MockMvcBuilders
         .standaloneSetup(controller)
+        .setCustomArgumentResolvers(MemberIdArgumentResolver())
         .setControllerAdvice(GlobalExceptionHandler())
         .build()
 
-    fun setAuthentication(userId: Long = 1L) {
-        val authentication = UsernamePasswordAuthenticationToken(userId, null, emptyList())
-        SecurityContextHolder.getContext().authentication = authentication
-    }
-
     beforeEach {
         clearMocks(getMyProductsUseCase, deleteProductUseCase)
-    }
-
-    afterEach {
-        SecurityContextHolder.clearContext()
     }
 
     Given("GET /api/v1/my-products") {
 
         When("정상적으로 내 상품 목록을 조회하면") {
             Then("200 OK와 페이징된 상품 목록이 반환된다") {
-                setAuthentication()
-
                 val now = ZonedDateTime.now()
                 val pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
                 val products = listOf(
@@ -90,6 +80,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                 val result = mockMvc.get("/api/v1/my-products") {
                     param("page", "0")
                     param("size", "20")
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -110,8 +101,6 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("상품이 없는 사용자가 조회하면") {
             Then("200 OK와 빈 목록이 반환된다") {
-                setAuthentication(userId = 2L)
-
                 val pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
 
                 every {
@@ -121,6 +110,7 @@ class ProductManagementApiControllerTest : BehaviorSpec({
                 val result = mockMvc.get("/api/v1/my-products") {
                     param("page", "0")
                     param("size", "20")
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "2")
                 }
 
                 result.andExpect {
@@ -133,15 +123,15 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("page와 size 파라미터 없이 조회하면") {
             Then("기본값(page=0, size=20)으로 조회된다") {
-                setAuthentication()
-
                 val pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
 
                 every {
                     getMyProductsUseCase.execute(userId = 1L, page = 0, size = 20)
                 } returns PageImpl(emptyList(), pageable, 0L)
 
-                val result = mockMvc.get("/api/v1/my-products")
+                val result = mockMvc.get("/api/v1/my-products") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isOk() }
@@ -156,11 +146,11 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("DRAFT 상품을 정상적으로 삭제하면") {
             Then("204 No Content가 반환된다") {
-                setAuthentication()
-
                 justRun { deleteProductUseCase.execute(userId = 1L, productId = 1L) }
 
-                val result = mockMvc.delete("/api/v1/my-products/1")
+                val result = mockMvc.delete("/api/v1/my-products/1") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isNoContent() }
@@ -172,15 +162,15 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("존재하지 않는 상품을 삭제하려고 하면") {
             Then("404 PRODUCT_NOT_FOUND 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     deleteProductUseCase.execute(userId = 1L, productId = 999L)
                 } throws ResourceNotFoundException(
                     errorCode = ErrorCode.PRODUCT_NOT_FOUND,
                 )
 
-                val result = mockMvc.delete("/api/v1/my-products/999")
+                val result = mockMvc.delete("/api/v1/my-products/999") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isNotFound() }
@@ -191,15 +181,15 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("권한이 없는 상품을 삭제하려고 하면") {
             Then("403 PRODUCT_OWNERSHIP_DENIED 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     deleteProductUseCase.execute(userId = 1L, productId = 1L)
                 } throws BusinessException(
                     errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
                 )
 
-                val result = mockMvc.delete("/api/v1/my-products/1")
+                val result = mockMvc.delete("/api/v1/my-products/1") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isForbidden() }
@@ -210,15 +200,15 @@ class ProductManagementApiControllerTest : BehaviorSpec({
 
         When("삭제할 수 없는 상태의 상품을 삭제하려고 하면") {
             Then("400 PRODUCT_NOT_DELETABLE 에러가 반환된다") {
-                setAuthentication()
-
                 every {
                     deleteProductUseCase.execute(userId = 1L, productId = 1L)
                 } throws BusinessException(
                     errorCode = ErrorCode.PRODUCT_NOT_DELETABLE,
                 )
 
-                val result = mockMvc.delete("/api/v1/my-products/1")
+                val result = mockMvc.delete("/api/v1/my-products/1") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isBadRequest() }

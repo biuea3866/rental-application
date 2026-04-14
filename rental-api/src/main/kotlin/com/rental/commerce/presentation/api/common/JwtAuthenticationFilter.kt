@@ -10,9 +10,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.ZonedDateTime
@@ -40,13 +37,6 @@ class JwtAuthenticationFilter(
         if (token != null) {
             try {
                 val claims = jwtProvider.validateAccessToken(token)
-                val authorities = listOf(SimpleGrantedAuthority("ROLE_${claims.role}"))
-                val authentication = UsernamePasswordAuthenticationToken(
-                    claims.userId,
-                    null,
-                    authorities,
-                )
-                SecurityContextHolder.getContext().authentication = authentication
                 // AuthorizationInterceptor가 X-Member-Id / X-Member-Role 헤더를 읽을 수 있도록 래핑
                 val wrappedRequest = AuthenticatedRequestWrapper(request, claims.userId, claims.role)
                 wrappedRequest.setAttribute(ATTRIBUTE_AUTHENTICATED, true)

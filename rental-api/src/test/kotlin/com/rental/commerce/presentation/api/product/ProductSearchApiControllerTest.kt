@@ -13,6 +13,7 @@ import com.rental.commerce.domain.product.ProductSortBy
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
 import com.rental.commerce.domain.product.SortDirection
+import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearMocks
@@ -21,8 +22,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -41,17 +40,8 @@ class ProductSearchApiControllerTest : BehaviorSpec({
         .setControllerAdvice(GlobalExceptionHandler())
         .build()
 
-    fun setAuthentication(userId: Long = 1L) {
-        val authentication = UsernamePasswordAuthenticationToken(userId, null, emptyList())
-        SecurityContextHolder.getContext().authentication = authentication
-    }
-
     beforeEach {
         clearMocks(searchProductUseCase, getProductDetailUseCase)
-    }
-
-    afterEach {
-        SecurityContextHolder.clearContext()
     }
 
     Given("GET /api/v1/products") {
@@ -246,8 +236,6 @@ class ProductSearchApiControllerTest : BehaviorSpec({
 
         When("로그인 상태에서 조회하면") {
             Then("requestUserId가 전달된다") {
-                setAuthentication(userId = 42L)
-
                 val now = ZonedDateTime.now()
                 val detailResponse = ProductDetailResponse(
                     id = 5L,
@@ -268,7 +256,9 @@ class ProductSearchApiControllerTest : BehaviorSpec({
                     getProductDetailUseCase.execute(productId = 5L, requestUserId = 42L)
                 } returns detailResponse
 
-                val result = mockMvc.get("/api/v1/products/5")
+                val result = mockMvc.get("/api/v1/products/5") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "42")
+                }
 
                 result.andExpect {
                     status { isOk() }

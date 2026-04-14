@@ -16,6 +16,7 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.ProductCondition
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
+import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
 import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver
 import io.kotest.core.spec.style.BehaviorSpec
@@ -23,10 +24,6 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.context.SecurityContextImpl
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -53,12 +50,6 @@ class ProductApiControllerTest : BehaviorSpec({
 
     beforeEach {
         clearMocks(createProductDraftUseCase, updateProductDraftUseCase, getProductDraftUseCase, submitProductUseCase)
-        val auth = UsernamePasswordAuthenticationToken(1L, null, listOf(SimpleGrantedAuthority("ROLE_USER")))
-        SecurityContextHolder.setContext(SecurityContextImpl(auth))
-    }
-
-    afterEach {
-        SecurityContextHolder.clearContext()
     }
 
     Given("POST /api/v1/products/drafts") {
@@ -86,7 +77,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"name":"맥북 프로","categoryCode":"ELECTRONICS"}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -119,7 +110,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.post("/api/v1/products/drafts") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -157,7 +148,7 @@ class ProductApiControllerTest : BehaviorSpec({
                         "condition": "LIKE_NEW",
                         "depositAmount": 500000
                     }"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -174,7 +165,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 0}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -188,7 +179,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 11}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -208,7 +199,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/999") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -229,7 +220,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 val result = mockMvc.patch("/api/v1/products/drafts/1") {
                     contentType = MediaType.APPLICATION_JSON
                     content = """{"step": 2, "name": "테스트"}"""
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -275,7 +266,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 } returns response
 
                 val result = mockMvc.get("/api/v1/products/drafts/1") {
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -304,7 +295,7 @@ class ProductApiControllerTest : BehaviorSpec({
                 )
 
                 val result = mockMvc.get("/api/v1/products/drafts/999") {
-
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
                 }
 
                 result.andExpect {
@@ -335,7 +326,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     )
                 } returns response
 
-                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isOk() }
@@ -361,7 +354,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     message = "상품을 찾을 수 없습니다 (id=999)",
                 )
 
-                val result = mockMvc.post("/api/v1/products/drafts/999/submit")
+                val result = mockMvc.post("/api/v1/products/drafts/999/submit") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isNotFound() }
@@ -381,7 +376,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     message = "해당 상품의 소유자가 아닙니다 (productId=1)",
                 )
 
-                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isForbidden() }
@@ -400,7 +397,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     "UNDER_REVIEW에서 UNDER_REVIEW(으)로 전이할 수 없습니다",
                 )
 
-                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isBadRequest() }
@@ -420,7 +419,9 @@ class ProductApiControllerTest : BehaviorSpec({
                     message = "상품명은 필수입니다",
                 )
 
-                val result = mockMvc.post("/api/v1/products/drafts/1/submit")
+                val result = mockMvc.post("/api/v1/products/drafts/1/submit") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
 
                 result.andExpect {
                     status { isBadRequest() }

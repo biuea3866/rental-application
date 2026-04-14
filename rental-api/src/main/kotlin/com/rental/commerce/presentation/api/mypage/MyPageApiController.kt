@@ -7,9 +7,8 @@ import com.rental.commerce.application.user.RenterProfileResponse
 import com.rental.commerce.application.user.UpdateLenderProfileUseCase
 import com.rental.commerce.application.user.UpdateRenterProfileUseCase
 import com.rental.commerce.application.user.UpdateUserProfileUseCase
-import com.rental.commerce.domain.common.UnauthorizedException
+import com.rental.commerce.presentation.api.common.AuthenticatedMember
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -26,43 +25,37 @@ class MyPageApiController(
 ) {
 
     @GetMapping
-    fun getMyPage(): ResponseEntity<MyPageResponse> {
-        val userId = extractUserId()
+    fun getMyPage(
+        @AuthenticatedMember userId: Long,
+    ): ResponseEntity<MyPageResponse> {
         val response = getMyPageUseCase.execute(userId)
         return ResponseEntity.ok(response)
     }
 
     @PatchMapping("/profile")
     fun updateUserProfile(
+        @AuthenticatedMember userId: Long,
         @RequestBody request: UpdateUserProfileRequest,
     ): ResponseEntity<Void> {
-        val userId = extractUserId()
         updateUserProfileUseCase.execute(request.toCommand(userId))
         return ResponseEntity.noContent().build()
     }
 
     @PatchMapping("/lender-profile")
     fun updateLenderProfile(
+        @AuthenticatedMember userId: Long,
         @RequestBody request: UpdateLenderProfileRequest,
     ): ResponseEntity<LenderProfileResponse> {
-        val userId = extractUserId()
         val response = updateLenderProfileUseCase.execute(request.toCommand(userId))
         return ResponseEntity.ok(response)
     }
 
     @PatchMapping("/renter-profile")
     fun updateRenterProfile(
+        @AuthenticatedMember userId: Long,
         @RequestBody request: UpdateRenterProfileRequest,
     ): ResponseEntity<RenterProfileResponse> {
-        val userId = extractUserId()
         val response = updateRenterProfileUseCase.execute(request.toCommand(userId))
         return ResponseEntity.ok(response)
-    }
-
-    private fun extractUserId(): Long {
-        val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw UnauthorizedException()
-        return (authentication.principal as? Long)
-            ?: throw UnauthorizedException()
     }
 }
