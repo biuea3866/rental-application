@@ -31,6 +31,10 @@ spec:
         - name: wait-zookeeper
           image: alpine:3.19
           command: ['sh', '-c', 'until nc -z -w3 zoo1 2181; do echo waiting for ZooKeeper zoo1; sleep 5; done']
+        # Dev 환경에서만: HBase 시작 전 ZK /hbase 상태 완전 초기화 (ephemeral storage와 동기화)
+        - name: wipe-zk-hbase
+          image: zookeeper:3.8
+          command: ['sh', '-c', 'echo "deleteall /hbase" | zkCli.sh -server zoo1:2181 2>&1 | tail -5; exit 0']
       containers:
         - name: pinpoint-hbase
           image: pinpointdocker/pinpoint-hbase:3.0.0
@@ -46,6 +50,8 @@ spec:
               CONF=$(find /opt /usr/local /home -name hbase-site.xml 2>/dev/null | head -1) &&
               echo "[init] patching hbase-site.xml at $CONF with POD_IP=$POD_IP" &&
               sed -i "s|</configuration>|<property><name>hbase.zookeeper.session.timeout</name><value>300000</value></property><property><name>hbase.master.hostname</name><value>${POD_IP}</value></property><property><name>hbase.regionserver.hostname</name><value>${POD_IP}</value></property></configuration>|" "$CONF" &&
+              echo "[init] wiping stale HBase data dir (ephemeral storage, dev only)" &&
+              rm -rf /home/pinpoint/hbase/* &&
               /usr/local/bin/initialize-hbase.sh &&
               tail -f /dev/null
           ports:
