@@ -50,10 +50,10 @@ spec:
               value: "60000"
           resources:
             requests:
-              memory: "1Gi"
+              memory: "1536Mi"
               cpu: "250m"
             limits:
-              memory: "2Gi"
+              memory: "3Gi"
               cpu: "500m"
           # HBase warmup 시간 고려 느슨한 probe (collector와 동일한 사유)
           readinessProbe:

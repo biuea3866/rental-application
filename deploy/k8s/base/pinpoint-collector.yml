@@ -65,10 +65,10 @@ spec:
               value: "60000"
           resources:
             requests:
-              memory: "1Gi"
+              memory: "1536Mi"
               cpu: "250m"
             limits:
-              memory: "2Gi"
+              memory: "3Gi"
               cpu: "500m"
           # HBase 11 tables warmup 중 SIGKILL 방지 — 충분히 느슨하게 (AgentStatV2 63 regions 대응)
           readinessProbe:
