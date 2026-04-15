@@ -26,15 +26,15 @@ vi.mock("next/navigation", () => ({
 
 let mockUnreadCount = 2;
 
-const mockApiClient: ApiClient = {
+const mockApiClient = {
   get: vi.fn(async () =>
-    ({ success: true, data: { count: mockUnreadCount }, timestamp: "" } as ApiResponse<{ count: number }>)
+    ({ success: true, data: { count: mockUnreadCount }, timestamp: "" })
   ),
-  post: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-  put: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-  patch: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-  delete: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-};
+  post: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+  put: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+  patch: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+  delete: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+} as unknown as ApiClient;
 
 vi.mock("@/lib/api/client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/client")>();

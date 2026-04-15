@@ -3,6 +3,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import {
   setAccessToken,
   setRefreshToken,
+  setTokenFamily,
   clearTokens,
 } from "@/lib/auth/token";
 import type { User, AuthTokens } from "@/lib/api/types";
@@ -12,18 +13,17 @@ import type { User, AuthTokens } from "@/lib/api/types";
 // ========================================
 
 const mockUser: User = {
-  id: "user-test-001",
+  id: 1,
   email: "test@rental.com",
   name: "테스트유저",
-  phone: "010-0000-0000",
   role: "RENTER",
-  createdAt: "2026-01-01T00:00:00Z",
 };
 
 const mockTokens: AuthTokens = {
   accessToken: "test-access-token",
   refreshToken: "test-refresh-token",
-  expiresIn: 3600,
+  tokenFamily: "family-001",
+  userId: 1,
 };
 
 describe("Auth Store 확장 테스트", () => {
@@ -50,7 +50,7 @@ describe("Auth Store 확장 테스트", () => {
   describe("checkAuth - 유효한 accessToken", () => {
     it("유효한 accessToken이 있으면 인증 상태가 true여야 한다", async () => {
       // 유효한 토큰 설정
-      setAccessToken("valid-access-token", 3600);
+      setAccessToken("valid-access-token", 3_600_000);
       setRefreshToken("valid-refresh-token");
 
       const { checkAuth } = useAuthStore.getState();
@@ -64,8 +64,9 @@ describe("Auth Store 확장 테스트", () => {
 
   describe("checkAuth - accessToken 만료, refreshToken 있음", () => {
     it("accessToken이 만료되고 refreshToken으로 갱신 성공 시 인증 상태가 true여야 한다", async () => {
-      // 만료된 accessToken, 유효한 refreshToken
+      // 만료된 accessToken, 유효한 refreshToken + tokenFamily
       setRefreshToken("valid-refresh-token");
+      setTokenFamily("valid-family-001");
       // accessToken은 저장하지 않아서 만료 상태
 
       const { checkAuth } = useAuthStore.getState();
@@ -93,6 +94,7 @@ describe("Auth Store 확장 테스트", () => {
       );
 
       setRefreshToken("invalid-refresh-token");
+      setTokenFamily("invalid-family-001");
 
       const { checkAuth } = useAuthStore.getState();
       await checkAuth();

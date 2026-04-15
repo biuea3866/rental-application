@@ -56,7 +56,7 @@ describe("로그인 페이지 추가 테스트", () => {
     mockLoginFn.mockImplementation(async () => {
       useAuthStore.setState({
         user: {
-          id: "user-001",
+          id: 1,
           email: "unknown@rental.com",
           name: "알수없음",
           phone: "010-0000-0000",

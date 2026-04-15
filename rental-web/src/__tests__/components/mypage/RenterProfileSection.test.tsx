@@ -9,7 +9,7 @@ import type { RenterProfile } from "@/lib/api/types";
 // ========================================
 
 const fullRenterProfile: RenterProfile = {
-  deliveryAddress: "서울 강남구 테헤란로 123",
+  shippingAddress: "서울 강남구 테헤란로 123",
   preferredCategories: ["ELECTRONICS", "SPORTS", "FASHION"],
 };
 
@@ -152,7 +152,7 @@ describe("RenterProfileSection", () => {
         <RenterProfileSection
           renterProfile={{
             preferredCategories: [],
-            deliveryAddress: "서울",
+            shippingAddress: "서울",
           }}
         />
       );

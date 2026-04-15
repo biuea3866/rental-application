@@ -1,6 +1,9 @@
 import type { ApiResponse, ApiError } from "./types";
 import { getAccessToken, clearTokens } from "@/lib/auth/token";
 
+// Re-export ApiResponse so test files can import it from this module
+export type { ApiResponse };
+
 // ========================================
 // API 모드 설정
 // ========================================
@@ -112,7 +115,18 @@ class RealApiClient implements ApiClient {
       throw new ApiRequestError(response.status, errorData as ApiError);
     }
 
-    return response.json();
+    const raw = await response.json();
+
+    // BE 응답 정규화: { success, data, ... } 래퍼가 있으면 그대로, 없으면 래핑
+    if (raw && typeof raw === "object" && "success" in raw && "data" in raw) {
+      return raw as ApiResponse<T>;
+    }
+
+    return {
+      success: true,
+      data: raw as T,
+      timestamp: new Date().toISOString(),
+    } satisfies ApiResponse<T>;
   }
 
   async get<T>(

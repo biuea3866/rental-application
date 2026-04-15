@@ -53,23 +53,19 @@ describe("API Endpoints 상수", () => {
       );
     });
 
-    it("SEARCH 엔드포인트가 올바르게 정의되어야 한다", () => {
-      expect(ENDPOINTS.PRODUCTS.SEARCH).toBe("/api/v1/products/search");
-    });
-
-    it("MY_PRODUCTS 엔드포인트가 올바르게 정의되어야 한다", () => {
-      expect(ENDPOINTS.PRODUCTS.MY_PRODUCTS).toBe("/api/v1/products/mine");
+    it("MY_PRODUCTS 엔드포인트가 올바르게 정의되어야 한다 (BE: /api/v1/my-products)", () => {
+      expect(ENDPOINTS.PRODUCTS.MY_PRODUCTS).toBe("/api/v1/my-products");
     });
   });
 
   describe("GUIDE_PRICES 엔드포인트", () => {
-    it("BASE 엔드포인트가 올바르게 정의되어야 한다", () => {
-      expect(ENDPOINTS.GUIDE_PRICES.BASE).toBe("/api/v1/guide-prices");
+    it("BASE 엔드포인트가 올바르게 정의되어야 한다 (BE: /api/v1/price-guides)", () => {
+      expect(ENDPOINTS.GUIDE_PRICES.BASE).toBe("/api/v1/price-guides");
     });
 
     it("BY_CATEGORY 함수가 올바른 URL을 반환해야 한다", () => {
       expect(ENDPOINTS.GUIDE_PRICES.BY_CATEGORY("SPORTS")).toBe(
-        "/api/v1/guide-prices/SPORTS"
+        "/api/v1/price-guides/SPORTS"
       );
     });
   });

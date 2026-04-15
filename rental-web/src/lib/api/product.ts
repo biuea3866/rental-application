@@ -2,17 +2,30 @@ import { getApiClient } from "./client";
 import { ENDPOINTS } from "./endpoints";
 import type {
   Product,
+  ProductSummary,
   CreateProductRequest,
-  PaginatedResponse,
   GuidePriceRange,
   ProductCategory,
 } from "./types";
 
 // ========================================
+// Spring Page 응답 타입
+// ========================================
+
+interface SpringPage<T> {
+  content: T[];
+  last: boolean;
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+// ========================================
 // Product API 호출
 // ========================================
 
-/** 상품 목록 조회 */
+/** 상품 목록 조회 (BE: Page<ProductSummaryResponse>) */
 export async function getProductsApi(params?: {
   page?: number;
   size?: number;
@@ -25,21 +38,21 @@ export async function getProductsApi(params?: {
   if (params?.size !== undefined) queryParams.size = String(params.size);
   if (params?.category) queryParams.category = params.category;
 
-  return client.get<PaginatedResponse<Product>>(ENDPOINTS.PRODUCTS.BASE, {
+  return client.get<SpringPage<ProductSummary>>(ENDPOINTS.PRODUCTS.BASE, {
     params: queryParams,
   });
 }
 
-/** 상품 상세 조회 */
-export async function getProductByIdApi(id: string) {
+/** 상품 상세 조회 (BE: ProductDetailResponse) */
+export async function getProductByIdApi(id: string | number) {
   const client = getApiClient();
   return client.get<Product>(ENDPOINTS.PRODUCTS.BY_ID(id));
 }
 
-/** 내 상품 목록 조회 */
+/** 내 상품 목록 조회 (BE: /api/v1/my-products) */
 export async function getMyProductsApi() {
   const client = getApiClient();
-  return client.get<PaginatedResponse<Product>>(ENDPOINTS.PRODUCTS.MY_PRODUCTS);
+  return client.get<SpringPage<ProductSummary>>(ENDPOINTS.PRODUCTS.MY_PRODUCTS);
 }
 
 /** 상품 등록 */
@@ -50,7 +63,7 @@ export async function createProductApi(request: CreateProductRequest) {
 
 /** 상품 수정 */
 export async function updateProductApi(
-  id: string,
+  id: string | number,
   request: Partial<CreateProductRequest>
 ) {
   const client = getApiClient();
@@ -58,20 +71,12 @@ export async function updateProductApi(
 }
 
 /** 상품 삭제 */
-export async function deleteProductApi(id: string) {
+export async function deleteProductApi(id: string | number) {
   const client = getApiClient();
   return client.delete<void>(ENDPOINTS.PRODUCTS.BY_ID(id));
 }
 
-/** 상품 검색 */
-export async function searchProductsApi(query: string) {
-  const client = getApiClient();
-  return client.get<PaginatedResponse<Product>>(ENDPOINTS.PRODUCTS.SEARCH, {
-    params: { q: query },
-  });
-}
-
-/** 가이드 가격 전체 조회 */
+/** 가이드 가격 전체 조회 (BE: /api/v1/price-guides) */
 export async function getGuidePricesApi() {
   const client = getApiClient();
   return client.get<GuidePriceRange[]>(ENDPOINTS.GUIDE_PRICES.BASE);

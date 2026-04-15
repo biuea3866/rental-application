@@ -10,23 +10,37 @@ import {
 } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/lib/api/endpoints";
-import type { Product, PaginatedResponse } from "@/lib/api/types";
+import type { ProductSummary, ProductStatus } from "@/lib/api/types";
 
 // ========================================
-// 상태 레이블
+// 상태 레이블 (BE ProductStatus enum 기준)
 // ========================================
 
-const STATUS_LABELS: Record<Product["status"], string> = {
-  AVAILABLE: "대여 가능",
-  RENTED: "대여 중",
-  UNAVAILABLE: "비활성",
+const STATUS_LABELS: Record<ProductStatus, string> = {
+  DRAFT: "초안",
+  UNDER_REVIEW: "검토 중",
+  APPROVED: "대여 가능",
+  REJECTED: "반려",
+  SUSPENDED: "정지",
 };
 
-const STATUS_COLORS: Record<Product["status"], string> = {
-  AVAILABLE: "text-green-600 bg-green-50",
-  RENTED: "text-blue-600 bg-blue-50",
-  UNAVAILABLE: "text-gray-500 bg-gray-100",
+const STATUS_COLORS: Record<ProductStatus, string> = {
+  DRAFT: "text-gray-500 bg-gray-100",
+  UNDER_REVIEW: "text-yellow-600 bg-yellow-50",
+  APPROVED: "text-green-600 bg-green-50",
+  REJECTED: "text-red-600 bg-red-50",
+  SUSPENDED: "text-gray-500 bg-gray-100",
 };
+
+/** BE /api/v1/my-products Spring Page 응답 */
+interface SpringPageProductSummary {
+  content: ProductSummary[];
+  last: boolean;
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
 
 const linkButtonClass =
   "inline-flex items-center justify-center rounded-lg border border-transparent bg-primary px-2.5 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/80";
@@ -47,7 +61,7 @@ export default function LenderProductsPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["lender-products"],
     queryFn: async () => {
-      const response = await apiClient.get<PaginatedResponse<Product>>(
+      const response = await apiClient.get<SpringPageProductSummary>(
         ENDPOINTS.PRODUCTS.MY_PRODUCTS
       );
       return response.data;
@@ -101,17 +115,17 @@ export default function LenderProductsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-4">
                 <p className="text-2xl font-bold text-green-600">
-                  {products.filter((p) => p.status === "AVAILABLE").length}
+                  {products.filter((p) => p.status === "APPROVED").length}
                 </p>
                 <p className="text-sm text-muted-foreground">대여 가능</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-4">
-                <p className="text-2xl font-bold text-blue-600">
-                  {products.filter((p) => p.status === "RENTED").length}
+                <p className="text-2xl font-bold text-yellow-600">
+                  {products.filter((p) => p.status === "UNDER_REVIEW").length}
                 </p>
-                <p className="text-sm text-muted-foreground">대여 중</p>
+                <p className="text-sm text-muted-foreground">검토 중</p>
               </CardContent>
             </Card>
           </div>
@@ -122,27 +136,28 @@ export default function LenderProductsPage() {
               <Card key={product.id}>
                 <CardHeader className="flex flex-row items-start justify-between pb-2">
                   <div className="space-y-1">
-                    <CardTitle className="text-base">{product.title}</CardTitle>
+                    <CardTitle className="text-base">
+                      {product.name ?? "상품명 없음"}
+                    </CardTitle>
                     <p className="text-xs text-muted-foreground">
-                      {product.category} · {product.location}
+                      {product.categoryCode ?? "카테고리 없음"}
                     </p>
                   </div>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      STATUS_COLORS[product.status]
+                      STATUS_COLORS[product.status] ?? STATUS_COLORS.DRAFT
                     }`}
                   >
-                    {STATUS_LABELS[product.status]}
+                    {STATUS_LABELS[product.status] ?? product.status}
                   </span>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between pt-0">
                   <div className="space-y-0.5">
-                    <p className="text-sm font-medium">
-                      {product.pricePerDay.toLocaleString("ko-KR")}원/일
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      보증금 {product.deposit.toLocaleString("ko-KR")}원
-                    </p>
+                    {product.depositAmount != null && (
+                      <p className="text-xs text-muted-foreground">
+                        보증금 {product.depositAmount.toLocaleString("ko-KR")}원
+                      </p>
+                    )}
                   </div>
                   <Link
                     href={`/lender/products/${product.id}/edit`}

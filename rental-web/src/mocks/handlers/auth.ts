@@ -50,11 +50,7 @@ export const authHandlers = [
     }
 
     currentUser = user;
-    return HttpResponse.json({
-      success: true,
-      data: generateStubTokens(),
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json(generateStubTokens(user.id as number));
   }),
 
   // 회원가입 (인증코드 발송)
@@ -76,20 +72,16 @@ export const authHandlers = [
     }
 
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: Date.now(),
       email: body.email,
       name: body.name,
-      phone: body.phone,
       role: body.role,
+      phone: body.phone,
       createdAt: new Date().toISOString(),
     };
 
     currentUser = newUser;
-    return HttpResponse.json({
-      success: true,
-      data: { message: "인증코드가 발송되었습니다." },
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json({ message: "인증코드가 발송되었습니다." });
   }),
 
   // 휴대폰 인증 완료
@@ -110,41 +102,28 @@ export const authHandlers = [
       );
     }
 
-    return HttpResponse.json({
-      success: true,
-      data: generateStubTokens(),
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json(generateStubTokens());
   }),
 
-  // 소셜 로그인
+  // 소셜 로그인 (BE: { provider, authorizationCode })
   http.post(`${BASE_URL}/api/v1/auth/social-login`, async ({ request }) => {
     await delay(300);
 
-    const body = (await request.json()) as SocialLoginRequest;
+    const body = (await request.json()) as { provider?: string; authorizationCode?: string };
 
-    if (!body.code || !body.provider) {
+    if (!body.authorizationCode || !body.provider) {
       return HttpResponse.json(
-        {
-          success: false,
-          data: null,
-          message: "소셜 로그인 정보가 올바르지 않습니다.",
-          timestamp: new Date().toISOString(),
-        },
+        { code: "INVALID_REQUEST", message: "소셜 로그인 정보가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
     // 소셜 로그인 성공 시 첫 번째 스텁 유저로 처리
     currentUser = STUB_USERS[0];
-    return HttpResponse.json({
-      success: true,
-      data: generateStubTokens(),
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json(generateStubTokens(STUB_USERS[0].id as number));
   }),
 
-  // 현재 유저 조회
+  // 현재 유저 조회 (BE: { id, email, name, role, profileType })
   http.get(`${BASE_URL}/api/v1/auth/me`, async () => {
     await delay(100);
 
@@ -152,22 +131,14 @@ export const authHandlers = [
       currentUser = STUB_USERS[0];
     }
 
-    return HttpResponse.json({
-      success: true,
-      data: currentUser,
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json(currentUser);
   }),
 
-  // 토큰 갱신
+  // 토큰 갱신 (BE: AuthTokenResponse)
   http.post(`${BASE_URL}/api/v1/auth/refresh`, async () => {
     await delay(100);
 
-    return HttpResponse.json({
-      success: true,
-      data: generateStubTokens(),
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json(generateStubTokens());
   }),
 
   // 로그아웃
@@ -175,10 +146,6 @@ export const authHandlers = [
     await delay(100);
 
     currentUser = null;
-    return HttpResponse.json({
-      success: true,
-      data: null,
-      timestamp: new Date().toISOString(),
-    });
+    return HttpResponse.json({ success: true });
   }),
 ];
