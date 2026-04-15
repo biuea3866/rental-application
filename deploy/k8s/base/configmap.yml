@@ -34,3 +34,6 @@ data:
   NAVER_CLIENT_ID: "dev-placeholder"
   NAVER_CLIENT_SECRET: "dev-placeholder"
   NAVER_REDIRECT_URI: "http://localhost:3000/auth/naver/callback"
+  # MongoDB + Kafka (클러스터 내부 Service DNS)
+  SPRING_DATA_MONGODB_URI: "mongodb://mongodb:27017/rental_commerce"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
