@@ -198,6 +198,17 @@ export interface GuidePriceRange {
   averagePricePerDay: number;
 }
 
+/** 상품 등록/수정 요청 — BE ProductRegisterRequest 와 매핑 */
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  categoryCode: string;
+  condition: ProductCondition;
+  prices: { unit: RentalUnit; amount: number }[];
+  depositAmount: number;
+  imageKeys: string[];
+}
+
 // ========================================
 // 마이페이지 타입
 // ========================================
