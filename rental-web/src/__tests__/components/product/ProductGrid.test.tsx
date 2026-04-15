@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import { STUB_PRODUCTS } from "@/mocks/products";
+import { STUB_PRODUCT_SUMMARIES } from "@/mocks/products";
 
 // ========================================
 // ProductGrid 테스트
@@ -9,7 +9,7 @@ import { STUB_PRODUCTS } from "@/mocks/products";
 
 describe("ProductGrid", () => {
   it("상품 목록이 정상 렌더링되어야 한다", () => {
-    render(<ProductGrid products={STUB_PRODUCTS} />);
+    render(<ProductGrid products={STUB_PRODUCT_SUMMARIES} />);
 
     expect(screen.getByTestId("product-grid")).toBeInTheDocument();
     // 각 상품 제목이 출력되는지 확인 (최소 2개)
@@ -35,7 +35,7 @@ describe("ProductGrid", () => {
   it("다음 페이지가 있을 때 더보기 버튼을 표시해야 한다", () => {
     render(
       <ProductGrid
-        products={STUB_PRODUCTS}
+        products={STUB_PRODUCT_SUMMARIES}
         hasNextPage
         onLoadMore={vi.fn()}
         useInfiniteScroll={false}
@@ -49,7 +49,7 @@ describe("ProductGrid", () => {
   it("다음 페이지가 없으면 더보기 버튼을 표시하지 않아야 한다", () => {
     render(
       <ProductGrid
-        products={STUB_PRODUCTS}
+        products={STUB_PRODUCT_SUMMARIES}
         hasNextPage={false}
         onLoadMore={vi.fn()}
         useInfiniteScroll={false}
@@ -67,7 +67,7 @@ describe("ProductGrid", () => {
 
     render(
       <ProductGrid
-        products={STUB_PRODUCTS}
+        products={STUB_PRODUCT_SUMMARIES}
         hasNextPage
         onLoadMore={onLoadMore}
         useInfiniteScroll={false}
@@ -81,7 +81,7 @@ describe("ProductGrid", () => {
   it("isFetchingNextPage가 true이면 더보기 버튼에 로딩 텍스트가 표시되어야 한다", () => {
     render(
       <ProductGrid
-        products={STUB_PRODUCTS}
+        products={STUB_PRODUCT_SUMMARIES}
         hasNextPage
         isFetchingNextPage
         onLoadMore={vi.fn()}
@@ -93,7 +93,7 @@ describe("ProductGrid", () => {
   });
 
   it("각 상품 카드에 상품 제목이 표시되어야 한다", () => {
-    render(<ProductGrid products={[STUB_PRODUCTS[0]]} />);
+    render(<ProductGrid products={[STUB_PRODUCT_SUMMARIES[0]]} />);
 
     expect(
       screen.getByText("소니 A7C II 미러리스 카메라")
@@ -101,9 +101,9 @@ describe("ProductGrid", () => {
   });
 
   it("각 상품 카드가 상세 페이지 링크를 가져야 한다", () => {
-    render(<ProductGrid products={[STUB_PRODUCTS[0]]} />);
+    render(<ProductGrid products={[STUB_PRODUCT_SUMMARIES[0]]} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/products/prod-001");
+    expect(link).toHaveAttribute("href", `/products/${STUB_PRODUCT_SUMMARIES[0].id}`);
   });
 });

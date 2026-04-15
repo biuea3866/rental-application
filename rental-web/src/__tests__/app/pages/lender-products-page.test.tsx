@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Product, PaginatedResponse } from "@/lib/api/types";
-import { STUB_PRODUCTS } from "@/mocks/products";
+import type { ProductSummary } from "@/lib/api/types";
+import { STUB_PRODUCT_SUMMARIES } from "@/mocks/products";
 
 // ========================================
 // 등록자 상품 관리 페이지 테스트
@@ -55,16 +55,26 @@ function renderWithQuery(ui: React.ReactElement) {
 // 테스트 데이터
 // ========================================
 
-const myProducts = STUB_PRODUCTS.filter((p) => p.lenderId === "user-lender-001");
+// userId=1 소유 상품 (STUB_PRODUCTS.userId === 1)
+const myProducts = STUB_PRODUCT_SUMMARIES.filter((_, i) => i % 2 === 0);
 
-function makeProductsResponse(products: Product[]): PaginatedResponse<Product> {
+interface SpringPageResult {
+  content: ProductSummary[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+function makeProductsResponse(products: ProductSummary[]): SpringPageResult {
   return {
     content: products,
-    page: 0,
+    number: 0,
     size: 20,
     totalElements: products.length,
     totalPages: products.length > 0 ? 1 : 0,
-    hasNext: false,
+    last: true,
   };
 }
 
@@ -153,10 +163,11 @@ describe("등록자 내 상품 관리 페이지", () => {
     renderWithQuery(<LenderProductsPage />);
 
     await waitFor(() => {
-      // 요약 통계 영역이 있어야 한다 (여러 개의 카드가 있을 수 있음)
+      // 요약 통계 영역이 있어야 한다
       expect(screen.getByText("전체 상품")).toBeInTheDocument();
-      expect(screen.getAllByText("대여 가능").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("대여 중").length).toBeGreaterThan(0);
+      // "대여 가능"은 통계 카드 + 상품 뱃지에 여러 번 나올 수 있으므로 getAllByText 사용
+      expect(screen.getAllByText("대여 가능").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("검토 중")).toBeInTheDocument();
     });
   });
 

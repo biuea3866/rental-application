@@ -7,18 +7,17 @@ import type { User, AuthTokens } from "@/lib/api/types";
 // ========================================
 
 const mockUser: User = {
-  id: "user-test-001",
+  id: 1,
   email: "test@rental.com",
   name: "테스트유저",
-  phone: "010-0000-0000",
   role: "RENTER",
-  createdAt: "2026-01-01T00:00:00Z",
 };
 
 const mockTokens: AuthTokens = {
   accessToken: "test-access-token",
   refreshToken: "test-refresh-token",
-  expiresIn: 3600,
+  tokenFamily: "family-001",
+  userId: 1,
 };
 
 describe("Auth Store", () => {

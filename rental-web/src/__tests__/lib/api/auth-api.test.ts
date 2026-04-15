@@ -26,7 +26,9 @@ describe("Auth API 모듈", () => {
       expect(result.success).toBe(true);
       expect(result.data.accessToken).toBeDefined();
       expect(result.data.refreshToken).toBeDefined();
-      expect(result.data.expiresIn).toBe(3600);
+      // BE AuthTokenResponse: no expiresIn — tokenFamily & userId instead
+      expect(result.data.tokenFamily).toBeDefined();
+      expect(result.data.userId).toBeDefined();
     });
 
     it("잘못된 비밀번호로 로그인 시 에러가 발생해야 한다", async () => {
@@ -95,7 +97,7 @@ describe("Auth API 모듈", () => {
   describe("logoutApi", () => {
     it("로그아웃이 성공해야 한다", async () => {
       // 먼저 토큰 설정
-      setAccessToken("test-access-token", 3600);
+      setAccessToken("test-access-token", 3_600_000);
       setRefreshToken("test-refresh-token");
 
       const { logoutApi } = await import("@/lib/api/auth");
@@ -107,7 +109,7 @@ describe("Auth API 모듈", () => {
 
   describe("getMeApi", () => {
     it("인증 토큰이 있으면 현재 유저 정보를 반환해야 한다", async () => {
-      setAccessToken("test-access-token", 3600);
+      setAccessToken("test-access-token", 3_600_000);
 
       const { getMeApi } = await import("@/lib/api/auth");
 

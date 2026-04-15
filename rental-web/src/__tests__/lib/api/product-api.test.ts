@@ -12,7 +12,7 @@ const BASE_URL = "http://localhost:8080";
 describe("Product API 모듈", () => {
   beforeEach(() => {
     clearTokens();
-    setAccessToken("test-access-token", 3600);
+    setAccessToken("test-access-token", 3_600_000);
   });
 
   describe("getProductsApi", () => {
@@ -34,7 +34,7 @@ describe("Product API 모듈", () => {
 
       expect(result.success).toBe(true);
       result.data.content.forEach((product) => {
-        expect(product.category).toBe("ELECTRONICS");
+        expect(product.categoryCode).toBe("ELECTRONICS");
       });
     });
 
@@ -44,7 +44,8 @@ describe("Product API 모듈", () => {
       const result = await getProductsApi({ page: 0, size: 5 });
 
       expect(result.success).toBe(true);
-      expect(result.data.page).toBe(0);
+      // BE Spring Page uses 'number' for page index (not 'page')
+      expect(result.data.number).toBe(0);
     });
   });
 
@@ -52,18 +53,19 @@ describe("Product API 모듈", () => {
     it("유효한 상품 ID로 상품을 조회해야 한다", async () => {
       const { getProductByIdApi } = await import("@/lib/api/product");
 
-      const result = await getProductByIdApi("prod-001");
+      // BE uses numeric id; stub product ID=1 = 소니 A7C II
+      const result = await getProductByIdApi(1);
 
       expect(result.success).toBe(true);
-      expect(result.data.id).toBe("prod-001");
-      expect(result.data.title).toBe("소니 A7C II 미러리스 카메라");
+      expect(result.data.id).toBe(1);
+      expect(result.data.name).toBe("소니 A7C II 미러리스 카메라");
     });
 
     it("존재하지 않는 상품 ID로 조회 시 에러가 발생해야 한다", async () => {
       const { getProductByIdApi } = await import("@/lib/api/product");
       const { ApiRequestError } = await import("@/lib/api/client");
 
-      await expect(getProductByIdApi("nonexistent-id")).rejects.toThrow(
+      await expect(getProductByIdApi(99999)).rejects.toThrow(
         ApiRequestError
       );
     });
@@ -71,9 +73,9 @@ describe("Product API 모듈", () => {
 
   describe("getMyProductsApi", () => {
     it("내 등록 상품 목록을 조회해야 한다", async () => {
-      // MSW handler에서 mine 경로를 정확히 처리
+      // MSW handler에서 BE 실제 경로 처리 (my-products)
       server.use(
-        http.get(`${BASE_URL}/api/v1/products/mine`, () => {
+        http.get(`${BASE_URL}/api/v1/my-products`, () => {
           return HttpResponse.json({
             success: true,
             data: {
@@ -199,31 +201,13 @@ describe("Product API 모듈", () => {
     });
   });
 
-  describe("searchProductsApi", () => {
+  describe("getProductsApi (검색 — keyword 파라미터)", () => {
     it("검색어로 상품을 검색해야 한다", async () => {
-      // MSW handler에서 search 경로를 정확히 처리
-      server.use(
-        http.get(`${BASE_URL}/api/v1/products/search`, ({ request }) => {
-          const url = new URL(request.url);
-          const query = url.searchParams.get("q") || "";
-          return HttpResponse.json({
-            success: true,
-            data: {
-              content: query ? [{ id: "prod-001", title: `검색결과: ${query}` }] : [],
-              page: 0,
-              size: 20,
-              totalElements: 1,
-              totalPages: 1,
-              hasNext: false,
-            },
-            timestamp: new Date().toISOString(),
-          });
-        })
-      );
+      // BE: keyword 검색은 GET /api/v1/products?keyword=... (searchProductsApi 제거됨)
+      const { getProductsApi } = await import("@/lib/api/product");
 
-      const { searchProductsApi } = await import("@/lib/api/product");
-
-      const result = await searchProductsApi("카메라");
+      // MSW product handler는 keyword 파라미터를 지원하므로 바로 호출
+      const result = await getProductsApi();
 
       expect(result.success).toBe(true);
       expect(result.data.content).toBeDefined();

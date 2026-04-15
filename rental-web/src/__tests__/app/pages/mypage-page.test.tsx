@@ -111,7 +111,7 @@ describe("마이페이지", () => {
       role: "RENTER",
       createdAt: "2026-01-20T11:00:00Z",
       renterProfile: {
-        deliveryAddress: "서울 강남구",
+        shippingAddress: "서울 강남구",
         preferredCategories: ["ELECTRONICS"],
       },
     };

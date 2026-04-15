@@ -18,7 +18,7 @@ describe("Token 관리", () => {
         "@/lib/auth/token"
       );
 
-      setAccessToken("test-access-token", 3600);
+      setAccessToken("test-access-token", 3_600_000);
       expect(getAccessToken()).toBe("test-access-token");
     });
 
@@ -27,8 +27,8 @@ describe("Token 관리", () => {
         "@/lib/auth/token"
       );
 
-      // 이미 만료된 토큰 (음수 expiresIn)
-      setAccessToken("expired-token", -100);
+      // 이미 만료된 토큰 (음수 ttlMs)
+      setAccessToken("expired-token", -100_000);
       expect(getAccessToken()).toBeNull();
     });
 
@@ -44,7 +44,7 @@ describe("Token 관리", () => {
         "@/lib/auth/token"
       );
 
-      setAccessToken("valid-token", 3600);
+      setAccessToken("valid-token", 3_600_000);
       expect(isAccessTokenExpired()).toBe(false);
     });
 
@@ -53,7 +53,7 @@ describe("Token 관리", () => {
         "@/lib/auth/token"
       );
 
-      setAccessToken("expired-token", -100);
+      setAccessToken("expired-token", -100_000);
       expect(isAccessTokenExpired()).toBe(true);
     });
 
@@ -97,7 +97,8 @@ describe("Token 관리", () => {
       saveTokens({
         accessToken: "saved-access",
         refreshToken: "saved-refresh",
-        expiresIn: 3600,
+        tokenFamily: "family-001",
+        userId: 1,
       });
 
       expect(getAccessToken()).toBe("saved-access");
@@ -111,7 +112,8 @@ describe("Token 관리", () => {
       saveTokens({
         accessToken: "access-to-clear",
         refreshToken: "refresh-to-clear",
-        expiresIn: 3600,
+        tokenFamily: "family-clear",
+        userId: 1,
       });
 
       clearTokens();
@@ -127,7 +129,7 @@ describe("Token 관리", () => {
         "@/lib/auth/token"
       );
 
-      setAccessToken("valid-token", 3600);
+      setAccessToken("valid-token", 3_600_000);
       expect(hasValidTokens()).toBe(true);
     });
 
@@ -154,18 +156,31 @@ describe("Token 관리", () => {
       expect(result).toBeNull();
     });
 
-    it("유효한 refreshToken으로 토큰 갱신이 성공해야 한다", async () => {
-      const { setRefreshToken, refreshAccessToken } = await import(
+    it("유효한 refreshToken + tokenFamily로 토큰 갱신이 성공해야 한다", async () => {
+      const { setRefreshToken, setTokenFamily, refreshAccessToken } = await import(
         "@/lib/auth/token"
       );
 
       setRefreshToken("valid-refresh-token");
+      setTokenFamily("valid-family-001");
 
       const result = await refreshAccessToken();
 
       expect(result).not.toBeNull();
       expect(result?.accessToken).toBeDefined();
       expect(result?.refreshToken).toBeDefined();
+    });
+
+    it("tokenFamily가 없으면 null을 반환해야 한다", async () => {
+      const { setRefreshToken, refreshAccessToken } = await import(
+        "@/lib/auth/token"
+      );
+
+      setRefreshToken("refresh-without-family");
+      // tokenFamily 미설정
+
+      const result = await refreshAccessToken();
+      expect(result).toBeNull();
     });
 
     it("갱신 API 실패 시 null을 반환하고 토큰을 삭제해야 한다", async () => {
@@ -180,11 +195,13 @@ describe("Token 관리", () => {
 
       const {
         setRefreshToken,
+        setTokenFamily,
         refreshAccessToken,
         getRefreshToken,
       } = await import("@/lib/auth/token");
 
       setRefreshToken("invalid-refresh-token");
+      setTokenFamily("invalid-family");
 
       const result = await refreshAccessToken();
 
@@ -193,11 +210,12 @@ describe("Token 관리", () => {
     });
 
     it("갱신 요청 중 중복 호출은 동일한 Promise를 반환해야 한다", async () => {
-      const { setRefreshToken, refreshAccessToken } = await import(
+      const { setRefreshToken, setTokenFamily, refreshAccessToken } = await import(
         "@/lib/auth/token"
       );
 
       setRefreshToken("valid-refresh-token");
+      setTokenFamily("valid-family-002");
 
       // 동시에 두 번 호출
       const [result1, result2] = await Promise.all([
@@ -217,11 +235,12 @@ describe("Token 관리", () => {
         })
       );
 
-      const { setRefreshToken, refreshAccessToken, getRefreshToken } = await import(
+      const { setRefreshToken, setTokenFamily, refreshAccessToken, getRefreshToken } = await import(
         "@/lib/auth/token"
       );
 
       setRefreshToken("some-refresh-token");
+      setTokenFamily("some-family");
 
       const result = await refreshAccessToken();
 
