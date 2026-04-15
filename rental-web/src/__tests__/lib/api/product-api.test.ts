@@ -107,17 +107,16 @@ describe("Product API 모듈", () => {
           return HttpResponse.json({
             success: true,
             data: {
-              id: "prod-new-001",
-              title: "새 상품",
+              id: 1,
+              userId: 1,
+              name: "새 상품",
               description: "새 상품 설명",
-              category: "ELECTRONICS",
-              pricePerDay: 10000,
-              deposit: 100000,
-              imageUrls: [],
-              status: "AVAILABLE",
-              lenderId: "user-lender-001",
-              lenderName: "김대여",
-              location: "서울",
+              categoryCode: "ELECTRONICS",
+              condition: "NEW",
+              status: "UNDER_REVIEW",
+              depositAmount: 100000,
+              prices: [{ id: 1, rentalUnit: "DAILY", priceAmount: 10000 }],
+              images: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
@@ -129,17 +128,17 @@ describe("Product API 모듈", () => {
       const { createProductApi } = await import("@/lib/api/product");
 
       const result = await createProductApi({
-        title: "새 상품",
+        name: "새 상품",
         description: "새 상품 설명",
-        category: "ELECTRONICS",
-        pricePerDay: 10000,
-        deposit: 100000,
-        imageUrls: [],
-        location: "서울",
+        categoryCode: "ELECTRONICS",
+        condition: "NEW",
+        prices: [{ unit: "DAILY", amount: 10000 }],
+        depositAmount: 100000,
+        imageKeys: [],
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.title).toBe("새 상품");
+      expect(result.data.name).toBe("새 상품");
     });
   });
 
@@ -150,17 +149,16 @@ describe("Product API 모듈", () => {
           return HttpResponse.json({
             success: true,
             data: {
-              id: "prod-001",
-              title: "수정된 상품 제목",
+              id: 1,
+              userId: 1,
+              name: "수정된 상품 제목",
               description: "수정된 설명",
-              category: "ELECTRONICS",
-              pricePerDay: 40000,
-              deposit: 600000,
-              imageUrls: [],
-              status: "AVAILABLE",
-              lenderId: "user-lender-001",
-              lenderName: "김대여",
-              location: "서울",
+              categoryCode: "ELECTRONICS",
+              condition: "GOOD",
+              status: "UNDER_REVIEW",
+              depositAmount: 600000,
+              prices: [{ id: 1, rentalUnit: "DAILY", priceAmount: 40000 }],
+              images: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
@@ -172,12 +170,12 @@ describe("Product API 모듈", () => {
       const { updateProductApi } = await import("@/lib/api/product");
 
       const result = await updateProductApi("prod-001", {
-        title: "수정된 상품 제목",
-        pricePerDay: 40000,
+        name: "수정된 상품 제목",
+        prices: [{ unit: "DAILY", amount: 40000 }],
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.title).toBe("수정된 상품 제목");
+      expect(result.data.name).toBe("수정된 상품 제목");
     });
   });
 

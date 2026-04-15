@@ -56,7 +56,7 @@ export function registerStubHandlers(): void {
     }
 
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: Date.now(),
       email: request.email,
       name: request.name,
       phone: request.phone,
@@ -135,7 +135,7 @@ export function registerStubHandlers(): void {
   client.registerHandler("/api/v1/users", async (endpoint) => {
     const idMatch = endpoint.match(/\/users\/([^/?]+)/);
     if (idMatch) {
-      const user = STUB_USERS.find((u) => u.id === idMatch[1]);
+      const user = STUB_USERS.find((u) => String(u.id) === idMatch[1]);
       if (!user) throw new Error("유저를 찾을 수 없습니다.");
       return user;
     }

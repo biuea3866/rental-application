@@ -87,6 +87,7 @@ describe("Auth API 모듈", () => {
 
       const result = await refreshTokenApi({
         refreshToken: "stub-refresh-token",
+        tokenFamily: "stub-family-001",
       });
 
       expect(result.success).toBe(true);

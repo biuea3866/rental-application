@@ -28,11 +28,11 @@ vi.mock("next/navigation", () => ({
 // 전역 알림 상태 (mutation 테스트 지원)
 let mockNotifications = STUB_NOTIFICATIONS.map((n) => ({ ...n }));
 
-const mockApiClient: ApiClient = {
+const mockApiClient = {
   get: vi.fn(async (endpoint: string) => {
     if (endpoint.includes("unread-count")) {
       const count = mockNotifications.filter((n) => !n.isRead).length;
-      return { success: true, data: { count }, timestamp: "" } as ApiResponse<{ count: number }>;
+      return { success: true, data: { count }, timestamp: "" };
     }
     if (endpoint.includes("/notifications")) {
       const url = new URL(`http://localhost${endpoint}`);
@@ -53,16 +53,16 @@ const mockApiClient: ApiClient = {
           hasNext: end < mockNotifications.length,
         } as PaginatedResponse<Notification>,
         timestamp: "",
-      } as ApiResponse<PaginatedResponse<Notification>>;
+      };
     }
-    return { success: true, data: {}, timestamp: "" } as ApiResponse<unknown>;
+    return { success: true, data: {}, timestamp: "" };
   }),
-  post: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-  put: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
+  post: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+  put: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
   patch: vi.fn(async (endpoint: string) => {
     if (endpoint.includes("read-all")) {
       mockNotifications = mockNotifications.map((n) => ({ ...n, isRead: true }));
-      return { success: true, data: null, timestamp: "" } as ApiResponse<null>;
+      return { success: true, data: null, timestamp: "" };
     }
     // read by id: /api/v1/notifications/:id/read
     const idMatch = endpoint.match(/\/notifications\/([^/]+)\/read/);
@@ -71,12 +71,12 @@ const mockApiClient: ApiClient = {
       mockNotifications = mockNotifications.map((n) =>
         n.id === id ? { ...n, isRead: true } : n
       );
-      return { success: true, data: {}, timestamp: "" } as ApiResponse<unknown>;
+      return { success: true, data: {}, timestamp: "" };
     }
-    return { success: true, data: {}, timestamp: "" } as ApiResponse<unknown>;
+    return { success: true, data: {}, timestamp: "" };
   }),
-  delete: vi.fn(async () => ({ success: true, data: {}, timestamp: "" } as ApiResponse<unknown>)),
-};
+  delete: vi.fn(async () => ({ success: true, data: {}, timestamp: "" })),
+} as unknown as ApiClient;
 
 vi.mock("@/lib/api/client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/client")>();

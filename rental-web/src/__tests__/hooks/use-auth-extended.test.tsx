@@ -107,7 +107,7 @@ describe("useAuth 확장 테스트", () => {
       // 먼저 로그인 상태 설정
       useAuthStore.setState({
         user: {
-          id: "user-001",
+          id: 1,
           email: "test@test.com",
           name: "테스트",
           phone: "010-0000-0000",
@@ -144,7 +144,7 @@ describe("useAuth 확장 테스트", () => {
 
       useAuthStore.setState({
         user: {
-          id: "user-001",
+          id: 1,
           email: "test@test.com",
           name: "테스트",
           phone: "010-0000-0000",

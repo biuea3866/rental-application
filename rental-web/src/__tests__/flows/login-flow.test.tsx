@@ -58,7 +58,7 @@ describe("로그인 플로우", () => {
     mockLoginFn.mockImplementation(async () => {
       useAuthStore.setState({
         user: {
-          id: "user-lender-001",
+          id: 1,
           email: "lender@rental.com",
           name: "김대여",
           phone: "010-1234-5678",
@@ -100,7 +100,7 @@ describe("로그인 플로우", () => {
     mockLoginFn.mockImplementation(async () => {
       useAuthStore.setState({
         user: {
-          id: "user-renter-001",
+          id: 3,
           email: "renter@rental.com",
           name: "이빌림",
           phone: "010-3456-7890",

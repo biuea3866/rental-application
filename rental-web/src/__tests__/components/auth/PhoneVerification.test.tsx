@@ -94,8 +94,10 @@ describe("PhoneVerification - 타이머 (fake timers)", () => {
 });
 
 describe("PhoneVerification - 인터랙션", () => {
-  let mockOnVerify: ReturnType<typeof vi.fn>;
-  let mockOnResend: ReturnType<typeof vi.fn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockOnVerify: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockOnResend: any;
 
   beforeEach(() => {
     vi.clearAllMocks();

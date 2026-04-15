@@ -65,7 +65,7 @@ describe("useAuth hook", () => {
   it("스토어에 유저가 설정되면 isAuthenticated가 true여야 한다", () => {
     useAuthStore.setState({
       user: {
-        id: "user-001",
+        id: 1,
         email: "test@test.com",
         name: "테스트",
         phone: "010-0000-0000",
@@ -85,7 +85,7 @@ describe("useAuth hook", () => {
     // 먼저 인증 상태 설정
     useAuthStore.setState({
       user: {
-        id: "user-001",
+        id: 1,
         email: "test@test.com",
         name: "테스트",
         phone: "010-0000-0000",

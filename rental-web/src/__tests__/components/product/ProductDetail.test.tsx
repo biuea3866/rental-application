@@ -19,7 +19,7 @@ describe("ProductDetail", () => {
     renderWithQuery(<ProductDetail product={AVAILABLE_PRODUCT} />);
 
     expect(
-      screen.getByText(AVAILABLE_PRODUCT.name)
+      screen.getByText(AVAILABLE_PRODUCT.name!)
     ).toBeInTheDocument();
   });
 
@@ -27,7 +27,7 @@ describe("ProductDetail", () => {
     renderWithQuery(<ProductDetail product={AVAILABLE_PRODUCT} />);
 
     expect(
-      screen.getByText(AVAILABLE_PRODUCT.description)
+      screen.getByText(AVAILABLE_PRODUCT.description!)
     ).toBeInTheDocument();
   });
 
@@ -43,7 +43,7 @@ describe("ProductDetail", () => {
   it("보증금 정보가 표시되어야 한다", () => {
     renderWithQuery(<ProductDetail product={AVAILABLE_PRODUCT} />);
 
-    const depositText = `${AVAILABLE_PRODUCT.depositAmount.toLocaleString()}원`;
+    const depositText = `${AVAILABLE_PRODUCT.depositAmount!.toLocaleString()}원`;
     expect(screen.getByText(depositText)).toBeInTheDocument();
   });
 

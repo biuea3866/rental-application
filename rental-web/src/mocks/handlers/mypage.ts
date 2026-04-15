@@ -16,6 +16,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 // 스텁 마이페이지 데이터
 export const STUB_MYPAGE_INFO: MyPageInfo = {
   ...STUB_USERS[0],
+  id: String(STUB_USERS[0].id),
+  phone: STUB_USERS[0].phone ?? "",
+  createdAt: STUB_USERS[0].createdAt ?? new Date().toISOString(),
   lenderProfile: {
     businessName: "김대여 렌탈샵",
     description: "좋은 물건을 합리적인 가격에 빌려드립니다.",
