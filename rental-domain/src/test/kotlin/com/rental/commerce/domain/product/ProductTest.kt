@@ -5,6 +5,7 @@ import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.product.event.ProductApprovedEvent
 import com.rental.commerce.domain.product.event.ProductRejectedEvent
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -402,6 +403,49 @@ class ProductTest : BehaviorSpec({
                     product.delete()
                 }
                 exception.errorCode shouldBe ErrorCode.PRODUCT_NOT_DELETABLE
+            }
+        }
+    }
+
+    // BLK-001: JPA 로드 시 @Transient 필드 null 문제 재현 및 방어 테스트
+    Given("JPA 리플렉션으로 로드된 Product — domainEvents null 시뮬레이션") {
+
+        fun createProductWithNullDomainEventsViaReflection(): Product {
+            val product = Product(userId = 1L)
+            // JPA/Hibernate가 리플렉션으로 인스턴스를 생성할 때
+            // @Transient 필드 initializer를 우회할 수 있어 null이 됨 (BLK-001 시나리오)
+            val field = Product::class.java.getDeclaredField("_domainEvents")
+            field.isAccessible = true
+            field.set(product, null)
+            return product
+        }
+
+        When("domainEvents가 null인 상태에서 approve()를 호출하면") {
+            val product = createProductWithNullDomainEventsViaReflection()
+            // 상태를 UNDER_REVIEW로 설정
+            val statusField = Product::class.java.getDeclaredField("status")
+            statusField.isAccessible = true
+            statusField.set(product, ProductStatus.UNDER_REVIEW)
+
+            Then("NPE 없이 정상 승인되어야 한다 (BLK-001 회귀 방어)") {
+                shouldNotThrowAny {
+                    product.approve()
+                }
+                product.status shouldBe ProductStatus.APPROVED
+            }
+        }
+
+        When("domainEvents가 null인 상태에서 reject()를 호출하면") {
+            val product = createProductWithNullDomainEventsViaReflection()
+            val statusField = Product::class.java.getDeclaredField("status")
+            statusField.isAccessible = true
+            statusField.set(product, ProductStatus.UNDER_REVIEW)
+
+            Then("NPE 없이 정상 반려되어야 한다 (BLK-001 회귀 방어)") {
+                shouldNotThrowAny {
+                    product.reject("검수 실패 사유")
+                }
+                product.status shouldBe ProductStatus.REJECTED
             }
         }
     }

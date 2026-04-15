@@ -34,9 +34,13 @@ minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  # CRT-001 / MAJ-001: 실제 MinIO 버킷명과 일치하도록 수정
   buckets:
-    default: ${MINIO_BUCKET:rental-commerce}
-    product-images: ${MINIO_BUCKET_PRODUCT_IMAGES:rental-commerce}
+    default: ${MINIO_BUCKET_DEFAULT:products}
+    product-images: ${MINIO_BUCKET_PRODUCT_IMAGES:products}
+    inspections: ${MINIO_BUCKET_INSPECTIONS:inspections}
+    documents: ${MINIO_BUCKET_DOCUMENTS:documents}
+    chat: ${MINIO_BUCKET_CHAT:chat}
 
 social:
   kakao:
