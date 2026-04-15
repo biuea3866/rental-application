@@ -3,6 +3,7 @@ package com.rental.commerce.presentation.api.auth
 import com.rental.commerce.application.auth.RefreshTokenUseCase
 import com.rental.commerce.application.auth.SocialLoginUseCase
 import com.rental.commerce.application.user.AuthTokenResponse
+import com.rental.commerce.application.user.GetMeUseCase
 import com.rental.commerce.application.user.LoginUseCase
 import com.rental.commerce.application.user.RegisterUserResponse
 import com.rental.commerce.application.user.RegisterUserUseCase
@@ -29,7 +30,8 @@ class AuthApiControllerTest : BehaviorSpec({
     val loginUseCase = mockk<LoginUseCase>()
     val refreshTokenUseCase = mockk<RefreshTokenUseCase>()
     val socialLoginUseCase = mockk<SocialLoginUseCase>()
-    val controller = AuthApiController(registerUserUseCase, verifyPhoneAndCompleteSignupUseCase, loginUseCase, refreshTokenUseCase, socialLoginUseCase)
+    val getMeUseCase = mockk<GetMeUseCase>()
+    val controller = AuthApiController(registerUserUseCase, verifyPhoneAndCompleteSignupUseCase, loginUseCase, refreshTokenUseCase, socialLoginUseCase, getMeUseCase)
     val mockMvc: MockMvc = MockMvcBuilders
         .standaloneSetup(controller)
         .setControllerAdvice(GlobalExceptionHandler())

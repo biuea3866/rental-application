@@ -62,7 +62,13 @@ class Product(
 ) : BaseEntity() {
 
     @Transient
-    private val domainEvents: MutableList<DomainEvent> = mutableListOf()
+    // JPA/Hibernate는 리플렉션으로 엔티티를 로드할 때 @Transient 필드의
+    // initializer를 실행하지 않아 null이 될 수 있음 (BLK-001).
+    // private var + lazy getter 패턴으로 null-safe 보장.
+    private var _domainEvents: MutableList<DomainEvent>? = null
+
+    private val domainEvents: MutableList<DomainEvent>
+        get() = _domainEvents ?: mutableListOf<DomainEvent>().also { _domainEvents = it }
 
     fun isPubliclyVisible(): Boolean {
         return status == ProductStatus.AVAILABLE || status == ProductStatus.RENTED
