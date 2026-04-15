@@ -18,8 +18,11 @@ kind: Kustomization
 
 namespace: rental-commerce
 
-commonLabels:
-  app.kubernetes.io/managed-by: kustomize
+# commonLabels는 Deployment/Service spec.selector까지 변경하여 immutable selector 오류 유발
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
 
 resources:
   - namespace.yml

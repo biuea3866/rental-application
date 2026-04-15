@@ -60,7 +60,9 @@ patches:
         SPRING_PROFILES_ACTIVE: "prod"
         LOG_LEVEL: "WARN"
 
-# prod 환경 라벨
-commonLabels:
-  app.kubernetes.io/instance: rental-commerce-prod
-  environment: production
+# prod 환경 라벨 — includeSelectors: false 로 Service/Deployment selector 오염 방지
+labels:
+  - pairs:
+      app.kubernetes.io/instance: rental-commerce-prod
+      environment: production
+    includeSelectors: false

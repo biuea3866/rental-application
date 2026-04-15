@@ -10,8 +10,14 @@ kind: Kustomization
 
 namespace: rental-commerce
 
-commonLabels:
-  app.kubernetes.io/managed-by: kustomize
+# commonLabels는 Deployment/Service spec.selector까지 변경하여
+# - Deployment selector 불변 오류 (한 번 만들어지면 수정 불가)
+# - Service selector ↔ Pod label 불일치 (엔드포인트 비어있음)
+# 두 가지 치명적 버그 유발. labels + includeSelectors: false로 교체.
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
 
 resources:
   - namespace.yml
