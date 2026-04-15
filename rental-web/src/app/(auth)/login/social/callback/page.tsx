@@ -30,13 +30,13 @@ function SocialCallbackContent() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/login/social/callback`;
     const apiClient = getApiClient();
 
     apiClient
       .post<AuthTokens>(
         ENDPOINTS.AUTH.SOCIAL_LOGIN,
-        { provider: state, code, redirectUri },
+        // BE SocialLoginRequest: { provider, authorizationCode }
+        { provider: state, authorizationCode: code },
         { requiresAuth: false }
       )
       .then(async (tokenResponse) => {

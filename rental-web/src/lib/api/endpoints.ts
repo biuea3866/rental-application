@@ -26,18 +26,18 @@ export const ENDPOINTS = {
   // 상품
   PRODUCTS: {
     BASE: `${API_VERSION}/products`,
-    BY_ID: (id: string) => `${API_VERSION}/products/${id}`,
+    BY_ID: (id: string | number) => `${API_VERSION}/products/${id}`,
     BY_CATEGORY: (category: string) =>
       `${API_VERSION}/products?category=${category}`,
-    SEARCH: `${API_VERSION}/products/search`,
-    MY_PRODUCTS: `${API_VERSION}/products/mine`,
+    /** BE: GET /api/v1/my-products */
+    MY_PRODUCTS: `${API_VERSION}/my-products`,
   },
 
-  // 가이드 가격
+  // 가이드 가격 (BE: /api/v1/price-guides)
   GUIDE_PRICES: {
-    BASE: `${API_VERSION}/guide-prices`,
+    BASE: `${API_VERSION}/price-guides`,
     BY_CATEGORY: (category: string) =>
-      `${API_VERSION}/guide-prices/${category}`,
+      `${API_VERSION}/price-guides/${category}`,
   },
 
   // 대여

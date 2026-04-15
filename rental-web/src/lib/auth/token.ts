@@ -7,10 +7,14 @@ import { BASE_URL } from "@/lib/api/client";
 
 // Access Token은 메모리에 저장 (보안상 localStorage 사용 안 함)
 let accessToken: string | null = null;
+// BE는 expiresIn을 반환하지 않으므로 30분 고정 TTL 사용 (MVP)
+const ACCESS_TOKEN_TTL_MS = 30 * 60 * 1000;
 let tokenExpiresAt: number | null = null;
 
-// Refresh Token 키 (localStorage 기반 - MVP)
+// localStorage 키
 const REFRESH_TOKEN_KEY = "rental_refresh_token";
+const TOKEN_FAMILY_KEY = "rental_token_family";
+const USER_ID_KEY = "rental_user_id";
 
 // ========================================
 // Access Token 관리
@@ -28,10 +32,10 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
-export function setAccessToken(token: string, expiresIn: number): void {
+export function setAccessToken(token: string, ttlMs: number = ACCESS_TOKEN_TTL_MS): void {
   accessToken = token;
-  // expiresIn은 초 단위, 10초 여유를 두고 만료 처리
-  tokenExpiresAt = Date.now() + (expiresIn - 10) * 1000;
+  // ttlMs(밀리초), 10초 여유를 두고 만료 처리
+  tokenExpiresAt = Date.now() + ttlMs - 10_000;
 }
 
 export function isAccessTokenExpired(): boolean {
@@ -59,18 +63,61 @@ export function removeRefreshToken(): void {
 }
 
 // ========================================
+// tokenFamily 관리 (localStorage) — BE refresh 필수 필드
+// ========================================
+
+export function getTokenFamily(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_FAMILY_KEY);
+}
+
+export function setTokenFamily(family: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_FAMILY_KEY, family);
+}
+
+export function removeTokenFamily(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_FAMILY_KEY);
+}
+
+// ========================================
+// userId 관리 (localStorage)
+// ========================================
+
+export function getUserId(): number | null {
+  if (typeof window === "undefined") return null;
+  const val = localStorage.getItem(USER_ID_KEY);
+  return val ? Number(val) : null;
+}
+
+export function setUserId(id: number): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(USER_ID_KEY, String(id));
+}
+
+export function removeUserId(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(USER_ID_KEY);
+}
+
+// ========================================
 // 토큰 일괄 관리
 // ========================================
 
 export function saveTokens(tokens: AuthTokens): void {
-  setAccessToken(tokens.accessToken, tokens.expiresIn);
+  setAccessToken(tokens.accessToken);
   setRefreshToken(tokens.refreshToken);
+  setTokenFamily(tokens.tokenFamily);
+  setUserId(tokens.userId);
 }
 
 export function clearTokens(): void {
   accessToken = null;
   tokenExpiresAt = null;
   removeRefreshToken();
+  removeTokenFamily();
+  removeUserId();
 }
 
 export function hasValidTokens(): boolean {
@@ -86,7 +133,9 @@ let refreshPromise: Promise<AuthTokens | null> | null = null;
 
 export async function refreshAccessToken(): Promise<AuthTokens | null> {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) {
+  const tokenFamily = getTokenFamily();
+
+  if (!refreshToken || !tokenFamily) {
     clearTokens();
     return null;
   }
@@ -97,7 +146,7 @@ export async function refreshAccessToken(): Promise<AuthTokens | null> {
   }
 
   isRefreshing = true;
-  refreshPromise = doRefresh(refreshToken);
+  refreshPromise = doRefresh(refreshToken, tokenFamily);
 
   try {
     const result = await refreshPromise;
@@ -108,12 +157,12 @@ export async function refreshAccessToken(): Promise<AuthTokens | null> {
   }
 }
 
-async function doRefresh(refreshToken: string): Promise<AuthTokens | null> {
+async function doRefresh(refreshToken: string, tokenFamily: string): Promise<AuthTokens | null> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ refreshToken, tokenFamily }),
     });
 
     if (!response.ok) {
@@ -122,7 +171,7 @@ async function doRefresh(refreshToken: string): Promise<AuthTokens | null> {
     }
 
     const data = await response.json();
-    const tokens: AuthTokens = data.data;
+    const tokens: AuthTokens = data.data ?? data;
 
     // Token Rotation: 새 토큰 저장
     saveTokens(tokens);
