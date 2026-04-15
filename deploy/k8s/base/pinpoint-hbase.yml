@@ -86,13 +86,15 @@ spec:
             # HBASE_CONF_hbase_* → hbase.* 프로퍼티 (hbase.zookeeper.session.timeout)
             - name: HBASE_CONF_hbase_zookeeper_session_timeout
               value: "300000"
+          # 63+256 region 생성 시 CPU throttling 발생 → ZK 세션 타임아웃 (76s 무응답)
+          # CPU limit 제거 + memory 증설로 region 생성 병목 해소
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "500m"
+              memory: "3Gi"
+              cpu: "1"
             limits:
-              memory: "4Gi"
-              cpu: "2000m"
+              memory: "6Gi"
+              cpu: "4"
           readinessProbe:
             tcpSocket:
               port: 60000

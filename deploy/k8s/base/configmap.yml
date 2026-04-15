@@ -27,3 +27,10 @@ data:
   MINIO_ENDPOINT: "http://minio.rental-commerce.svc.cluster.local:9000"
   # Redis 포트
   SPRING_DATA_REDIS_PORT: "6379"
+  # 소셜 로그인 (dev/placeholder — 실제 값은 Secret이 오버라이드)
+  KAKAO_CLIENT_ID: "dev-placeholder"
+  KAKAO_CLIENT_SECRET: "dev-placeholder"
+  KAKAO_REDIRECT_URI: "http://localhost:3000/auth/kakao/callback"
+  NAVER_CLIENT_ID: "dev-placeholder"
+  NAVER_CLIENT_SECRET: "dev-placeholder"
+  NAVER_REDIRECT_URI: "http://localhost:3000/auth/naver/callback"
