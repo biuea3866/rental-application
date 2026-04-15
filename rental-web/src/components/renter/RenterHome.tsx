@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CATEGORY_OPTIONS } from "@/components/product/ProductFilters";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/lib/api/types";
+import type { ProductSummary } from "@/lib/api/types";
 
 // ========================================
 // 배너 컴포넌트
@@ -92,7 +92,7 @@ function CategoryGrid() {
 // ========================================
 
 interface FeaturedProductsProps {
-  products: Product[];
+  products: ProductSummary[];
   isLoading?: boolean;
 }
 
@@ -134,7 +134,7 @@ function FeaturedProducts({ products, isLoading }: FeaturedProductsProps) {
 // ========================================
 
 interface RenterHomeProps {
-  featuredProducts?: Product[];
+  featuredProducts?: ProductSummary[];
   isLoading?: boolean;
 }
 

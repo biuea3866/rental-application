@@ -2,27 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PriceGuide } from "./PriceGuide";
 import { cn } from "@/lib/utils";
-import type { Product, ProductCategory, ProductStatus } from "@/lib/api/types";
+import type {
+  Product,
+  ProductCategory,
+  ProductStatus,
+  RentalUnit,
+} from "@/lib/api/types";
+import { getDailyPrice } from "@/lib/api/types";
 
 // ========================================
-// 상태 설정
+// 상태 설정 (BE ProductStatus enum 기준)
 // ========================================
 
 const STATUS_CONFIG: Record<
   ProductStatus,
   { label: string; className: string }
 > = {
-  AVAILABLE: { label: "대여 가능", className: "bg-green-100 text-green-700" },
-  RENTED: { label: "대여 중", className: "bg-red-100 text-red-700" },
-  UNAVAILABLE: { label: "대여 불가", className: "bg-gray-100 text-gray-500" },
+  DRAFT: { label: "초안", className: "bg-gray-100 text-gray-500" },
+  UNDER_REVIEW: { label: "검토 중", className: "bg-yellow-100 text-yellow-700" },
+  APPROVED: { label: "대여 가능", className: "bg-green-100 text-green-700" },
+  REJECTED: { label: "반려", className: "bg-red-100 text-red-700" },
+  SUSPENDED: { label: "정지", className: "bg-gray-100 text-gray-500" },
 };
 
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   ELECTRONICS: "전자기기",
   FURNITURE: "가구",
   SPORTS: "스포츠",
@@ -33,24 +41,30 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   OTHERS: "기타",
 };
 
+const RENTAL_UNIT_LABELS: Record<RentalUnit, string> = {
+  DAILY: "일",
+  WEEKLY: "주",
+  MONTHLY: "월",
+};
+
 // ========================================
-// 이미지 갤러리
+// 이미지 갤러리 (BE ImageResponse[] 기준)
 // ========================================
 
 interface ImageGalleryProps {
-  images: string[];
+  images: { objectKey: string; sortOrder: number }[];
   title: string;
 }
 
 function ImageGallery({ images, title }: ImageGalleryProps) {
+  const sorted = [...images].sort((a, b) => a.sortOrder - b.sortOrder);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const prev = () =>
-    setCurrentIndex((i) => (i - 1 + images.length) % images.length);
-  const next = () =>
-    setCurrentIndex((i) => (i + 1) % images.length);
+    setCurrentIndex((i) => (i - 1 + sorted.length) % sorted.length);
+  const next = () => setCurrentIndex((i) => (i + 1) % sorted.length);
 
-  const src = images[currentIndex];
+  const src = sorted[currentIndex]?.objectKey;
 
   return (
     <div className="space-y-2" data-testid="image-gallery">
@@ -74,7 +88,7 @@ function ImageGallery({ images, title }: ImageGalleryProps) {
         )}
 
         {/* 네비게이션 (이미지 2장 이상) */}
-        {images.length > 1 && (
+        {sorted.length > 1 && (
           <>
             <button
               type="button"
@@ -93,7 +107,7 @@ function ImageGallery({ images, title }: ImageGalleryProps) {
               <ChevronRight className="size-4" />
             </button>
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-              {images.map((_, i) => (
+              {sorted.map((_, i) => (
                 <button
                   key={i}
                   type="button"
@@ -111,11 +125,11 @@ function ImageGallery({ images, title }: ImageGalleryProps) {
       </div>
 
       {/* 썸네일 스트립 */}
-      {images.length > 1 && (
+      {sorted.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {images.map((img, i) => (
+          {sorted.map((img, i) => (
             <button
-              key={i}
+              key={img.objectKey}
               type="button"
               onClick={() => setCurrentIndex(i)}
               className={cn(
@@ -125,7 +139,7 @@ function ImageGallery({ images, title }: ImageGalleryProps) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={img}
+                src={img.objectKey}
                 alt={`썸네일 ${i + 1}`}
                 className="h-full w-full object-cover"
               />
@@ -138,7 +152,7 @@ function ImageGallery({ images, title }: ImageGalleryProps) {
 }
 
 // ========================================
-// ProductDetail 컴포넌트
+// ProductDetail 컴포넌트 (BE ProductDetailResponse 기준)
 // ========================================
 
 interface ProductDetailProps {
@@ -146,12 +160,20 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
-  const statusConfig = STATUS_CONFIG[product.status];
-  const categoryLabel = CATEGORY_LABELS[product.category];
-  const isAvailable = product.status === "AVAILABLE";
+  const statusConfig = STATUS_CONFIG[product.status] ?? STATUS_CONFIG.APPROVED;
+  const categoryLabel = product.categoryCode
+    ? (CATEGORY_LABELS[product.categoryCode] ?? product.categoryCode)
+    : "기타";
+  const isAvailable = product.status === "APPROVED";
+
+  // 대표 가격: DAILY 우선
+  const dailyPrice = getDailyPrice(product);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 space-y-6" data-testid="product-detail">
+    <div
+      className="mx-auto max-w-4xl px-4 py-6 space-y-6"
+      data-testid="product-detail"
+    >
       {/* 뒤로가기 */}
       <Link
         href="/products"
@@ -164,17 +186,22 @@ export function ProductDetail({ product }: ProductDetailProps) {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* 좌측: 이미지 + 설명 */}
         <div className="space-y-6">
-          <ImageGallery images={product.imageUrls} title={product.title} />
+          <ImageGallery
+            images={product.images}
+            title={product.name ?? "상품"}
+          />
 
           {/* 설명 */}
-          <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2">
-              상품 설명
-            </h2>
-            <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">
-              {product.description}
-            </p>
-          </div>
+          {product.description && (
+            <div>
+              <h2 className="text-sm font-semibold text-muted-foreground mb-2">
+                상품 설명
+              </h2>
+              <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">
+                {product.description}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* 우측: 상품 정보 + CTA */}
@@ -195,23 +222,52 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
 
           {/* 제목 */}
-          <h1 className="text-xl font-bold leading-snug">{product.title}</h1>
+          <h1 className="text-xl font-bold leading-snug">
+            {product.name ?? "상품명 없음"}
+          </h1>
 
           {/* 가격 카드 */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-primary">
-                  {product.pricePerDay.toLocaleString()}원
-                </span>
-                <span className="text-sm text-muted-foreground">/일</span>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                보증금{" "}
-                <span className="font-semibold text-foreground">
-                  {product.deposit.toLocaleString()}원
-                </span>
-              </div>
+              {/* 가격 목록 (prices[]) */}
+              {product.prices.length > 0 ? (
+                <div className="space-y-1">
+                  {product.prices.map((price) => (
+                    <div key={price.id} className="flex items-baseline gap-1">
+                      <span
+                        className={cn(
+                          "font-bold text-primary",
+                          price.rentalUnit === "DAILY"
+                            ? "text-2xl"
+                            : "text-lg"
+                        )}
+                      >
+                        {price.priceAmount.toLocaleString()}원
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        /{RENTAL_UNIT_LABELS[price.rentalUnit]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : dailyPrice != null ? (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-primary">
+                    {dailyPrice.toLocaleString()}원
+                  </span>
+                  <span className="text-sm text-muted-foreground">/일</span>
+                </div>
+              ) : null}
+
+              {/* 보증금 (depositAmount) */}
+              {product.depositAmount != null && (
+                <div className="text-sm text-muted-foreground">
+                  보증금{" "}
+                  <span className="font-semibold text-foreground">
+                    {product.depositAmount.toLocaleString()}원
+                  </span>
+                </div>
+              )}
 
               <Button
                 className="w-full"
@@ -223,25 +279,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </CardContent>
           </Card>
 
-          {/* 위치 */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="size-4 shrink-0" />
-            <span>{product.location}</span>
-          </div>
-
-          {/* 등록자 정보 */}
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center justify-center size-8 rounded-full bg-muted">
-              <User className="size-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">등록자</p>
-              <p className="font-medium">{product.lenderName}</p>
-            </div>
-          </div>
-
           {/* 카테고리 가이드 가격 */}
-          <PriceGuide highlightCategory={product.category} />
+          {product.categoryCode && (
+            <PriceGuide
+              highlightCategory={product.categoryCode as ProductCategory}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "./ProductCard";
-import type { Product } from "@/lib/api/types";
+import type { ProductSummary } from "@/lib/api/types";
 
 // ========================================
 // ProductGrid 컴포넌트
 // ========================================
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductSummary[];
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;

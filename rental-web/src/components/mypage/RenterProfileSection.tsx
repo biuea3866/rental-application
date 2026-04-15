@@ -46,12 +46,12 @@ export function RenterProfileSection({
       <CardContent>
         {renterProfile ? (
           <div className="space-y-3 rounded-lg bg-muted/30 p-4">
-            {renterProfile.deliveryAddress && (
+            {renterProfile.shippingAddress && (
               <div className="flex justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
                   배송 주소
                 </span>
-                <span className="text-sm">{renterProfile.deliveryAddress}</span>
+                <span className="text-sm">{renterProfile.shippingAddress}</span>
               </div>
             )}
             {renterProfile.preferredCategories &&

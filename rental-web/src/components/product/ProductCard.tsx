@@ -4,19 +4,21 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Product, ProductStatus } from "@/lib/api/types";
+import type { ProductSummary, ProductStatus } from "@/lib/api/types";
 
 // ========================================
-// 상태 뱃지 설정
+// 상태 뱃지 설정 (BE ProductStatus enum 기준)
 // ========================================
 
 const STATUS_CONFIG: Record<
   ProductStatus,
   { label: string; className: string }
 > = {
-  AVAILABLE: { label: "대여 가능", className: "bg-green-100 text-green-700" },
-  RENTED: { label: "대여 중", className: "bg-red-100 text-red-700" },
-  UNAVAILABLE: { label: "대여 불가", className: "bg-gray-100 text-gray-500" },
+  DRAFT: { label: "초안", className: "bg-gray-100 text-gray-500" },
+  UNDER_REVIEW: { label: "검토 중", className: "bg-yellow-100 text-yellow-700" },
+  APPROVED: { label: "대여 가능", className: "bg-green-100 text-green-700" },
+  REJECTED: { label: "반려", className: "bg-red-100 text-red-700" },
+  SUSPENDED: { label: "정지", className: "bg-gray-100 text-gray-500" },
 };
 
 // ========================================
@@ -35,18 +37,20 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 // ========================================
-// ProductCard 컴포넌트
+// ProductCard 컴포넌트 (ProductSummary 기준)
 // ========================================
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductSummary;
   className?: string;
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const statusConfig = STATUS_CONFIG[product.status];
-  const categoryLabel = CATEGORY_LABELS[product.category] ?? product.category;
-  const isAvailable = product.status === "AVAILABLE";
+  const statusConfig = STATUS_CONFIG[product.status] ?? STATUS_CONFIG.APPROVED;
+  const categoryLabel = product.categoryCode
+    ? (CATEGORY_LABELS[product.categoryCode] ?? product.categoryCode)
+    : "기타";
+  const isAvailable = product.status === "APPROVED";
 
   return (
     <Link href={`/products/${product.id}`} className="block h-full">
@@ -59,11 +63,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
       >
         {/* 이미지 영역 */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          {product.imageUrls[0] ? (
+          {product.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={product.imageUrls[0]}
-              alt={product.title}
+              src={product.thumbnailUrl}
+              alt={product.name ?? "상품 이미지"}
               className="h-full w-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
@@ -95,24 +99,23 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* 본문 */}
         <CardContent className="pt-3 pb-0">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
-            {product.title}
+            {product.name ?? "상품명 없음"}
           </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-            {product.description}
-          </p>
         </CardContent>
 
-        {/* 가격 / 위치 */}
+        {/* 보증금 */}
         <CardFooter className="border-none bg-transparent pt-2 flex flex-col items-start gap-0.5">
-          <div className="flex items-baseline gap-1">
-            <span className="text-base font-bold text-primary">
-              {product.pricePerDay.toLocaleString()}원
-            </span>
-            <span className="text-xs text-muted-foreground">/일</span>
-          </div>
+          {product.depositAmount != null && (
+            <div className="flex items-baseline gap-1">
+              <span className="text-xs text-muted-foreground">보증금</span>
+              <span className="text-sm font-semibold text-primary">
+                {product.depositAmount.toLocaleString()}원
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="size-3 shrink-0" />
-            <span className="truncate">{product.location}</span>
+            <span className="truncate">위치 미제공</span>
           </div>
         </CardFooter>
       </Card>
