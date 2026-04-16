@@ -6,26 +6,20 @@ import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
-import com.rental.commerce.domain.rental.RentalEventPublisher
-import com.rental.commerce.domain.rental.RentalRepository
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import java.time.ZonedDateTime
 
 class StartRentalUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val rentalRepository = mockk<RentalRepository>()
-    val rentalEventPublisher = mockk<RentalEventPublisher>()
-    val useCase = StartRentalUseCase(rentalDomainService, rentalRepository, rentalEventPublisher)
+    val useCase = StartRentalUseCase(rentalDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -55,13 +49,13 @@ class StartRentalUseCaseTest : BehaviorSpec({
     }
 
     beforeEach {
-        clearMocks(rentalDomainService, rentalRepository, rentalEventPublisher)
+        clearMocks(rentalDomainService)
     }
 
     Given("대여 시작 요청을 할 때") {
 
         When("등록자(lender)가 PAID 상태의 대여를 시작하면") {
-            Then("rental.startRental()이 호출되고 IN_USE 상태로 저장된다") {
+            Then("RentalDomainService.startRental()이 호출되고 IN_USE 상태로 전이된다") {
                 val rental = createPaidRental(rentalId = 1L)
 
                 val command = StartRentalCommand(
@@ -70,14 +64,16 @@ class StartRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns rental
-                every { rentalRepository.save(rental) } returns rental
-                every { rentalEventPublisher.publishAll(any()) } just runs
+                every { rentalDomainService.startRental(rental, lenderId) } answers {
+                    rental.startRental()
+                    rental
+                }
 
                 useCase.execute(command)
 
                 rental.status shouldBe RentalStatus.IN_USE
                 verify(exactly = 1) { rentalDomainService.getRentalById(1L) }
-                verify(exactly = 1) { rentalRepository.save(rental) }
+                verify(exactly = 1) { rentalDomainService.startRental(rental, lenderId) }
             }
         }
 
@@ -87,16 +83,20 @@ class StartRentalUseCaseTest : BehaviorSpec({
 
                 val command = StartRentalCommand(
                     rentalId = 1L,
-                    userId = renterId, // 대여자가 시도 — 등록자만 가능
+                    userId = renterId,
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns rental
+                every { rentalDomainService.startRental(rental, renterId) } throws BusinessException(
+                    errorCode = ErrorCode.FORBIDDEN,
+                    message = "대여 시작 권한이 없습니다. rentalId=1",
+                )
 
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.FORBIDDEN
-                verify(exactly = 0) { rentalRepository.save(any()) }
+                verify(exactly = 1) { rentalDomainService.startRental(rental, renterId) }
             }
         }
 
@@ -119,11 +119,13 @@ class StartRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns rental
+                every { rentalDomainService.startRental(rental, lenderId) } throws InvalidStateTransitionException(
+                    "REQUESTED에서 IN_USE(으)로 전이할 수 없습니다"
+                )
 
                 shouldThrow<InvalidStateTransitionException> {
                     useCase.execute(command)
                 }
-                verify(exactly = 0) { rentalRepository.save(any()) }
             }
         }
     }

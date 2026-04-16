@@ -4,26 +4,20 @@ import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
-import com.rental.commerce.domain.rental.RentalEventPublisher
-import com.rental.commerce.domain.rental.RentalRepository
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import java.time.ZonedDateTime
 
 class ReturnRentalUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val rentalRepository = mockk<RentalRepository>()
-    val rentalEventPublisher = mockk<RentalEventPublisher>()
-    val useCase = ReturnRentalUseCase(rentalDomainService, rentalRepository, rentalEventPublisher)
+    val useCase = ReturnRentalUseCase(rentalDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -54,13 +48,13 @@ class ReturnRentalUseCaseTest : BehaviorSpec({
     }
 
     beforeEach {
-        clearMocks(rentalDomainService, rentalRepository, rentalEventPublisher)
+        clearMocks(rentalDomainService)
     }
 
     Given("대여 반납 요청을 할 때") {
 
         When("대여자(renter)가 IN_USE 상태의 대여를 반납하면") {
-            Then("rental.returnRental()이 호출되고 RETURNED 상태로 저장된다") {
+            Then("RentalDomainService.returnRental()이 호출되고 RETURNED 상태로 전이된다") {
                 val rental = createInUseRental(rentalId = 1L)
 
                 val command = ReturnRentalCommand(
@@ -69,19 +63,21 @@ class ReturnRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns rental
-                every { rentalRepository.save(rental) } returns rental
-                every { rentalEventPublisher.publishAll(any()) } just runs
+                every { rentalDomainService.returnRental(rental) } answers {
+                    rental.returnRental()
+                    rental
+                }
 
                 useCase.execute(command)
 
                 rental.status shouldBe RentalStatus.RETURNED
                 verify(exactly = 1) { rentalDomainService.getRentalById(1L) }
-                verify(exactly = 1) { rentalRepository.save(rental) }
+                verify(exactly = 1) { rentalDomainService.returnRental(rental) }
             }
         }
 
         When("등록자(lender)가 IN_USE 상태의 대여를 반납 처리하면") {
-            Then("rental.returnRental()이 호출되고 RETURNED 상태로 저장된다 (양측 모두 가능)") {
+            Then("RentalDomainService.returnRental()이 호출되고 RETURNED 상태로 저장된다 (양측 모두 가능)") {
                 val rental = createInUseRental(rentalId = 1L)
 
                 val command = ReturnRentalCommand(
@@ -90,14 +86,16 @@ class ReturnRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns rental
-                every { rentalRepository.save(rental) } returns rental
-                every { rentalEventPublisher.publishAll(any()) } just runs
+                every { rentalDomainService.returnRental(rental) } answers {
+                    rental.returnRental()
+                    rental
+                }
 
                 useCase.execute(command)
 
                 rental.status shouldBe RentalStatus.RETURNED
                 verify(exactly = 1) { rentalDomainService.getRentalById(1L) }
-                verify(exactly = 1) { rentalRepository.save(rental) }
+                verify(exactly = 1) { rentalDomainService.returnRental(rental) }
             }
         }
 
@@ -122,11 +120,13 @@ class ReturnRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(1L) } returns paidRental
+                every { rentalDomainService.returnRental(paidRental) } throws InvalidStateTransitionException(
+                    "PAID에서 RETURNED(으)로 전이할 수 없습니다"
+                )
 
                 shouldThrow<InvalidStateTransitionException> {
                     useCase.execute(command)
                 }
-                verify(exactly = 0) { rentalRepository.save(any()) }
             }
         }
     }
