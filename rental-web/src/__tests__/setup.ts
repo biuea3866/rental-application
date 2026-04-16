@@ -3,6 +3,7 @@ import { server } from "@/mocks/server";
 import { resetAuthHandlerState } from "@/mocks/handlers/auth";
 import { resetMyPageHandlerState } from "@/mocks/handlers/mypage";
 import { resetNotificationHandlerState } from "@/mocks/handlers/notification";
+import { resetRentalHandlerState } from "@/mocks/handlers/rental";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 // ========================================
@@ -64,6 +65,7 @@ beforeEach(() => {
   resetAuthHandlerState();
   resetMyPageHandlerState();
   resetNotificationHandlerState();
+  resetRentalHandlerState();
 });
 afterEach(() => {
   server.resetHandlers();
