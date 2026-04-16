@@ -93,6 +93,12 @@ const STUB_RENTAL_DETAIL: RentalDetail = {
     status: "COMPLETED",
     paidAt: "2026-04-14T12:00:00+09:00",
   },
+  timeline: [
+    { status: "REQUESTED" as const, occurredAt: "2026-04-14T10:00:00+09:00" },
+    { status: "APPROVED" as const, occurredAt: "2026-04-14T11:00:00+09:00" },
+    { status: "PAID" as const, occurredAt: "2026-04-14T12:00:00+09:00" },
+    { status: "IN_USE" as const, occurredAt: "2026-04-15T09:00:00+09:00" },
+  ],
   requestedAt: "2026-04-14T10:00:00+09:00",
   approvedAt: "2026-04-14T11:00:00+09:00",
   paidAt: "2026-04-14T12:00:00+09:00",

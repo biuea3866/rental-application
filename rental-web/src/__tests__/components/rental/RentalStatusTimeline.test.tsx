@@ -29,6 +29,9 @@ const BASE_RENTAL: RentalDetail = {
     addressLine1: "서울특별시 강남구 테헤란로 123",
     zipCode: "06234",
   },
+  timeline: [
+    { status: "REQUESTED" as const, occurredAt: "2026-04-14T10:00:00+09:00" },
+  ],
   requestedAt: "2026-04-14T10:00:00+09:00",
 };
 

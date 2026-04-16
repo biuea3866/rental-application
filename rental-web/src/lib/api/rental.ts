@@ -116,3 +116,13 @@ export async function cancelRentalApi(
     request
   );
 }
+
+// ========================================
+// RC-FE-215 alias — PR #59 페이지가 사용하는 이름을 dev 함수로 연결
+// ========================================
+
+/** alias: getMyRentalsApi → getRentalsApi (내 대여 목록 조회) */
+export const getMyRentalsApi = getRentalsApi;
+
+/** alias: getRentalDetailApi → getRentalByIdApi (대여 상세 조회) */
+export const getRentalDetailApi = getRentalByIdApi;

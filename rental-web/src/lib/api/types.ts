@@ -327,6 +327,7 @@ export interface RentalPaymentInfo {
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
   paidAt: string;
+  refundedAt?: string;
 }
 
 export interface RentalProductInfo {
@@ -415,6 +416,17 @@ export interface RentalReturnResponse {
   returnedAt: string;
 }
 
+/** 대여 역할 (내 대여 목록 조회 시 사용) */
+export type RentalRole = "RENTER" | "LENDER";
+
+/** 상태 변경 응답 (start/return) */
+export interface RentalStatusChangeResponse {
+  rentalId: number;
+  status: RentalStatus;
+  startedAt?: string;
+  returnedAt?: string;
+}
+
 // ========================================
 // 알림 타입
 // ========================================
@@ -441,148 +453,3 @@ export interface UnreadCountResponse {
   count: number;
 }
 
-// ========================================
-// 대여(Rental) 관련 타입 (BE TDD-002 기준)
-// ========================================
-
-/** BE RentalStatus enum */
-export type RentalStatus =
-  | "REQUESTED"
-  | "APPROVED"
-  | "PAID"
-  | "IN_USE"
-  | "RETURNED"
-  | "CANCELLED";
-
-/** BE PaymentStatus enum */
-export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
-
-/** BE PaymentMethod enum */
-export type PaymentMethod = "CARD" | "BANK_TRANSFER" | "TOSS_PAY" | "KAKAO_PAY";
-
-/** 대여 역할 (내 대여 목록 조회 시 사용) */
-export type RentalRole = "RENTER" | "LENDER";
-
-/** 배송지 정보 VO */
-export interface DeliveryInfo {
-  recipientName: string;
-  recipientPhone: string;
-  addressLine1: string;
-  addressLine2?: string;
-  zipCode: string;
-}
-
-/** 결제 정보 (대여 상세 내 포함) */
-export interface RentalPaymentInfo {
-  paymentId: number;
-  amount: number;
-  paymentMethod: PaymentMethod;
-  status: PaymentStatus;
-  paidAt: string;
-  refundedAt?: string;
-}
-
-/** 대여 목록 아이템 (BE GET /api/v1/rentals 응답) */
-export interface RentalSummary {
-  rentalId: number;
-  productId: number;
-  productName: string;
-  productThumbnailUrl: string | null;
-  status: RentalStatus;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  requestedAt: string;
-}
-
-/** 대여 상세 (BE GET /api/v1/rentals/{id} 응답) */
-export interface RentalDetail {
-  rentalId: number;
-  product: {
-    productId: number;
-    name: string;
-    thumbnailUrl: string | null;
-    category: string;
-  };
-  renter: { userId: number; name: string };
-  lender: { userId: number; name: string };
-  status: RentalStatus;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  depositAmount: number;
-  deliveryInfo: DeliveryInfo;
-  payment?: RentalPaymentInfo;
-  requestedAt: string;
-  approvedAt?: string;
-  paidAt?: string;
-  startedAt?: string;
-  returnedAt?: string;
-  cancelledAt?: string;
-  cancelReason?: string;
-}
-
-/** 대여 신청 요청 */
-export interface RequestRentalRequest {
-  productId: number;
-  startDate: string;
-  endDate: string;
-  deliveryInfo: DeliveryInfo;
-}
-
-/** 대여 신청 응답 */
-export interface RequestRentalResponse {
-  rentalId: number;
-  productId: number;
-  status: RentalStatus;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  depositAmount: number;
-  requestedAt: string;
-}
-
-/** 승인 응답 */
-export interface ApproveRentalResponse {
-  rentalId: number;
-  status: RentalStatus;
-  approvedAt: string;
-}
-
-/** 거절/취소 요청 */
-export interface RejectOrCancelRentalRequest {
-  reason: string;
-}
-
-/** 거절/취소 응답 */
-export interface RejectOrCancelRentalResponse {
-  rentalId: number;
-  status: RentalStatus;
-  cancelReason: string;
-  cancelledAt: string;
-}
-
-/** 결제 처리 요청 */
-export interface ProcessPaymentRequest {
-  paymentKey: string;
-  orderId: string;
-  amount: number;
-  paymentMethod: PaymentMethod;
-}
-
-/** 결제 처리 응답 */
-export interface ProcessPaymentResponse {
-  rentalId: number;
-  paymentId: number;
-  status: RentalStatus;
-  externalPaymentId: string;
-  paidAt: string;
-}
-
-/** 상태 변경 응답 (start/return) */
-export interface RentalStatusChangeResponse {
-  rentalId: number;
-  status: RentalStatus;
-  startedAt?: string;
-  returnedAt?: string;
-}

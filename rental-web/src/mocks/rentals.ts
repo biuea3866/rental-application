@@ -107,6 +107,12 @@ export const STUB_RENTAL_DETAILS: RentalDetail[] = [
       status: "COMPLETED",
       paidAt: "2026-04-14T12:00:00+09:00",
     },
+    timeline: [
+      { status: "REQUESTED", occurredAt: "2026-04-14T10:00:00+09:00" },
+      { status: "APPROVED", occurredAt: "2026-04-14T11:00:00+09:00" },
+      { status: "PAID", occurredAt: "2026-04-14T12:00:00+09:00" },
+      { status: "IN_USE", occurredAt: "2026-04-15T09:00:00+09:00" },
+    ],
     requestedAt: "2026-04-14T10:00:00+09:00",
     approvedAt: "2026-04-14T11:00:00+09:00",
     paidAt: "2026-04-14T12:00:00+09:00",
@@ -134,6 +140,10 @@ export const STUB_RENTAL_DETAILS: RentalDetail[] = [
       addressLine2: "202호",
       zipCode: "04066",
     },
+    timeline: [
+      { status: "REQUESTED", occurredAt: "2026-04-14T11:00:00+09:00" },
+      { status: "APPROVED", occurredAt: "2026-04-14T13:00:00+09:00" },
+    ],
     requestedAt: "2026-04-14T11:00:00+09:00",
     approvedAt: "2026-04-14T13:00:00+09:00",
   },
@@ -159,6 +169,9 @@ export const STUB_RENTAL_DETAILS: RentalDetail[] = [
       addressLine2: "101호",
       zipCode: "06234",
     },
+    timeline: [
+      { status: "REQUESTED", occurredAt: "2026-04-14T12:00:00+09:00" },
+    ],
     requestedAt: "2026-04-14T12:00:00+09:00",
   },
   {
@@ -189,6 +202,13 @@ export const STUB_RENTAL_DETAILS: RentalDetail[] = [
       status: "COMPLETED",
       paidAt: "2026-03-30T10:00:00+09:00",
     },
+    timeline: [
+      { status: "REQUESTED", occurredAt: "2026-03-28T09:00:00+09:00" },
+      { status: "APPROVED", occurredAt: "2026-03-29T10:00:00+09:00" },
+      { status: "PAID", occurredAt: "2026-03-30T10:00:00+09:00" },
+      { status: "IN_USE", occurredAt: "2026-04-01T09:00:00+09:00" },
+      { status: "RETURNED", occurredAt: "2026-04-10T18:00:00+09:00" },
+    ],
     requestedAt: "2026-03-28T09:00:00+09:00",
     approvedAt: "2026-03-29T10:00:00+09:00",
     paidAt: "2026-03-30T10:00:00+09:00",
