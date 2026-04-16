@@ -327,6 +327,7 @@ export interface RentalPaymentInfo {
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
   paidAt: string;
+  refundedAt?: string;
 }
 
 export interface RentalProductInfo {
@@ -415,6 +416,17 @@ export interface RentalReturnResponse {
   returnedAt: string;
 }
 
+/** 대여 역할 (내 대여 목록 조회 시 사용) */
+export type RentalRole = "RENTER" | "LENDER";
+
+/** 상태 변경 응답 (start/return) */
+export interface RentalStatusChangeResponse {
+  rentalId: number;
+  status: RentalStatus;
+  startedAt?: string;
+  returnedAt?: string;
+}
+
 // ========================================
 // 알림 타입
 // ========================================
@@ -440,3 +452,4 @@ export interface Notification {
 export interface UnreadCountResponse {
   count: number;
 }
+

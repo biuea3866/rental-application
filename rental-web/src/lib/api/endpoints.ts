@@ -44,7 +44,7 @@ export const ENDPOINTS = {
   RENTALS: {
     BASE: `${API_VERSION}/rentals`,
     BY_ID: (id: string | number) => `${API_VERSION}/rentals/${id}`,
-    MY_RENTALS: `${API_VERSION}/rentals/mine`,
+    MY_RENTALS: `${API_VERSION}/rentals`,
     APPROVE: (id: string | number) => `${API_VERSION}/rentals/${id}/approve`,
     REJECT: (id: string | number) => `${API_VERSION}/rentals/${id}/reject`,
     PAYMENT: (id: string | number) => `${API_VERSION}/rentals/${id}/payment`,

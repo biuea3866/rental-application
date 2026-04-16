@@ -81,8 +81,8 @@ describe("API Endpoints 상수", () => {
       );
     });
 
-    it("MY_RENTALS 엔드포인트가 올바르게 정의되어야 한다", () => {
-      expect(ENDPOINTS.RENTALS.MY_RENTALS).toBe("/api/v1/rentals/mine");
+    it("MY_RENTALS 엔드포인트가 올바르게 정의되어야 한다 (BE TDD-002: GET /api/v1/rentals?role=&status=)", () => {
+      expect(ENDPOINTS.RENTALS.MY_RENTALS).toBe("/api/v1/rentals");
     });
   });
 
