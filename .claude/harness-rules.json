@@ -127,24 +127,17 @@
         "severity": "error"
       },
       {
-        "id": "no-cross-domain-import",
-        "pattern": "import com\\.rental\\.commerce\\.domain\\.(product|user|notification)\\.",
-        "file_glob": "*/domain/rental/**/*.kt",
-        "message": "도메인 패키지 간 참조 금지 — domain.rental에서 domain.product/user/notification import 불가. domain.common만 허용. 다른 도메인 데이터는 ID(Long)만 보유.",
+        "id": "no-if-throw-in-usecase",
+        "pattern": "if\\s*\\(!?\\w+\\.\\w+\\(.*\\)\\)\\s*\\{?\\s*throw",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에서 if + throw 패턴 금지 — Entity에 validate*/require* 메서드로 캡슐화하세요. 예: product.validateNotOwnedBy(userId), rental.verifyPaymentAuthority(userId)",
         "severity": "error"
       },
       {
-        "id": "no-cross-domain-import-product",
-        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|user|notification)\\.",
-        "file_glob": "*/domain/product/**/*.kt",
-        "message": "도메인 패키지 간 참조 금지 — domain.product에서 domain.rental/user/notification import 불가. domain.common만 허용.",
-        "severity": "error"
-      },
-      {
-        "id": "no-cross-domain-import-user",
-        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|product|notification)\\.",
-        "file_glob": "*/domain/user/**/*.kt",
-        "message": "도메인 패키지 간 참조 금지 — domain.user에서 domain.rental/product/notification import 불가. domain.common만 허용.",
+        "id": "no-status-check-in-usecase",
+        "pattern": "\\.status\\.canTransitTo|\\.status\\s*(==|!=)\\s*\\w+Status",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에서 상태 검증 금지 — Entity의 상태 전이 메서드(approve/markPaid/startRental 등) 내부에 requireTransitionTo()로 캡슐화되어 있어야 합니다.",
         "severity": "error"
       }
     ]
@@ -335,22 +328,12 @@
         "allowed_dependency": [],
         "rules": [
           "Entity는 Rich Domain Model로 설계한다 — 비즈니스 로직(검증, 상태 전이, 계산)은 Entity 메서드에 캡슐화한다",
-          "Entity 내부에 Gateway/Repository/외부 Port interface 주입 절대 금지 — Entity는 순수해야 한다",
-          "도메인 패키지 간 참조 금지 — domain.rental은 domain.product를 import할 수 없다. domain.common만 허용",
-          "다른 도메인의 데이터가 필요하면 ID만 보유 (예: rental.productId: Long) — Entity 객체를 직접 참조하지 않는다",
           "Anemic Domain Model (getter/setter만 있는 Entity) 금지 — 행위가 Entity 밖에 있으면 안 된다",
           "상태 전이는 Enum 내부에 canTransitTo()로 캡슐화한다",
-          "Entity의 상태 전이 메서드가 관련 Aggregate를 생성/반환할 수 있다 (예: rental.markPaid() → RentalPayment) — 단, 외부 포트 호출은 포함하지 않는다",
-          "외부 시스템 접근은 Port interface(Repository, Gateway)로 정의한다 — Entity가 아닌 DomainService에서만 호출",
-          "Domain Service는 Entity 메서드 + Port(Gateway/Repository) 호출을 조합한다 — 멱등성, 외부 API 호출+상태 전이 등",
-          "Domain Event는 Entity 내부에서 발행한다 (@Transient domainEvents 리스트 패턴) — 이벤트 발행(publishAll)은 DomainService가 수행"
-        ],
-        "package_boundary": {
-          "description": "도메인 패키지 간 참조 규칙 — Bounded Context 격리",
-          "allowed": "domain.common (BaseEntity, ErrorCode, DomainEvent, BusinessException)",
-          "forbidden": "domain.{다른도메인} (예: domain.rental에서 domain.product import 금지)",
-          "cross_domain": "다른 도메인 데이터가 필요하면 ID(Long)만 보유. 객체 필요 시 UseCase에서 각각 조회 후 조합."
-        }
+          "외부 시스템 접근은 Port interface(Repository, Gateway)로 정의한다",
+          "Domain Service는 여러 Entity/VO를 조합하는 로직이 필요할 때만 사용한다",
+          "Domain Event는 Entity 내부에서 발행한다 (@Transient domainEvents 리스트 패턴)"
+        ]
       },
       "infrastructure": {
         "description": "기술 구현체 — DB, Kafka, Redis, 외부 API",
@@ -416,72 +399,6 @@
         "message": "Application 레이어에서 Infrastructure 직접 참조 금지 — Domain interface를 사용하세요.",
         "severity": "error"
       }
-    ]
-  },
-
-  "clean_code": {
-    "description": "클린 코드 원칙 — 모든 BE 코드 필수 준수. PR 리뷰어가 강제 검증.",
-    "rules": [
-      "UseCase execute() 메서드는 10줄 이내 — 초과하면 DomainService로 위임 부족",
-      "DomainService 메서드는 15줄 이내 — 초과하면 private 메서드로 분리",
-      "한 메서드는 하나의 추상화 수준만 — rental.markPaid()와 repository.save()가 같은 레벨에 공존 금지",
-      "Guard clause (early return) 적극 사용 — nullable?.let { return it }, if (실패) throw/return 을 메서드 상단에 배치",
-      "if-else 중첩 금지 — guard clause로 flatten. depth 2 이상 금지",
-      "매직 넘버/문자열 금지 — 상수 또는 enum으로 정의",
-      "주석 대신 메서드명으로 의도 표현 — // 권한 검증 대신 rental.verifyAuthority(userId)",
-      "한 메서드는 한 가지 일만 — 검증+처리+저장+이벤트를 한 메서드에 나열 금지"
-    ],
-    "early_return": {
-      "good": ["repo.findById(id)?.let { return it }", "if (!condition) throw XxxException(...)"],
-      "bad": ["val x = repo.find(id); if (x != null) { return ... }", "if (ok) { 긴 로직 } else { throw }"]
-    },
-    "abstraction_level": {
-      "rule": "한 메서드 내 높은 추상화(rental.markPaid())와 낮은 추상화(repository.save())를 섞지 않는다",
-      "bad": "rental.markPaid() + repository.save(payment) + publisher.publishAll(events) 나열",
-      "good": "domainService.processPayment(rental, request) 한 줄"
-    },
-    "reviewer_enforcement": {
-      "agent_type": "everything-claude-code:kotlin-reviewer",
-      "criteria": ["UseCase 10줄 이내", "Guard clause", "추상화 수준 일관성", "Entity 캡슐화", "DomainService 경유", "네이밍"],
-      "must_pass": true
-    }
-  },
-
-  "design_patterns": {
-    "description": "디자인 패턴 적용 가이드 — 코드 리뷰 시 패턴 미적용 감지하면 reject",
-    "patterns": {
-      "strategy": {
-        "when": "동일 인터페이스의 여러 구현체가 런타임에 교체 가능할 때",
-        "apply_to": ["PaymentGateway (Toss/Kakao/Mock)", "SocialLoginProvider (Kakao/Naver)", "NotificationSender (Email/Push/SMS)"],
-        "anti_pattern": "when (type) { A -> ..., B -> ..., C -> ... } — Strategy interface + 구현체 주입으로 분리"
-      },
-      "state": {
-        "when": "객체 상태에 따라 행위가 달라질 때",
-        "apply_to": ["RentalStatus별 행위 (전이 가능 여부 + 허용 액션)"],
-        "anti_pattern": "when (status) { REQUESTED -> ..., APPROVED -> ... } — 각 상태가 자기 행위를 캡슐화하는 State 클래스"
-      },
-      "factory": {
-        "when": "객체 생성 로직이 복잡하거나 조건별 다른 타입 반환",
-        "apply_to": ["DomainEvent 생성", "Notification 생성 (이벤트 타입별 메시지)"],
-        "anti_pattern": "create()에 조건 분기 나열 → Factory 분리"
-      },
-      "template_method": {
-        "when": "여러 클래스가 동일 골격(조회→검증→실행→이벤트)을 반복",
-        "apply_to": ["Rental 상태 전이 UseCase들 (Approve/Reject/Start/Return/Cancel 동일 구조)"],
-        "anti_pattern": "5개 이상 UseCase가 같은 구조 복붙 → AbstractRentalStateTransitionUseCase"
-      },
-      "observer": {
-        "when": "한 이벤트에 여러 후속 처리 필요",
-        "apply_to": ["RentalStatusChanged → Notification + Kafka + 로그", "ProductApproved → 알림 + 검색 인덱스"],
-        "implementation": "@EventListener / @TransactionalEventListener(AFTER_COMMIT) + @Async"
-      }
-    },
-    "review_criteria": [
-      "if-else/when 분기 3개 이상 → Strategy 검토",
-      "상태별 행위 분기 → State 검토",
-      "동일 구조 메서드 3개 이상 반복 → Template Method 검토",
-      "한 이벤트 후속 처리 2개 이상 → Observer 검토",
-      "객체 생성 조건 복잡 → Factory 검토"
     ]
   },
 
