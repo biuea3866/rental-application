@@ -16,6 +16,8 @@ resources:
 images:
   - name: ghcr.io/biuea3866/rental-commerce
     newTag: dev-c6d75327d5ef039f5b538968d308ac2135c012f4
+  - name: ghcr.io/biuea3866/rental-web
+    newTag: dev-c6d75327d5ef039f5b538968d308ac2135c012f4
 
 # dev 환경 레플리카 수 축소 + ConfigMap 오버라이드
 patches:
