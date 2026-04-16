@@ -35,3 +35,7 @@ class InvalidTokenException(
 class TokenFamilyCompromisedException(
     message: String = ErrorCode.TOKEN_FAMILY_COMPROMISED.message,
 ) : BusinessException(ErrorCode.TOKEN_FAMILY_COMPROMISED, message)
+
+class PaymentFailedException(
+    message: String = ErrorCode.PAYMENT_FAILED.message,
+) : BusinessException(ErrorCode.PAYMENT_FAILED, message)
