@@ -1,26 +1,26 @@
 import { getApiClient } from "./client";
 import { ENDPOINTS } from "./endpoints";
 import type {
-  RentalSummary,
+  CreateRentalRequest,
+  RentalCreatedResponse,
   RentalDetail,
-  RequestRentalRequest,
-  RequestRentalResponse,
-  ApproveRentalResponse,
-  RejectOrCancelRentalRequest,
-  RejectOrCancelRentalResponse,
+  RentalSummary,
+  RentalApproveResponse,
+  RentalRejectRequest,
+  RentalCancelResponse,
   ProcessPaymentRequest,
   ProcessPaymentResponse,
-  RentalStatusChangeResponse,
-  RentalRole,
-  RentalStatus,
+  RentalStartResponse,
+  RentalReturnResponse,
 } from "./types";
 
 // ========================================
-// Spring Page 응답 타입 (대여 목록용)
+// Spring Page 응답 타입
 // ========================================
 
-interface RentalPage {
-  content: RentalSummary[];
+interface SpringPage<T> {
+  content: T[];
+  last: boolean;
   totalElements: number;
   totalPages: number;
   size: number;
@@ -28,62 +28,60 @@ interface RentalPage {
 }
 
 // ========================================
-// 대여 API 호출
+// Rental API 호출 (9개 함수)
 // ========================================
 
-/** 내 대여 목록 조회 — GET /api/v1/rentals?role=&status=&page=&size= */
-export async function getMyRentalsApi(params?: {
-  role?: RentalRole;
-  status?: RentalStatus;
+/** 1. 대여 신청 — POST /api/v1/rentals */
+export async function createRentalApi(request: CreateRentalRequest) {
+  const client = getApiClient();
+  return client.post<RentalCreatedResponse>(ENDPOINTS.RENTALS.BASE, request);
+}
+
+/** 2. 대여 목록 조회 — GET /api/v1/rentals?role=&status=&page=&size= */
+export async function getRentalsApi(params?: {
+  role?: "RENTER" | "LENDER";
+  status?: string;
   page?: number;
   size?: number;
 }) {
   const client = getApiClient();
   const queryParams: Record<string, string> = {};
-
   if (params?.role) queryParams.role = params.role;
   if (params?.status) queryParams.status = params.status;
   if (params?.page !== undefined) queryParams.page = String(params.page);
   if (params?.size !== undefined) queryParams.size = String(params.size);
-
-  return client.get<RentalPage>(ENDPOINTS.RENTALS.MY_RENTALS, {
+  return client.get<SpringPage<RentalSummary>>(ENDPOINTS.RENTALS.BASE, {
     params: queryParams,
   });
 }
 
-/** 대여 상세 조회 — GET /api/v1/rentals/{id} */
-export async function getRentalDetailApi(rentalId: string | number) {
+/** 3. 대여 상세 조회 — GET /api/v1/rentals/{rentalId} */
+export async function getRentalByIdApi(rentalId: string | number) {
   const client = getApiClient();
   return client.get<RentalDetail>(ENDPOINTS.RENTALS.BY_ID(rentalId));
 }
 
-/** 대여 신청 — POST /api/v1/rentals */
-export async function requestRentalApi(request: RequestRentalRequest) {
-  const client = getApiClient();
-  return client.post<RequestRentalResponse>(ENDPOINTS.RENTALS.BASE, request);
-}
-
-/** 대여 승인 — PATCH /api/v1/rentals/{id}/approve */
+/** 4. 대여 승인 — PATCH /api/v1/rentals/{rentalId}/approve */
 export async function approveRentalApi(rentalId: string | number) {
   const client = getApiClient();
-  return client.patch<ApproveRentalResponse>(
+  return client.patch<RentalApproveResponse>(
     ENDPOINTS.RENTALS.APPROVE(rentalId)
   );
 }
 
-/** 대여 거절 — PATCH /api/v1/rentals/{id}/reject */
+/** 5. 대여 거절 — PATCH /api/v1/rentals/{rentalId}/reject */
 export async function rejectRentalApi(
   rentalId: string | number,
-  request: RejectOrCancelRentalRequest
+  request: RentalRejectRequest
 ) {
   const client = getApiClient();
-  return client.patch<RejectOrCancelRentalResponse>(
+  return client.patch<RentalCancelResponse>(
     ENDPOINTS.RENTALS.REJECT(rentalId),
     request
   );
 }
 
-/** 결제 처리 — POST /api/v1/rentals/{id}/payment */
+/** 6. 결제 처리 — POST /api/v1/rentals/{rentalId}/payment */
 export async function processPaymentApi(
   rentalId: string | number,
   request: ProcessPaymentRequest
@@ -95,29 +93,25 @@ export async function processPaymentApi(
   );
 }
 
-/** 배송 시작 — PATCH /api/v1/rentals/{id}/start */
+/** 7. 대여 시작 (배송 시작) — PATCH /api/v1/rentals/{rentalId}/start */
 export async function startRentalApi(rentalId: string | number) {
   const client = getApiClient();
-  return client.patch<RentalStatusChangeResponse>(
-    ENDPOINTS.RENTALS.START(rentalId)
-  );
+  return client.patch<RentalStartResponse>(ENDPOINTS.RENTALS.START(rentalId));
 }
 
-/** 반납 처리 — PATCH /api/v1/rentals/{id}/return */
+/** 8. 반납 처리 — PATCH /api/v1/rentals/{rentalId}/return */
 export async function returnRentalApi(rentalId: string | number) {
   const client = getApiClient();
-  return client.patch<RentalStatusChangeResponse>(
-    ENDPOINTS.RENTALS.RETURN(rentalId)
-  );
+  return client.patch<RentalReturnResponse>(ENDPOINTS.RENTALS.RETURN(rentalId));
 }
 
-/** 대여 취소 — PATCH /api/v1/rentals/{id}/cancel */
+/** 9. 대여 취소 — PATCH /api/v1/rentals/{rentalId}/cancel */
 export async function cancelRentalApi(
   rentalId: string | number,
-  request: RejectOrCancelRentalRequest
+  request: RentalRejectRequest
 ) {
   const client = getApiClient();
-  return client.patch<RejectOrCancelRentalResponse>(
+  return client.patch<RentalCancelResponse>(
     ENDPOINTS.RENTALS.CANCEL(rentalId),
     request
   );

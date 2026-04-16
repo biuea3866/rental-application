@@ -260,6 +260,162 @@ export interface UpdateRenterProfileRequest {
 }
 
 // ========================================
+// 대여 관련 타입 (BE RentalResponse / RentalDetailResponse 기준)
+// ========================================
+
+export type RentalStatus =
+  | "REQUESTED"
+  | "APPROVED"
+  | "PAID"
+  | "IN_USE"
+  | "RETURNED"
+  | "CANCELLED";
+
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+
+export type PaymentMethod = "CARD" | "BANK_TRANSFER" | "TOSS_PAY" | "KAKAO_PAY";
+
+export interface DeliveryInfo {
+  recipientName: string;
+  recipientPhone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  zipCode: string;
+}
+
+/** POST /api/v1/rentals 요청 바디 */
+export interface CreateRentalRequest {
+  productId: number;
+  startDate: string;
+  endDate: string;
+  deliveryInfo: DeliveryInfo;
+}
+
+/** 대여 신청 결과 (201 응답) */
+export interface RentalCreatedResponse {
+  rentalId: number;
+  productId: number;
+  status: RentalStatus;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  depositAmount: number;
+  requestedAt: string;
+}
+
+/** 대여 목록 아이템 (GET /api/v1/rentals) */
+export interface RentalSummary {
+  rentalId: number;
+  productId: number;
+  productName: string;
+  productThumbnailUrl: string | null;
+  status: RentalStatus;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  requestedAt: string;
+}
+
+export interface RentalTimelineEntry {
+  status: RentalStatus;
+  occurredAt: string;
+}
+
+export interface RentalPaymentInfo {
+  paymentId: number;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  status: PaymentStatus;
+  paidAt: string;
+}
+
+export interface RentalProductInfo {
+  productId: number;
+  name: string;
+  thumbnailUrl: string | null;
+  category: string;
+}
+
+export interface RentalUserInfo {
+  userId: number;
+  name: string;
+}
+
+/** 대여 상세 (GET /api/v1/rentals/{rentalId}) */
+export interface RentalDetail {
+  rentalId: number;
+  product: RentalProductInfo;
+  renter: RentalUserInfo;
+  lender: RentalUserInfo;
+  status: RentalStatus;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  depositAmount: number;
+  deliveryInfo: DeliveryInfo;
+  payment?: RentalPaymentInfo;
+  timeline: RentalTimelineEntry[];
+  requestedAt: string;
+  approvedAt?: string;
+  paidAt?: string;
+  startedAt?: string;
+  returnedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+}
+
+/** 대여 승인 응답 */
+export interface RentalApproveResponse {
+  rentalId: number;
+  status: RentalStatus;
+  approvedAt: string;
+}
+
+/** 대여 거절/취소 요청 */
+export interface RentalRejectRequest {
+  reason: string;
+}
+
+/** 대여 거절/취소 응답 */
+export interface RentalCancelResponse {
+  rentalId: number;
+  status: RentalStatus;
+  cancelReason: string;
+  cancelledAt: string;
+}
+
+/** POST /api/v1/rentals/{rentalId}/payment 요청 바디 */
+export interface ProcessPaymentRequest {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+}
+
+/** 결제 처리 응답 */
+export interface ProcessPaymentResponse {
+  rentalId: number;
+  paymentId: number;
+  status: RentalStatus;
+  externalPaymentId: string;
+  paidAt: string;
+}
+
+/** 대여 시작 응답 */
+export interface RentalStartResponse {
+  rentalId: number;
+  status: RentalStatus;
+  startedAt: string;
+}
+
+/** 반납 응답 */
+export interface RentalReturnResponse {
+  rentalId: number;
+  status: RentalStatus;
+  returnedAt: string;
+}
+
+// ========================================
 // 알림 타입
 // ========================================
 
