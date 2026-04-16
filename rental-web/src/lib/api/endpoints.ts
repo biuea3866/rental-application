@@ -43,8 +43,14 @@ export const ENDPOINTS = {
   // 대여
   RENTALS: {
     BASE: `${API_VERSION}/rentals`,
-    BY_ID: (id: string) => `${API_VERSION}/rentals/${id}`,
+    BY_ID: (id: string | number) => `${API_VERSION}/rentals/${id}`,
     MY_RENTALS: `${API_VERSION}/rentals/mine`,
+    APPROVE: (id: string | number) => `${API_VERSION}/rentals/${id}/approve`,
+    REJECT: (id: string | number) => `${API_VERSION}/rentals/${id}/reject`,
+    CANCEL: (id: string | number) => `${API_VERSION}/rentals/${id}/cancel`,
+    PAYMENT: (id: string | number) => `${API_VERSION}/rentals/${id}/payment`,
+    START: (id: string | number) => `${API_VERSION}/rentals/${id}/start`,
+    RETURN: (id: string | number) => `${API_VERSION}/rentals/${id}/return`,
   },
 
   // 마이페이지

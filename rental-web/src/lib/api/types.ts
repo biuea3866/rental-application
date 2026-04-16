@@ -260,6 +260,103 @@ export interface UpdateRenterProfileRequest {
 }
 
 // ========================================
+// 대여 관련 타입 (BE Rental/RentalPayment 기준)
+// ========================================
+
+export type RentalStatus =
+  | "REQUESTED"
+  | "APPROVED"
+  | "PAID"
+  | "IN_USE"
+  | "RETURNED"
+  | "CANCELLED";
+
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+
+export interface DeliveryInfo {
+  recipientName: string;
+  recipientPhone: string;
+  address: string;
+  addressDetail: string;
+  zipCode: string;
+}
+
+export interface RentalPaymentInfo {
+  id: number;
+  paymentKey?: string;
+  orderId: string;
+  amount: number;
+  status: PaymentStatus;
+  paymentMethod?: string;
+  paidAt?: string;
+}
+
+export interface Rental {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl?: string;
+  renterId: number;
+  renterName: string;
+  lenderId: number;
+  lenderName: string;
+  status: RentalStatus;
+  startDate: string;
+  endDate: string;
+  dailyPrice: number;
+  depositAmount: number;
+  totalAmount: number;
+  deliveryInfo: DeliveryInfo;
+  payment?: RentalPaymentInfo;
+  cancelReason?: string;
+  requestedAt: string;
+  approvedAt?: string;
+  paidAt?: string;
+  startedAt?: string;
+  returnedAt?: string;
+  cancelledAt?: string;
+}
+
+export interface CreateRentalRequest {
+  productId: number;
+  startDate: string;
+  endDate: string;
+  deliveryInfo: DeliveryInfo;
+}
+
+export interface ApproveRentalRequest {
+  rentalId: number;
+}
+
+export interface RejectRentalRequest {
+  rentalId: number;
+  reason: string;
+}
+
+export interface CancelRentalRequest {
+  rentalId: number;
+  reason?: string;
+}
+
+export interface RentalPaymentRequest {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+}
+
+export interface CreateRentalResponse {
+  rentalId: number;
+  status: RentalStatus;
+}
+
+export interface MyRentalsParams {
+  role?: "renter" | "lender";
+  status?: RentalStatus;
+  page?: number;
+  size?: number;
+}
+
+// ========================================
 // 알림 타입
 // ========================================
 
