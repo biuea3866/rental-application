@@ -35,3 +35,15 @@ class InvalidTokenException(
 class TokenFamilyCompromisedException(
     message: String = ErrorCode.TOKEN_FAMILY_COMPROMISED.message,
 ) : BusinessException(ErrorCode.TOKEN_FAMILY_COMPROMISED, message)
+
+class RentalPeriodConflictException(
+    message: String = ErrorCode.RENTAL_PERIOD_CONFLICT.message,
+) : BusinessException(ErrorCode.RENTAL_PERIOD_CONFLICT, message)
+
+class AmountMismatchException(
+    message: String = ErrorCode.AMOUNT_MISMATCH.message,
+) : BusinessException(ErrorCode.AMOUNT_MISMATCH, message)
+
+class PaymentFailedException(
+    message: String = ErrorCode.PAYMENT_FAILED.message,
+) : BusinessException(ErrorCode.PAYMENT_FAILED, message)
