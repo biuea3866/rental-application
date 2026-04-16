@@ -41,7 +41,7 @@ export const rentalHandlers = [
     const page = parseInt(url.searchParams.get("page") ?? "0", 10);
     const size = parseInt(url.searchParams.get("size") ?? "20", 10);
 
-    let filtered = filterRentalsByStatus(rentalSummaryState, status ?? undefined);
+    const filtered = filterRentalsByStatus(rentalSummaryState, status ?? undefined);
 
     const start = page * size;
     const end = start + size;
