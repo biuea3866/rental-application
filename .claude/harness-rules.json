@@ -388,6 +388,34 @@
     ]
   },
 
+  "clean_code": {
+    "description": "클린 코드 원칙 — 모든 BE 코드 필수 준수. PR 리뷰어가 강제 검증.",
+    "rules": [
+      "UseCase execute() 메서드는 10줄 이내 — 초과하면 DomainService로 위임 부족",
+      "DomainService 메서드는 15줄 이내 — 초과하면 private 메서드로 분리",
+      "한 메서드는 하나의 추상화 수준만 — rental.markPaid()와 repository.save()가 같은 레벨에 공존 금지",
+      "Guard clause (early return) 적극 사용 — nullable?.let { return it }, if (실패) throw/return 을 메서드 상단에 배치",
+      "if-else 중첩 금지 — guard clause로 flatten. depth 2 이상 금지",
+      "매직 넘버/문자열 금지 — 상수 또는 enum으로 정의",
+      "주석 대신 메서드명으로 의도 표현 — // 권한 검증 대신 rental.verifyAuthority(userId)",
+      "한 메서드는 한 가지 일만 — 검증+처리+저장+이벤트를 한 메서드에 나열 금지"
+    ],
+    "early_return": {
+      "good": ["repo.findById(id)?.let { return it }", "if (!condition) throw XxxException(...)"],
+      "bad": ["val x = repo.find(id); if (x != null) { return ... }", "if (ok) { 긴 로직 } else { throw }"]
+    },
+    "abstraction_level": {
+      "rule": "한 메서드 내 높은 추상화(rental.markPaid())와 낮은 추상화(repository.save())를 섞지 않는다",
+      "bad": "rental.markPaid() + repository.save(payment) + publisher.publishAll(events) 나열",
+      "good": "domainService.processPayment(rental, request) 한 줄"
+    },
+    "reviewer_enforcement": {
+      "agent_type": "everything-claude-code:kotlin-reviewer",
+      "criteria": ["UseCase 10줄 이내", "Guard clause", "추상화 수준 일관성", "Entity 캡슐화", "DomainService 경유", "네이밍"],
+      "must_pass": true
+    }
+  },
+
   "gc_scanner": {
     "description": "기존 코드베이스 전체 스캔 — 규칙 위반 감지 및 리포트",
     "scan_dirs": [
