@@ -125,6 +125,27 @@
         "file_glob": "*UseCase*.kt",
         "message": "UseCase에 private 검증 로직(validate*) 금지 — Domain Service 또는 Entity 메서드로 위임하세요.",
         "severity": "error"
+      },
+      {
+        "id": "no-cross-domain-import",
+        "pattern": "import com\\.rental\\.commerce\\.domain\\.(product|user|notification)\\.",
+        "file_glob": "*/domain/rental/**/*.kt",
+        "message": "도메인 패키지 간 참조 금지 — domain.rental에서 domain.product/user/notification import 불가. domain.common만 허용. 다른 도메인 데이터는 ID(Long)만 보유.",
+        "severity": "error"
+      },
+      {
+        "id": "no-cross-domain-import-product",
+        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|user|notification)\\.",
+        "file_glob": "*/domain/product/**/*.kt",
+        "message": "도메인 패키지 간 참조 금지 — domain.product에서 domain.rental/user/notification import 불가. domain.common만 허용.",
+        "severity": "error"
+      },
+      {
+        "id": "no-cross-domain-import-user",
+        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|product|notification)\\.",
+        "file_glob": "*/domain/user/**/*.kt",
+        "message": "도메인 패키지 간 참조 금지 — domain.user에서 domain.rental/product/notification import 불가. domain.common만 허용.",
+        "severity": "error"
       }
     ]
   },
@@ -314,12 +335,22 @@
         "allowed_dependency": [],
         "rules": [
           "Entity는 Rich Domain Model로 설계한다 — 비즈니스 로직(검증, 상태 전이, 계산)은 Entity 메서드에 캡슐화한다",
+          "Entity 내부에 Gateway/Repository/외부 Port interface 주입 절대 금지 — Entity는 순수해야 한다",
+          "도메인 패키지 간 참조 금지 — domain.rental은 domain.product를 import할 수 없다. domain.common만 허용",
+          "다른 도메인의 데이터가 필요하면 ID만 보유 (예: rental.productId: Long) — Entity 객체를 직접 참조하지 않는다",
           "Anemic Domain Model (getter/setter만 있는 Entity) 금지 — 행위가 Entity 밖에 있으면 안 된다",
           "상태 전이는 Enum 내부에 canTransitTo()로 캡슐화한다",
-          "외부 시스템 접근은 Port interface(Repository, Gateway)로 정의한다",
-          "Domain Service는 여러 Entity/VO를 조합하는 로직이 필요할 때만 사용한다",
-          "Domain Event는 Entity 내부에서 발행한다 (@Transient domainEvents 리스트 패턴)"
-        ]
+          "Entity의 상태 전이 메서드가 관련 Aggregate를 생성/반환할 수 있다 (예: rental.markPaid() → RentalPayment) — 단, 외부 포트 호출은 포함하지 않는다",
+          "외부 시스템 접근은 Port interface(Repository, Gateway)로 정의한다 — Entity가 아닌 DomainService에서만 호출",
+          "Domain Service는 Entity 메서드 + Port(Gateway/Repository) 호출을 조합한다 — 멱등성, 외부 API 호출+상태 전이 등",
+          "Domain Event는 Entity 내부에서 발행한다 (@Transient domainEvents 리스트 패턴) — 이벤트 발행(publishAll)은 DomainService가 수행"
+        ],
+        "package_boundary": {
+          "description": "도메인 패키지 간 참조 규칙 — Bounded Context 격리",
+          "allowed": "domain.common (BaseEntity, ErrorCode, DomainEvent, BusinessException)",
+          "forbidden": "domain.{다른도메인} (예: domain.rental에서 domain.product import 금지)",
+          "cross_domain": "다른 도메인 데이터가 필요하면 ID(Long)만 보유. 객체 필요 시 UseCase에서 각각 조회 후 조합."
+        }
       },
       "infrastructure": {
         "description": "기술 구현체 — DB, Kafka, Redis, 외부 API",

@@ -86,39 +86,57 @@ jobs:
 
       # ArgoCD GitOps: GitHub Contents API로 dev 브랜치의 kustomization.yml 직접 업데이트
       # git clone/checkout 없이 단일 파일만 수정 → exit 128 문제 원천 제거
+      # 409 Conflict 대응: SHA 충돌 시 최대 5회 retry (동시 CD 실행 보호)
       - name: Update kustomization.yml image tags via GitHub Contents API
         run: |
           FILE_PATH="deploy/k8s/overlays/dev/kustomization.yml"
           REPO="${{ github.repository }}"
           BRANCH="dev"
           NEW_TAG="dev-${{ github.sha }}"
+          MAX_RETRIES=5
 
-          # 현재 파일 내용 + SHA 조회
-          RESPONSE=$(curl -sSf \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}")
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "[Attempt $i/$MAX_RETRIES] Fetching current file..."
 
-          FILE_SHA=$(echo "$RESPONSE" | jq -r '.sha')
-          CURRENT_CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
+            RESPONSE=$(curl -sSf \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}")
 
-          # rental-commerce / rental-web 두 이미지 태그 모두 갱신
-          UPDATED_CONTENT=$(echo "$CURRENT_CONTENT" \
-            | sed -E "s|(name: ghcr\.io/biuea3866/rental-commerce)|\1|;/name: ghcr\.io\/biuea3866\/rental-commerce/{n;s/newTag: .*/newTag: ${NEW_TAG}/}" \
-            | sed -E "/name: ghcr\.io\/biuea3866\/rental-web/{n;s/newTag: .*/newTag: ${NEW_TAG}/}")
+            FILE_SHA=$(echo "$RESPONSE" | jq -r '.sha')
+            CURRENT_CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
 
-          ENCODED=$(echo "$UPDATED_CONTENT" | base64 -w 0)
+            UPDATED_CONTENT=$(echo "$CURRENT_CONTENT" \
+              | sed -E "/name: ghcr\.io\/biuea3866\/rental-commerce/{n;s/newTag: .*/newTag: ${NEW_TAG}/}" \
+              | sed -E "/name: ghcr\.io\/biuea3866\/rental-web/{n;s/newTag: .*/newTag: ${NEW_TAG}/}")
 
-          # Contents API PUT으로 직접 커밋
-          curl -sSf -X PUT \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}" \
-            -d "{
-              \"message\": \"chore(gitops): dev 이미지 태그 갱신 — ${NEW_TAG}\",
-              \"content\": \"${ENCODED}\",
-              \"sha\": \"${FILE_SHA}\",
-              \"branch\": \"${BRANCH}\"
-            }"
+            ENCODED=$(echo "$UPDATED_CONTENT" | base64 -w 0)
+
+            HTTP_CODE=$(curl -s -o /tmp/put_response.json -w "%{http_code}" -X PUT \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}" \
+              -d "{
+                \"message\": \"chore(gitops): dev 이미지 태그 갱신 — ${NEW_TAG}\",
+                \"content\": \"${ENCODED}\",
+                \"sha\": \"${FILE_SHA}\",
+                \"branch\": \"${BRANCH}\"
+              }")
+
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+              echo "✅ Success (HTTP $HTTP_CODE)"
+              exit 0
+            elif [ "$HTTP_CODE" = "409" ]; then
+              echo "⚠️ SHA conflict (409), retrying in 3s..."
+              sleep 3
+            else
+              echo "❌ Unexpected HTTP $HTTP_CODE"
+              cat /tmp/put_response.json
+              exit 1
+            fi
+          done
+
+          echo "❌ Failed after $MAX_RETRIES retries"
+          exit 1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
