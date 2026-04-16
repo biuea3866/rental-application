@@ -35,6 +35,7 @@ enum class ErrorCode(
     LENDER_PROFILE_NOT_FOUND(404, "LENDER_PROFILE_NOT_FOUND", "등록자 프로필을 찾을 수 없습니다"),
     RENTER_PROFILE_NOT_FOUND(404, "RENTER_PROFILE_NOT_FOUND", "대여자 프로필을 찾을 수 없습니다"),
     NOTIFICATION_NOT_FOUND(404, "NOTIFICATION_NOT_FOUND", "알림을 찾을 수 없습니다"),
+    RENTAL_NOT_FOUND(404, "RENTAL_NOT_FOUND", "대여를 찾을 수 없습니다"),
 
     // 409
     SOCIAL_ACCOUNT_ALREADY_LINKED(409, "SOCIAL_ACCOUNT_ALREADY_LINKED", "이미 소셜 계정이 연결되어 있습니다"),
@@ -44,6 +45,7 @@ enum class ErrorCode(
     DUPLICATE_PROFILE(409, "DUPLICATE_PROFILE", "이미 등록된 프로필입니다"),
     LENDER_PROFILE_ALREADY_EXISTS(409, "LENDER_PROFILE_ALREADY_EXISTS", "이미 등록자 프로필이 존재합니다"),
     RENTER_PROFILE_ALREADY_EXISTS(409, "RENTER_PROFILE_ALREADY_EXISTS", "이미 대여자 프로필이 존재합니다"),
+    RENTAL_PERIOD_CONFLICT(409, "RENTAL_PERIOD_CONFLICT", "해당 기간에 이미 대여 신청이 존재합니다"),
 
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
