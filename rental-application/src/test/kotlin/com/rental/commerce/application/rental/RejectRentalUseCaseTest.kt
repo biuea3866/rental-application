@@ -7,26 +7,20 @@ import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
-import com.rental.commerce.domain.rental.RentalEventPublisher
-import com.rental.commerce.domain.rental.RentalRepository
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import java.time.ZonedDateTime
 
 class RejectRentalUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val rentalRepository = mockk<RentalRepository>()
-    val rentalEventPublisher = mockk<RentalEventPublisher>()
-    val useCase = RejectRentalUseCase(rentalDomainService, rentalRepository, rentalEventPublisher)
+    val useCase = RejectRentalUseCase(rentalDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -49,34 +43,36 @@ class RejectRentalUseCaseTest : BehaviorSpec({
         )
 
     beforeEach {
-        clearMocks(rentalDomainService, rentalRepository, rentalEventPublisher)
+        clearMocks(rentalDomainService)
     }
 
     Given("대여 거절 요청을 할 때") {
 
         When("등록자가 REQUESTED 상태의 대여를 거절하면") {
-            Then("rental.reject()가 호출되고 CANCELLED 상태로 저장된다") {
+            Then("RentalDomainService.rejectRental()이 호출되고 CANCELLED 상태로 전이된다") {
                 val lenderId = 20L
                 val rentalId = 1L
+                val reason = "해당 기간에 다른 일정이 생겼습니다."
                 val rental = createRequestedRental(rentalId = rentalId, lenderId = lenderId)
 
                 val command = RejectRentalCommand(
                     rentalId = rentalId,
                     userId = lenderId,
-                    reason = "해당 기간에 다른 일정이 생겼습니다.",
+                    reason = reason,
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
-                every { rentalRepository.save(rental) } returns rental
-                every { rentalEventPublisher.publishAll(any()) } just runs
+                every { rentalDomainService.rejectRental(rental, lenderId, reason) } answers {
+                    rental.reject(reason)
+                    rental
+                }
 
                 useCase.execute(command)
 
                 rental.status shouldBe RentalStatus.CANCELLED
-                rental.cancelReason shouldBe "해당 기간에 다른 일정이 생겼습니다."
+                rental.cancelReason shouldBe reason
                 verify(exactly = 1) { rentalDomainService.getRentalById(rentalId) }
-                verify(exactly = 1) { rentalRepository.save(rental) }
-                verify(exactly = 1) { rentalEventPublisher.publishAll(any()) }
+                verify(exactly = 1) { rentalDomainService.rejectRental(rental, lenderId, reason) }
             }
         }
 
@@ -85,21 +81,26 @@ class RejectRentalUseCaseTest : BehaviorSpec({
                 val lenderId = 20L
                 val notLenderId = 99L
                 val rentalId = 1L
+                val reason = "거절 사유입니다."
                 val rental = createRequestedRental(rentalId = rentalId, lenderId = lenderId)
 
                 val command = RejectRentalCommand(
                     rentalId = rentalId,
                     userId = notLenderId,
-                    reason = "거절 사유입니다.",
+                    reason = reason,
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every { rentalDomainService.rejectRental(rental, notLenderId, reason) } throws BusinessException(
+                    errorCode = ErrorCode.FORBIDDEN,
+                    message = "대여 거절 권한이 없습니다. rentalId=$rentalId",
+                )
 
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.FORBIDDEN
-                verify(exactly = 0) { rentalRepository.save(any()) }
+                verify(exactly = 1) { rentalDomainService.rejectRental(rental, notLenderId, reason) }
             }
         }
 
@@ -107,22 +108,24 @@ class RejectRentalUseCaseTest : BehaviorSpec({
             Then("InvalidStateTransitionException 예외가 발생한다") {
                 val lenderId = 20L
                 val rentalId = 1L
+                val reason = "거절 사유입니다."
                 val rental = createRequestedRental(rentalId = rentalId, lenderId = lenderId)
-                // APPROVED 상태로 만들기
                 rental.approve()
 
                 val command = RejectRentalCommand(
                     rentalId = rentalId,
                     userId = lenderId,
-                    reason = "거절 사유입니다.",
+                    reason = reason,
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every { rentalDomainService.rejectRental(rental, lenderId, reason) } throws InvalidStateTransitionException(
+                    "APPROVED에서 CANCELLED(으)로 거절 전이는 REQUESTED 상태에서만 가능합니다"
+                )
 
                 shouldThrow<InvalidStateTransitionException> {
                     useCase.execute(command)
                 }
-                verify(exactly = 0) { rentalRepository.save(any()) }
             }
         }
 
