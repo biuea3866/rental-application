@@ -100,6 +100,8 @@ class Rental private constructor(
 
     fun isRequestedByRenter(userId: Long): Boolean = renterId == userId
 
+    fun isParticipant(userId: Long): Boolean = renterId == userId || lenderId == userId
+
     fun approve() {
         validateTransition(RentalStatus.APPROVED)
         val previousStatus = status
@@ -129,14 +131,18 @@ class Rental private constructor(
 
     fun startRental() {
         validateTransition(RentalStatus.IN_USE)
+        val previousStatus = status
         this.status = RentalStatus.IN_USE
         this.startedAt = ZonedDateTime.now()
+        publishStatusChangedEvent(from = previousStatus, to = RentalStatus.IN_USE)
     }
 
     fun returnRental() {
         validateTransition(RentalStatus.RETURNED)
+        val previousStatus = status
         this.status = RentalStatus.RETURNED
         this.returnedAt = ZonedDateTime.now()
+        publishStatusChangedEvent(from = previousStatus, to = RentalStatus.RETURNED)
     }
 
     fun cancel(reason: String) {
