@@ -43,3 +43,11 @@ class RentalNotFoundException(
 class RentalPeriodConflictException(
     message: String = ErrorCode.RENTAL_PERIOD_CONFLICT.message,
 ) : BusinessException(ErrorCode.RENTAL_PERIOD_CONFLICT, message)
+
+class PaymentFailedException(
+    message: String = ErrorCode.PAYMENT_FAILED.message,
+) : BusinessException(ErrorCode.PAYMENT_FAILED, message)
+
+class AlreadyPaidException(
+    message: String = ErrorCode.ALREADY_PAID.message,
+) : BusinessException(ErrorCode.ALREADY_PAID, message)
