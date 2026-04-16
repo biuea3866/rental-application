@@ -74,6 +74,22 @@ class Product(
         return status == ProductStatus.AVAILABLE || status == ProductStatus.RENTED
     }
 
+    fun isOwnedBy(userId: Long): Boolean = this.userId == userId
+
+    fun validateAvailableForRental() {
+        if (status != ProductStatus.AVAILABLE) {
+            throw BusinessException(
+                errorCode = ErrorCode.INVALID_STATE_TRANSITION,
+                message = "대여 신청 가능한 상품이 아닙니다 (현재 상태: $status)",
+            )
+        }
+    }
+
+    fun markAsRented() {
+        validateTransition(ProductStatus.RENTED)
+        this.status = ProductStatus.RENTED
+    }
+
     fun pullEvents(): List<DomainEvent> {
         val events = domainEvents.toList()
         domainEvents.clear()
