@@ -44,6 +44,16 @@ enum class ErrorCode(
     DUPLICATE_PROFILE(409, "DUPLICATE_PROFILE", "이미 등록된 프로필입니다"),
     LENDER_PROFILE_ALREADY_EXISTS(409, "LENDER_PROFILE_ALREADY_EXISTS", "이미 등록자 프로필이 존재합니다"),
     RENTER_PROFILE_ALREADY_EXISTS(409, "RENTER_PROFILE_ALREADY_EXISTS", "이미 대여자 프로필이 존재합니다"),
+    RENTAL_PERIOD_CONFLICT(409, "RENTAL_PERIOD_CONFLICT", "해당 기간에 이미 대여 신청이 존재합니다"),
+    RENTAL_ALREADY_PAID(409, "RENTAL_ALREADY_PAID", "이미 결제가 완료된 대여입니다"),
+
+    // 402
+    PAYMENT_FAILED(402, "PAYMENT_FAILED", "결제에 실패하였습니다"),
+
+    // 422
+    PRODUCT_NOT_AVAILABLE(422, "PRODUCT_NOT_AVAILABLE", "대여 가능한 상태의 상품이 아닙니다"),
+    RENTAL_NOT_FOUND(404, "RENTAL_NOT_FOUND", "대여 정보를 찾을 수 없습니다"),
+    AMOUNT_MISMATCH(422, "AMOUNT_MISMATCH", "결제 금액이 대여 금액과 일치하지 않습니다"),
 
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
