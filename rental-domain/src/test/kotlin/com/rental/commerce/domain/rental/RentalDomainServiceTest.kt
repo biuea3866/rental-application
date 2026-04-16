@@ -2,6 +2,7 @@ package com.rental.commerce.domain.rental
 
 import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.common.RentalPeriodConflictException
+import com.rental.commerce.domain.product.ProductRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -15,7 +16,17 @@ class RentalDomainServiceTest : BehaviorSpec({
 
     fun newMocks(): Pair<RentalRepository, RentalDomainService> {
         val repo = mockk<RentalRepository>()
-        return repo to RentalDomainService(repo)
+        val rentalPaymentRepository = mockk<RentalPaymentRepository>()
+        val paymentGateway = mockk<PaymentGateway>()
+        val rentalEventPublisher = mockk<RentalEventPublisher>()
+        val productRepository = mockk<ProductRepository>()
+        return repo to RentalDomainService(
+            rentalRepository = repo,
+            rentalPaymentRepository = rentalPaymentRepository,
+            paymentGateway = paymentGateway,
+            rentalEventPublisher = rentalEventPublisher,
+            productRepository = productRepository,
+        )
     }
 
     fun createRental(

@@ -2,17 +2,11 @@ package com.rental.commerce.application.rental
 
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.common.RentalPeriodConflictException
 import com.rental.commerce.domain.common.ResourceNotFoundException
-import com.rental.commerce.domain.product.Product
-import com.rental.commerce.domain.product.ProductCondition
-import com.rental.commerce.domain.product.ProductRepository
-import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
-import com.rental.commerce.domain.rental.RentalEventPublisher
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -20,18 +14,14 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import java.time.ZonedDateTime
 
 class RequestRentalUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val productRepository = mockk<ProductRepository>()
-    val rentalEventPublisher = mockk<RentalEventPublisher>()
-    val useCase = RequestRentalUseCase(rentalDomainService, productRepository, rentalEventPublisher)
+    val useCase = RequestRentalUseCase(rentalDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -42,25 +32,17 @@ class RequestRentalUseCaseTest : BehaviorSpec({
     )
 
     beforeEach {
-        clearMocks(rentalDomainService, productRepository, rentalEventPublisher)
+        clearMocks(rentalDomainService)
     }
 
     Given("대여 신청을 할 때") {
 
         When("정상적으로 대여 신청을 하면") {
-            Then("RentalDomainService.createRental()이 호출되고 결과가 반환된다") {
+            Then("RentalDomainService.requestRental()이 호출되고 결과가 반환된다") {
                 val renterId = 10L
                 val productId = 42L
                 val startDate = ZonedDateTime.now().plusDays(1)
                 val endDate = ZonedDateTime.now().plusDays(8)
-
-                val product = Product(
-                    productId = productId,
-                    userId = 20L, // renterId != lenderId
-                    name = "캠핑 텐트 A",
-                    status = ProductStatus.AVAILABLE,
-                    depositAmount = 50_000L,
-                )
 
                 val expectedRental = Rental.create(
                     renterId = renterId,
@@ -82,34 +64,28 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                     deliveryInfo = deliveryInfo,
                 )
 
-                every { productRepository.findById(productId) } returns product
                 every {
-                    rentalDomainService.createRental(
+                    rentalDomainService.requestRental(
                         renterId = renterId,
-                        lenderId = 20L,
                         productId = productId,
                         startDate = startDate,
                         endDate = endDate,
                         dailyPrice = 10_000L,
-                        depositAmount = 50_000L,
                         deliveryInfo = deliveryInfo,
                     )
                 } returns expectedRental
-                every { rentalEventPublisher.publishAll(any()) } just runs
 
                 val result = useCase.execute(command)
 
                 result shouldNotBe null
                 result.status shouldBe RentalStatus.REQUESTED
                 verify(exactly = 1) {
-                    rentalDomainService.createRental(
+                    rentalDomainService.requestRental(
                         renterId = renterId,
-                        lenderId = 20L,
                         productId = productId,
                         startDate = startDate,
                         endDate = endDate,
                         dailyPrice = 10_000L,
-                        depositAmount = 50_000L,
                         deliveryInfo = deliveryInfo,
                     )
                 }
@@ -123,14 +99,6 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                 val startDate = ZonedDateTime.now().plusDays(1)
                 val endDate = ZonedDateTime.now().plusDays(8)
 
-                val product = Product(
-                    productId = productId,
-                    userId = 20L,
-                    name = "캠핑 텐트 A",
-                    status = ProductStatus.AVAILABLE,
-                    depositAmount = 50_000L,
-                )
-
                 val command = RequestRentalCommand(
                     renterId = renterId,
                     productId = productId,
@@ -140,16 +108,13 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                     deliveryInfo = deliveryInfo,
                 )
 
-                every { productRepository.findById(productId) } returns product
                 every {
-                    rentalDomainService.createRental(
+                    rentalDomainService.requestRental(
                         renterId = renterId,
-                        lenderId = 20L,
                         productId = productId,
                         startDate = startDate,
                         endDate = endDate,
                         dailyPrice = 10_000L,
-                        depositAmount = 50_000L,
                         deliveryInfo = deliveryInfo,
                     )
                 } throws RentalPeriodConflictException()
@@ -168,14 +133,6 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                 val startDate = ZonedDateTime.now().plusDays(1)
                 val endDate = ZonedDateTime.now().plusDays(8)
 
-                val product = Product(
-                    productId = productId,
-                    userId = userId, // renterId == lenderId
-                    name = "내 캠핑 텐트",
-                    status = ProductStatus.AVAILABLE,
-                    depositAmount = 50_000L,
-                )
-
                 val command = RequestRentalCommand(
                     renterId = userId,
                     productId = productId,
@@ -185,7 +142,19 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                     deliveryInfo = deliveryInfo,
                 )
 
-                every { productRepository.findById(productId) } returns product
+                every {
+                    rentalDomainService.requestRental(
+                        renterId = userId,
+                        productId = productId,
+                        startDate = startDate,
+                        endDate = endDate,
+                        dailyPrice = 10_000L,
+                        deliveryInfo = deliveryInfo,
+                    )
+                } throws BusinessException(
+                    errorCode = ErrorCode.FORBIDDEN,
+                    message = "자신의 상품은 대여 신청할 수 없습니다.",
+                )
 
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
@@ -210,7 +179,19 @@ class RequestRentalUseCaseTest : BehaviorSpec({
                     deliveryInfo = deliveryInfo,
                 )
 
-                every { productRepository.findById(productId) } returns null
+                every {
+                    rentalDomainService.requestRental(
+                        renterId = renterId,
+                        productId = productId,
+                        startDate = startDate,
+                        endDate = endDate,
+                        dailyPrice = 10_000L,
+                        deliveryInfo = deliveryInfo,
+                    )
+                } throws ResourceNotFoundException(
+                    errorCode = ErrorCode.RESOURCE_NOT_FOUND,
+                    message = "상품을 찾을 수 없습니다. productId=$productId",
+                )
 
                 shouldThrow<ResourceNotFoundException> {
                     useCase.execute(command)

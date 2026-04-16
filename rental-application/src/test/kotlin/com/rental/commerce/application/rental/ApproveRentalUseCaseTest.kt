@@ -7,26 +7,20 @@ import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
-import com.rental.commerce.domain.rental.RentalEventPublisher
-import com.rental.commerce.domain.rental.RentalRepository
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import java.time.ZonedDateTime
 
 class ApproveRentalUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val rentalRepository = mockk<RentalRepository>()
-    val rentalEventPublisher = mockk<RentalEventPublisher>()
-    val useCase = ApproveRentalUseCase(rentalDomainService, rentalRepository, rentalEventPublisher)
+    val useCase = ApproveRentalUseCase(rentalDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -49,13 +43,13 @@ class ApproveRentalUseCaseTest : BehaviorSpec({
         )
 
     beforeEach {
-        clearMocks(rentalDomainService, rentalRepository, rentalEventPublisher)
+        clearMocks(rentalDomainService)
     }
 
     Given("대여 승인 요청을 할 때") {
 
         When("등록자가 REQUESTED 상태의 대여를 승인하면") {
-            Then("rental.approve()가 호출되고 APPROVED 상태로 저장된다") {
+            Then("RentalDomainService.approveRental()이 호출되고 APPROVED 상태로 전이된다") {
                 val lenderId = 20L
                 val rentalId = 1L
                 val rental = createRequestedRental(rentalId = rentalId, lenderId = lenderId)
@@ -66,15 +60,16 @@ class ApproveRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
-                every { rentalRepository.save(rental) } returns rental
-                every { rentalEventPublisher.publishAll(any()) } just runs
+                every { rentalDomainService.approveRental(rental, lenderId) } answers {
+                    rental.approve()
+                    rental
+                }
 
                 useCase.execute(command)
 
                 rental.status shouldBe RentalStatus.APPROVED
                 verify(exactly = 1) { rentalDomainService.getRentalById(rentalId) }
-                verify(exactly = 1) { rentalRepository.save(rental) }
-                verify(exactly = 1) { rentalEventPublisher.publishAll(any()) }
+                verify(exactly = 1) { rentalDomainService.approveRental(rental, lenderId) }
             }
         }
 
@@ -91,12 +86,16 @@ class ApproveRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every { rentalDomainService.approveRental(rental, notLenderId) } throws BusinessException(
+                    errorCode = ErrorCode.FORBIDDEN,
+                    message = "대여 승인 권한이 없습니다. rentalId=$rentalId",
+                )
 
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
                 exception.errorCode shouldBe ErrorCode.FORBIDDEN
-                verify(exactly = 0) { rentalRepository.save(any()) }
+                verify(exactly = 1) { rentalDomainService.approveRental(rental, notLenderId) }
             }
         }
 
@@ -105,7 +104,6 @@ class ApproveRentalUseCaseTest : BehaviorSpec({
                 val lenderId = 20L
                 val rentalId = 1L
                 val rental = createRequestedRental(rentalId = rentalId, lenderId = lenderId)
-                // APPROVED 상태로 만들기
                 rental.approve()
 
                 val command = ApproveRentalCommand(
@@ -114,11 +112,13 @@ class ApproveRentalUseCaseTest : BehaviorSpec({
                 )
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every { rentalDomainService.approveRental(rental, lenderId) } throws InvalidStateTransitionException(
+                    "APPROVED에서 APPROVED(으)로 전이할 수 없습니다"
+                )
 
                 shouldThrow<InvalidStateTransitionException> {
                     useCase.execute(command)
                 }
-                verify(exactly = 0) { rentalRepository.save(any()) }
             }
         }
 
