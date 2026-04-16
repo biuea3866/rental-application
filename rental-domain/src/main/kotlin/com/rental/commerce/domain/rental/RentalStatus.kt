@@ -17,7 +17,7 @@ enum class RentalStatus {
         private val allowedTransitions: Map<RentalStatus, Set<RentalStatus>> = mapOf(
             REQUESTED to setOf(APPROVED, CANCELLED),
             APPROVED to setOf(PAID, CANCELLED),
-            PAID to setOf(IN_USE),
+            PAID to setOf(IN_USE, CANCELLED),
             IN_USE to setOf(RETURNED),
         )
     }

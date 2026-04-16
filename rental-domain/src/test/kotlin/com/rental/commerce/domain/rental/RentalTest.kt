@@ -226,7 +226,7 @@ class RentalTest : BehaviorSpec({
         }
     }
 
-    Given("cancel() — REQUESTED/APPROVED → CANCELLED 전이") {
+    Given("cancel() — REQUESTED/APPROVED/PAID → CANCELLED 전이") {
 
         When("REQUESTED 상태에서 cancel()을 호출하면") {
             val rental = createRental()
@@ -257,10 +257,26 @@ class RentalTest : BehaviorSpec({
             rental.approve()
             rental.pullEvents()
             rental.markPaid()
+            rental.cancel(reason = "결제 후 취소")
+
+            Then("status가 CANCELLED로 변경된다 (환불 처리는 UseCase에서 수행)") {
+                rental.status shouldBe RentalStatus.CANCELLED
+            }
+
+            Then("cancelReason이 설정된다") {
+                rental.cancelReason shouldBe "결제 후 취소"
+            }
+        }
+
+        When("IN_USE 상태에서 cancel()을 호출하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.markPaid()
+            rental.startRental()
 
             Then("InvalidStateTransitionException이 발생한다") {
                 shouldThrow<InvalidStateTransitionException> {
-                    rental.cancel(reason = "PAID 상태 취소 시도")
+                    rental.cancel(reason = "IN_USE 상태 취소 시도")
                 }
             }
         }
@@ -297,6 +313,30 @@ class RentalTest : BehaviorSpec({
 
             Then("false를 반환한다") {
                 rental.isRequestedByRenter(999L) shouldBe false
+            }
+        }
+
+        When("isParticipant()를 renterId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("true를 반환한다") {
+                rental.isParticipant(1L) shouldBe true
+            }
+        }
+
+        When("isParticipant()를 lenderId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("true를 반환한다") {
+                rental.isParticipant(2L) shouldBe true
+            }
+        }
+
+        When("isParticipant()를 참여자가 아닌 userId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("false를 반환한다") {
+                rental.isParticipant(999L) shouldBe false
             }
         }
     }
