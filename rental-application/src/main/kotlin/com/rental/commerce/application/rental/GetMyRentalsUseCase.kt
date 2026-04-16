@@ -1,7 +1,7 @@
 package com.rental.commerce.application.rental
 
 import com.rental.commerce.domain.rental.Rental
-import com.rental.commerce.domain.rental.RentalRepository
+import com.rental.commerce.domain.rental.RentalDomainService
 import com.rental.commerce.domain.rental.RentalStatus
 import java.time.ZonedDateTime
 import org.springframework.stereotype.Service
@@ -38,14 +38,11 @@ data class RentalSummaryResult(
 @Service
 @Transactional(readOnly = true)
 class GetMyRentalsUseCase(
-    private val rentalRepository: RentalRepository,
+    private val rentalDomainService: RentalDomainService,
 ) {
 
     fun execute(command: GetMyRentalsCommand): List<RentalSummaryResult> {
-        val rentals = rentalRepository.findAllByRenterIdOrLenderId(
-            renterId = command.userId,
-            lenderId = command.userId,
-        )
+        val rentals = rentalDomainService.getRentalsByUserId(command.userId)
         return rentals.map { RentalSummaryResult.from(it) }
     }
 }

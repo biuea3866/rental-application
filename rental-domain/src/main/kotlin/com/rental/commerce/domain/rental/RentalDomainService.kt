@@ -86,6 +86,19 @@ class RentalDomainService(
     }
 
     /**
+     * 사용자가 대여자 또는 등록자로 참여한 모든 대여를 조회한다.
+     *
+     * @param userId 조회할 사용자 ID (대여자 또는 등록자)
+     * @return 사용자가 참여한 대여 목록
+     */
+    fun getRentalsByUserId(userId: Long): List<Rental> {
+        return rentalRepository.findAllByRenterIdOrLenderId(
+            renterId = userId,
+            lenderId = userId,
+        )
+    }
+
+    /**
      * 신규 대여를 생성한다 — 기간 중복 검증 포함.
      *
      * @throws RentalPeriodConflictException 기간 중복 시
