@@ -103,12 +103,12 @@ class ProcessPaymentUseCaseTest : BehaviorSpec({
                     failureMessage = null,
                 )
 
-                val savedPayment = RentalPayment.create(
+                val completedPayment = RentalPayment.create(
                     rentalId = rentalId,
                     amount = amount,
                     paymentMethod = PaymentMethod.CARD,
                     orderId = orderId,
-                )
+                ).also { it.complete(paymentKey) }
 
                 every { rentalDomainService.getRentalById(rentalId) } returns rental
                 every { rentalPaymentRepository.findByRentalId(rentalId) } returns null
@@ -121,7 +121,7 @@ class ProcessPaymentUseCaseTest : BehaviorSpec({
                         )
                     )
                 } returns paymentResult
-                every { rentalPaymentRepository.save(any()) } returns savedPayment
+                every { rentalPaymentRepository.save(any()) } returns completedPayment
                 every { rentalEventPublisher.publishAll(any()) } just runs
 
                 val result = useCase.execute(command)
