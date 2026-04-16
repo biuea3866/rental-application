@@ -447,6 +447,44 @@
     }
   },
 
+  "design_patterns": {
+    "description": "디자인 패턴 적용 가이드 — 코드 리뷰 시 패턴 미적용 감지하면 reject",
+    "patterns": {
+      "strategy": {
+        "when": "동일 인터페이스의 여러 구현체가 런타임에 교체 가능할 때",
+        "apply_to": ["PaymentGateway (Toss/Kakao/Mock)", "SocialLoginProvider (Kakao/Naver)", "NotificationSender (Email/Push/SMS)"],
+        "anti_pattern": "when (type) { A -> ..., B -> ..., C -> ... } — Strategy interface + 구현체 주입으로 분리"
+      },
+      "state": {
+        "when": "객체 상태에 따라 행위가 달라질 때",
+        "apply_to": ["RentalStatus별 행위 (전이 가능 여부 + 허용 액션)"],
+        "anti_pattern": "when (status) { REQUESTED -> ..., APPROVED -> ... } — 각 상태가 자기 행위를 캡슐화하는 State 클래스"
+      },
+      "factory": {
+        "when": "객체 생성 로직이 복잡하거나 조건별 다른 타입 반환",
+        "apply_to": ["DomainEvent 생성", "Notification 생성 (이벤트 타입별 메시지)"],
+        "anti_pattern": "create()에 조건 분기 나열 → Factory 분리"
+      },
+      "template_method": {
+        "when": "여러 클래스가 동일 골격(조회→검증→실행→이벤트)을 반복",
+        "apply_to": ["Rental 상태 전이 UseCase들 (Approve/Reject/Start/Return/Cancel 동일 구조)"],
+        "anti_pattern": "5개 이상 UseCase가 같은 구조 복붙 → AbstractRentalStateTransitionUseCase"
+      },
+      "observer": {
+        "when": "한 이벤트에 여러 후속 처리 필요",
+        "apply_to": ["RentalStatusChanged → Notification + Kafka + 로그", "ProductApproved → 알림 + 검색 인덱스"],
+        "implementation": "@EventListener / @TransactionalEventListener(AFTER_COMMIT) + @Async"
+      }
+    },
+    "review_criteria": [
+      "if-else/when 분기 3개 이상 → Strategy 검토",
+      "상태별 행위 분기 → State 검토",
+      "동일 구조 메서드 3개 이상 반복 → Template Method 검토",
+      "한 이벤트 후속 처리 2개 이상 → Observer 검토",
+      "객체 생성 조건 복잡 → Factory 검토"
+    ]
+  },
+
   "gc_scanner": {
     "description": "기존 코드베이스 전체 스캔 — 규칙 위반 감지 및 리포트",
     "scan_dirs": [
