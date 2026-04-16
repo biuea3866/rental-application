@@ -35,3 +35,11 @@ class InvalidTokenException(
 class TokenFamilyCompromisedException(
     message: String = ErrorCode.TOKEN_FAMILY_COMPROMISED.message,
 ) : BusinessException(ErrorCode.TOKEN_FAMILY_COMPROMISED, message)
+
+class RentalNotFoundException(
+    message: String = ErrorCode.RENTAL_NOT_FOUND.message,
+) : BusinessException(ErrorCode.RENTAL_NOT_FOUND, message)
+
+class RentalPeriodConflictException(
+    message: String = ErrorCode.RENTAL_PERIOD_CONFLICT.message,
+) : BusinessException(ErrorCode.RENTAL_PERIOD_CONFLICT, message)
