@@ -23,13 +23,14 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: biuea3866/rental-commerce
+  WEB_IMAGE_NAME: biuea3866/rental-web
 
 jobs:
   build-and-push:
     name: Build & Push Docker Image (Dev)
     runs-on: ubuntu-latest
     environment: dev
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -60,7 +61,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
 
-      - name: Build and Push Docker Image
+      - name: Build and Push BE Docker Image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6
         with:
           context: .
@@ -68,29 +69,56 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=be
+          cache-to: type=gha,mode=max,scope=be
 
-      # ArgoCD GitOps: gitops/dev 브랜치에 이미지 태그 직접 push
-      # gitops/dev는 branch protection 없음 → PR 없이 바로 반영
-      - name: Update Kustomize image tag on gitops/dev
+      - name: Build and Push FE Docker Image (rental-web)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6
+        with:
+          context: .
+          file: deploy/k8s/Dockerfile.web
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:dev-${{ github.sha }}
+          cache-from: type=gha,scope=fe
+          cache-to: type=gha,mode=max,scope=fe
+
+      # ArgoCD GitOps: GitHub Contents API로 dev 브랜치의 kustomization.yml 직접 업데이트
+      # git clone/checkout 없이 단일 파일만 수정 → exit 128 문제 원천 제거
+      - name: Update kustomization.yml image tags via GitHub Contents API
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          FILE_PATH="deploy/k8s/overlays/dev/kustomization.yml"
+          REPO="${{ github.repository }}"
+          BRANCH="dev"
+          NEW_TAG="dev-${{ github.sha }}"
 
-          # gitops/dev 브랜치로 전환 (없으면 dev 기반으로 생성)
-          git fetch origin gitops/dev:gitops/dev 2>/dev/null || git checkout -b gitops/dev
-          git checkout gitops/dev
-          # dev 브랜치의 k8s 파일 동기화 (베이스 매니페스트 최신화)
-          git checkout origin/dev -- deploy/k8s/
+          # 현재 파일 내용 + SHA 조회
+          RESPONSE=$(curl -sSf \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}")
 
-          cd deploy/k8s/overlays/dev
-          sed -i "s/newTag: .*/newTag: dev-${{ github.sha }}/" kustomization.yml
+          FILE_SHA=$(echo "$RESPONSE" | jq -r '.sha')
+          CURRENT_CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
 
-          git add deploy/k8s/
-          git diff --staged --quiet && echo "No changes" && exit 0
+          # rental-commerce / rental-web 두 이미지 태그 모두 갱신
+          UPDATED_CONTENT=$(echo "$CURRENT_CONTENT" \
+            | sed -E "s|(name: ghcr\.io/biuea3866/rental-commerce)|\1|;/name: ghcr\.io\/biuea3866\/rental-commerce/{n;s/newTag: .*/newTag: ${NEW_TAG}/}" \
+            | sed -E "/name: ghcr\.io\/biuea3866\/rental-web/{n;s/newTag: .*/newTag: ${NEW_TAG}/}")
 
-          git commit -m "chore(gitops): dev 이미지 태그 갱신 — dev-${{ github.sha }}"
-          git push origin gitops/dev
+          ENCODED=$(echo "$UPDATED_CONTENT" | base64 -w 0)
+
+          # Contents API PUT으로 직접 커밋
+          curl -sSf -X PUT \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/contents/${FILE_PATH}" \
+            -d "{
+              \"message\": \"chore(gitops): dev 이미지 태그 갱신 — ${NEW_TAG}\",
+              \"content\": \"${ENCODED}\",
+              \"sha\": \"${FILE_SHA}\",
+              \"branch\": \"${BRANCH}\"
+            }"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
