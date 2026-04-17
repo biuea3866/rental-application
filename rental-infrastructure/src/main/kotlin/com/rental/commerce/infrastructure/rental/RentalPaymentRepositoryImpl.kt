@@ -5,7 +5,7 @@ import com.rental.commerce.domain.rental.RentalPaymentRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-class JpaRentalPaymentRepository(
+class RentalPaymentRepositoryImpl(
     private val rentalPaymentJpaRepository: RentalPaymentJpaRepository,
 ) : RentalPaymentRepository {
 

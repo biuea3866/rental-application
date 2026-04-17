@@ -76,6 +76,15 @@ class Product(
 
     fun isOwnedBy(userId: Long): Boolean = this.userId == userId
 
+    fun validateNotOwnedBy(userId: Long) {
+        if (isOwnedBy(userId)) {
+            throw BusinessException(
+                errorCode = ErrorCode.FORBIDDEN,
+                message = "자신의 상품은 대여 신청할 수 없습니다.",
+            )
+        }
+    }
+
     fun validateAvailableForRental() {
         if (status != ProductStatus.AVAILABLE) {
             throw BusinessException(
