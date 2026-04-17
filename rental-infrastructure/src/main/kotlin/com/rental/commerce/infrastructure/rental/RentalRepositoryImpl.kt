@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 import org.springframework.stereotype.Repository
 
 @Repository
-class JpaRentalRepository(
+class RentalRepositoryImpl(
     private val rentalJpaRepository: RentalJpaRepository,
 ) : RentalRepository {
 

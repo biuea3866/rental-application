@@ -1,7 +1,9 @@
 package com.rental.commerce.domain.rental
 
 import com.rental.commerce.domain.common.BaseEntity
+import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.DomainEvent
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import jakarta.persistence.Column
@@ -111,11 +113,7 @@ class Rental private constructor(
     }
 
     fun reject(reason: String) {
-        if (status != RentalStatus.REQUESTED) {
-            throw InvalidStateTransitionException(
-                "${status.name}에서 CANCELLED(으)로 거절 전이는 REQUESTED 상태에서만 가능합니다"
-            )
-        }
+        requireStatus(RentalStatus.REQUESTED, "거절")
         val previousStatus = status
         this.status = RentalStatus.CANCELLED
         this.cancelReason = reason
@@ -125,8 +123,10 @@ class Rental private constructor(
 
     fun markPaid() {
         validateTransition(RentalStatus.PAID)
+        val previousStatus = status
         this.status = RentalStatus.PAID
         this.paidAt = ZonedDateTime.now()
+        publishStatusChangedEvent(from = previousStatus, to = RentalStatus.PAID)
     }
 
     fun startRental() {
@@ -152,6 +152,43 @@ class Rental private constructor(
         this.cancelReason = reason
         this.cancelledAt = ZonedDateTime.now()
         publishStatusChangedEvent(from = previousStatus, to = RentalStatus.CANCELLED)
+    }
+
+    fun verifyLenderAuthority(userId: Long) {
+        if (!isOwnedByLender(userId)) {
+            throw BusinessException(
+                errorCode = ErrorCode.FORBIDDEN,
+                message = "등록자 권한이 없습니다. rentalId=$id",
+            )
+        }
+    }
+
+    fun verifyRenterAuthority(userId: Long) {
+        if (!isRequestedByRenter(userId)) {
+            throw BusinessException(
+                errorCode = ErrorCode.FORBIDDEN,
+                message = "대여자 권한이 없습니다. rentalId=$id",
+            )
+        }
+    }
+
+    fun verifyParticipant(userId: Long) {
+        if (!isParticipant(userId)) {
+            throw BusinessException(
+                errorCode = ErrorCode.FORBIDDEN,
+                message = "대여 참여자가 아닙니다. rentalId=$id",
+            )
+        }
+    }
+
+    fun isPaid(): Boolean = status == RentalStatus.PAID
+
+    private fun requireStatus(expected: RentalStatus, action: String) {
+        if (status != expected) {
+            throw InvalidStateTransitionException(
+                "${status.name} 상태에서 $action 처리는 ${expected.name} 상태에서만 가능합니다"
+            )
+        }
     }
 
     private fun validateTransition(target: RentalStatus) {
