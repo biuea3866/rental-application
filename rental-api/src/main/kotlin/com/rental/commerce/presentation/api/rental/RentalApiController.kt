@@ -12,6 +12,7 @@ import com.rental.commerce.application.rental.ProcessPaymentUseCase
 import com.rental.commerce.application.rental.RejectRentalUseCase
 import com.rental.commerce.application.rental.RentalDetailResult
 import com.rental.commerce.application.rental.RentalSummaryResult
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.application.rental.RequestRentalResult
 import com.rental.commerce.application.rental.RequestRentalUseCase
 import com.rental.commerce.application.rental.ReturnRentalCommand
@@ -114,9 +115,9 @@ class RentalApiController(
     @GetMapping("/my-rentals")
     fun getMyRentals(
         @AuthenticatedMember userId: Long,
-    ): ResponseEntity<RentalListResponse> {
+    ): ResponseEntity<PageResult<RentalSummaryResult>> {
         val results = getMyRentalsUseCase.execute(GetMyRentalsCommand(userId = userId))
-        return ResponseEntity.ok(RentalListResponse(rentals = results))
+        return ResponseEntity.ok(results)
     }
 
     @GetMapping("/rentals/{rentalId}")
