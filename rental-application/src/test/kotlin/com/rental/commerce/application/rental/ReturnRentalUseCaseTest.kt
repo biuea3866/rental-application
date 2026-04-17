@@ -1,6 +1,9 @@
 package com.rental.commerce.application.rental
 
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
+import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
@@ -122,6 +125,46 @@ class ReturnRentalUseCaseTest : BehaviorSpec({
                 every { rentalDomainService.getRentalById(1L) } returns paidRental
                 every { rentalDomainService.returnRental(paidRental) } throws InvalidStateTransitionException(
                     "PAID에서 RETURNED(으)로 전이할 수 없습니다"
+                )
+
+                shouldThrow<InvalidStateTransitionException> {
+                    useCase.execute(command)
+                }
+            }
+        }
+
+        When("존재하지 않는 대여를 반납하려고 하면") {
+            Then("RentalNotFoundException 예외가 발생한다") {
+                val nonExistentRentalId = 9999L
+                val command = ReturnRentalCommand(
+                    rentalId = nonExistentRentalId,
+                    userId = renterId,
+                )
+
+                every { rentalDomainService.getRentalById(nonExistentRentalId) } throws RentalNotFoundException(
+                    "대여를 찾을 수 없습니다. rentalId=$nonExistentRentalId"
+                )
+
+                shouldThrow<RentalNotFoundException> {
+                    useCase.execute(command)
+                }
+                verify(exactly = 0) { rentalDomainService.returnRental(any()) }
+            }
+        }
+
+        When("RETURNED 상태의 대여를 다시 반납하려고 하면") {
+            Then("InvalidStateTransitionException 예외가 발생한다") {
+                val rental = createInUseRental()
+                rental.returnRental()
+
+                val command = ReturnRentalCommand(
+                    rentalId = 1L,
+                    userId = renterId,
+                )
+
+                every { rentalDomainService.getRentalById(1L) } returns rental
+                every { rentalDomainService.returnRental(rental) } throws InvalidStateTransitionException(
+                    "RETURNED에서 RETURNED(으)로 전이할 수 없습니다"
                 )
 
                 shouldThrow<InvalidStateTransitionException> {

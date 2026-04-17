@@ -151,5 +151,53 @@ class CancelRentalUseCaseTest : BehaviorSpec({
                 verify(exactly = 1) { rentalDomainService.cancelRental(rental, cancelReason) }
             }
         }
+
+        When("RETURNED 상태의 대여를 취소하려고 하면") {
+            Then("InvalidStateTransitionException 예외가 발생한다") {
+                val rental = createRequestedRental()
+                rental.approve()
+                rental.markPaid()
+                rental.startRental()
+                rental.returnRental()
+
+                val command = CancelRentalCommand(
+                    rentalId = 1L,
+                    userId = renterId,
+                    reason = cancelReason,
+                )
+
+                every { rentalDomainService.getRentalById(1L) } returns rental
+                every { rentalDomainService.cancelRental(rental, cancelReason) } throws InvalidStateTransitionException(
+                    "RETURNED에서 CANCELLED(으)로 전이할 수 없습니다"
+                )
+
+                shouldThrow<InvalidStateTransitionException> {
+                    useCase.execute(command)
+                }
+                verify(exactly = 1) { rentalDomainService.cancelRental(rental, cancelReason) }
+            }
+        }
+
+        When("이미 CANCELLED 상태의 대여를 다시 취소하려고 하면") {
+            Then("InvalidStateTransitionException 예외가 발생한다") {
+                val rental = createRequestedRental()
+                rental.cancel(cancelReason)
+
+                val command = CancelRentalCommand(
+                    rentalId = 1L,
+                    userId = renterId,
+                    reason = "중복 취소 시도",
+                )
+
+                every { rentalDomainService.getRentalById(1L) } returns rental
+                every { rentalDomainService.cancelRental(rental, "중복 취소 시도") } throws InvalidStateTransitionException(
+                    "CANCELLED에서 CANCELLED(으)로 전이할 수 없습니다"
+                )
+
+                shouldThrow<InvalidStateTransitionException> {
+                    useCase.execute(command)
+                }
+            }
+        }
     }
 })
