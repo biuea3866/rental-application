@@ -1,5 +1,7 @@
 package com.rental.commerce.domain.rental
 
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import io.kotest.assertions.throwables.shouldThrow
@@ -151,6 +153,15 @@ class RentalTest : BehaviorSpec({
 
             Then("paidAt이 설정된다") {
                 rental.paidAt shouldNotBe null
+            }
+
+            Then("RentalStatusChangedEvent(PAID)가 발행된다") {
+                val events = rental.pullEvents()
+                events shouldHaveSize 1
+                val event = events.first()
+                event.shouldBeInstanceOf<RentalStatusChangedEvent>()
+                (event as RentalStatusChangedEvent).fromStatus shouldBe RentalStatus.APPROVED
+                (event as RentalStatusChangedEvent).toStatus shouldBe RentalStatus.PAID
             }
         }
 
@@ -337,6 +348,103 @@ class RentalTest : BehaviorSpec({
 
             Then("false를 반환한다") {
                 rental.isParticipant(999L) shouldBe false
+            }
+        }
+    }
+
+    Given("verifyLenderAuthority() — 등록자 권한 검증 캡슐화") {
+
+        When("lenderId와 일치하는 userId로 호출하면") {
+            val rental = createRental(lenderId = 2L)
+
+            Then("예외 없이 통과한다") {
+                rental.verifyLenderAuthority(2L)
+            }
+        }
+
+        When("lenderId와 다른 userId로 호출하면") {
+            val rental = createRental(lenderId = 2L)
+
+            Then("FORBIDDEN BusinessException이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    rental.verifyLenderAuthority(999L)
+                }
+                exception.errorCode shouldBe ErrorCode.FORBIDDEN
+            }
+        }
+    }
+
+    Given("verifyRenterAuthority() — 대여자 권한 검증 캡슐화") {
+
+        When("renterId와 일치하는 userId로 호출하면") {
+            val rental = createRental(renterId = 1L)
+
+            Then("예외 없이 통과한다") {
+                rental.verifyRenterAuthority(1L)
+            }
+        }
+
+        When("renterId와 다른 userId로 호출하면") {
+            val rental = createRental(renterId = 1L)
+
+            Then("FORBIDDEN BusinessException이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    rental.verifyRenterAuthority(999L)
+                }
+                exception.errorCode shouldBe ErrorCode.FORBIDDEN
+            }
+        }
+    }
+
+    Given("verifyParticipant() — 참여자 검증 캡슐화") {
+
+        When("renterId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("예외 없이 통과한다") {
+                rental.verifyParticipant(1L)
+            }
+        }
+
+        When("lenderId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("예외 없이 통과한다") {
+                rental.verifyParticipant(2L)
+            }
+        }
+
+        When("참여자가 아닌 userId로 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+
+            Then("FORBIDDEN BusinessException이 발생한다") {
+                val exception = shouldThrow<BusinessException> {
+                    rental.verifyParticipant(999L)
+                }
+                exception.errorCode shouldBe ErrorCode.FORBIDDEN
+            }
+        }
+    }
+
+    Given("isPaid() — PAID 상태 확인") {
+
+        When("PAID 상태인 경우") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+
+            Then("true를 반환한다") {
+                rental.isPaid() shouldBe true
+            }
+        }
+
+        When("PAID가 아닌 상태인 경우") {
+            val rental = createRental()
+
+            Then("false를 반환한다") {
+                rental.isPaid() shouldBe false
             }
         }
     }
