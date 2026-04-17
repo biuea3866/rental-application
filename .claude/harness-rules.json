@@ -561,6 +561,39 @@
     ]
   },
 
+  "agent_model_policy": {
+    "description": "에이전트 모델 선택 정책 — 비용 최적화 + 품질 보장",
+    "default_model": "sonnet",
+    "rules": {
+      "sonnet": {
+        "description": "기본값. 대부분의 작업에 사용.",
+        "tasks": [
+          "단일 티켓 구현 (1 UseCase, 1 Controller, 1 테스트)",
+          "FE 페이지/컴포넌트 구현",
+          "DevOps (Flyway, K8s, CI/CD, Kafka 토픽)",
+          "린트/타입 에러 수정",
+          "테스트 추가/수정",
+          "문서 작성 (PRD, TDD, QA 리포트)",
+          "단순 리뷰 반영 (피드백 기반 수정)",
+          "노션 티켓 업데이트",
+          "Dockerfile/워크플로우 수정"
+        ]
+      },
+      "opus": {
+        "description": "아키텍처 판단이 필요한 복잡한 작업에만 사용.",
+        "tasks": [
+          "다중 파일 리팩토링 (5개+ 파일, 아키텍처 변경)",
+          "디자인 패턴 적용 (Strategy/State/Template Method 등)",
+          "도메인 모델 설계 변경 (Bounded Context 이동, Aggregate 분리)",
+          "코드 리뷰 (kotlin-reviewer — 아키텍처+클린코드+패턴 종합 판단)",
+          "성능/동시성 문제 진단",
+          "새 도메인 BC 설계 (TDD 문서 작성)"
+        ]
+      }
+    },
+    "enforcement": "agent-harness-inject.sh 훅에서 model=opus 지정 시 아키텍처 키워드 없으면 WARN"
+  },
+
   "gc_scanner": {
     "description": "기존 코드베이스 전체 스캔 — 규칙 위반 감지 및 리포트",
     "scan_dirs": [
