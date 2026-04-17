@@ -81,9 +81,9 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
                 result.renterId shouldBe renterId
                 result.lenderId shouldBe lenderId
                 result.status shouldBe RentalStatus.APPROVED
-                val payment = result.payment.shouldNotBeNull()
-                payment.paymentMethod shouldBe PaymentMethod.CARD
-                payment.status shouldBe PaymentStatus.COMPLETED
+                val paymentResult = result.payment.shouldNotBeNull()
+                paymentResult.paymentMethod shouldBe PaymentMethod.CARD
+                paymentResult.status shouldBe PaymentStatus.COMPLETED
                 verify(exactly = 1) { rentalDomainService.getRentalDetail(rentalId) }
             }
         }
