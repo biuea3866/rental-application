@@ -3,9 +3,11 @@ package com.rental.commerce.infrastructure.rental
 import com.rental.commerce.domain.common.DomainEvent
 import com.rental.commerce.domain.rental.RentalEventPublisher
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("test")
 class NoopRentalEventPublisher : RentalEventPublisher {
 
     private val logger = LoggerFactory.getLogger(NoopRentalEventPublisher::class.java)
