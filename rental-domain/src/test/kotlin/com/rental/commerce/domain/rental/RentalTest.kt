@@ -671,6 +671,152 @@ class RentalTest : BehaviorSpec({
         }
     }
 
+    Given("create() — 금액 및 기간 필드 저장 검증") {
+
+        When("totalAmount=70_000, depositAmount=50_000으로 생성하면") {
+            val rental = createRental()
+
+            Then("totalAmount가 70_000으로 저장된다") {
+                rental.totalAmount shouldBe 70_000L
+            }
+
+            Then("depositAmount가 50_000으로 저장된다") {
+                rental.depositAmount shouldBe 50_000L
+            }
+        }
+
+        When("totalAmount=0(보증금만 있는 경우)으로 생성하면") {
+            val rental = Rental.create(
+                renterId = 1L,
+                lenderId = 2L,
+                productId = 10L,
+                startDate = ZonedDateTime.now().plusDays(1),
+                endDate = ZonedDateTime.now().plusDays(7),
+                totalAmount = 50_000L,
+                depositAmount = 50_000L,
+                deliveryInfo = DeliveryInfo(
+                    recipientName = "홍길동",
+                    recipientPhone = "010-1234-5678",
+                    addressLine1 = "서울특별시 강남구",
+                    zipCode = "06234",
+                ),
+            )
+
+            Then("totalAmount가 보증금과 같은 50_000으로 저장된다") {
+                rental.totalAmount shouldBe 50_000L
+                rental.depositAmount shouldBe 50_000L
+            }
+        }
+
+        When("최대 기간(30일) + 최대 단가로 생성하면") {
+            val rental = Rental.create(
+                renterId = 1L,
+                lenderId = 2L,
+                productId = 10L,
+                startDate = ZonedDateTime.now().plusDays(1),
+                endDate = ZonedDateTime.now().plusDays(31),
+                totalAmount = 400_000L,
+                depositAmount = 100_000L,
+                deliveryInfo = DeliveryInfo(
+                    recipientName = "홍길동",
+                    recipientPhone = "010-1234-5678",
+                    addressLine1 = "서울특별시 강남구",
+                    zipCode = "06234",
+                ),
+            )
+
+            Then("totalAmount=400_000, depositAmount=100_000으로 저장된다") {
+                rental.totalAmount shouldBe 400_000L
+                rental.depositAmount shouldBe 100_000L
+            }
+        }
+    }
+
+    Given("RentalStatus.canTransitTo() — 전이 허용/차단 규칙 전체 검증") {
+
+        When("REQUESTED 상태에서 허용 전이를 확인하면") {
+            Then("APPROVED, CANCELLED만 허용된다") {
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.APPROVED) shouldBe true
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.CANCELLED) shouldBe true
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.PAID) shouldBe false
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.IN_USE) shouldBe false
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.RETURNED) shouldBe false
+                RentalStatus.REQUESTED.canTransitTo(RentalStatus.REQUESTED) shouldBe false
+            }
+        }
+
+        When("APPROVED 상태에서 허용 전이를 확인하면") {
+            Then("PAID, CANCELLED만 허용된다") {
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.PAID) shouldBe true
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.CANCELLED) shouldBe true
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.REQUESTED) shouldBe false
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.IN_USE) shouldBe false
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.RETURNED) shouldBe false
+                RentalStatus.APPROVED.canTransitTo(RentalStatus.APPROVED) shouldBe false
+            }
+        }
+
+        When("PAID 상태에서 허용 전이를 확인하면") {
+            Then("IN_USE, CANCELLED만 허용된다") {
+                RentalStatus.PAID.canTransitTo(RentalStatus.IN_USE) shouldBe true
+                RentalStatus.PAID.canTransitTo(RentalStatus.CANCELLED) shouldBe true
+                RentalStatus.PAID.canTransitTo(RentalStatus.REQUESTED) shouldBe false
+                RentalStatus.PAID.canTransitTo(RentalStatus.APPROVED) shouldBe false
+                RentalStatus.PAID.canTransitTo(RentalStatus.RETURNED) shouldBe false
+                RentalStatus.PAID.canTransitTo(RentalStatus.PAID) shouldBe false
+            }
+        }
+
+        When("IN_USE 상태에서 허용 전이를 확인하면") {
+            Then("RETURNED만 허용된다") {
+                RentalStatus.IN_USE.canTransitTo(RentalStatus.RETURNED) shouldBe true
+                RentalStatus.IN_USE.canTransitTo(RentalStatus.CANCELLED) shouldBe false
+                RentalStatus.IN_USE.canTransitTo(RentalStatus.PAID) shouldBe false
+                RentalStatus.IN_USE.canTransitTo(RentalStatus.APPROVED) shouldBe false
+            }
+        }
+
+        When("RETURNED 상태에서 확인하면") {
+            Then("어떤 상태로도 전이할 수 없다 (terminal state)") {
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.REQUESTED) shouldBe false
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.APPROVED) shouldBe false
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.PAID) shouldBe false
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.IN_USE) shouldBe false
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.CANCELLED) shouldBe false
+                RentalStatus.RETURNED.canTransitTo(RentalStatus.RETURNED) shouldBe false
+            }
+        }
+
+        When("CANCELLED 상태에서 확인하면") {
+            Then("어떤 상태로도 전이할 수 없다 (terminal state)") {
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.REQUESTED) shouldBe false
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.APPROVED) shouldBe false
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.PAID) shouldBe false
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.IN_USE) shouldBe false
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.RETURNED) shouldBe false
+                RentalStatus.CANCELLED.canTransitTo(RentalStatus.CANCELLED) shouldBe false
+            }
+        }
+    }
+
+    Given("이벤트 발행 — pullEvents 전 여러 전이로 이벤트가 누적된다") {
+
+        When("approve() 후 pullEvents()를 호출하지 않고 markPaid()를 호출하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.markPaid()
+            val events = rental.pullEvents()
+
+            Then("두 이벤트(APPROVED, PAID)가 순서대로 누적된다") {
+                events shouldHaveSize 2
+                val first = events[0] as RentalStatusChangedEvent
+                val second = events[1] as RentalStatusChangedEvent
+                first.toStatus shouldBe RentalStatus.APPROVED
+                second.toStatus shouldBe RentalStatus.PAID
+            }
+        }
+    }
+
     Given("isPaid() — 모든 비-PAID 상태에서 false를 반환한다") {
 
         When("REQUESTED 상태인 경우") {
