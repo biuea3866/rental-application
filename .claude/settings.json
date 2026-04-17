@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/biuea/feature/flag_project/rental-commerce/.claude/hooks/pre-pr-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash /Users/biuea/feature/flag_project/rental-commerce/.claude/hooks/branch-naming-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/biuea/feature/flag_project/rental-commerce/.claude/hooks/agent-harness-inject.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

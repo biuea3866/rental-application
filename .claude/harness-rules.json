@@ -127,6 +127,44 @@
         "severity": "error"
       },
       {
+        "id": "no-repo-in-usecase",
+        "pattern": "Repository",
+        "file_glob": "*UseCase*.kt",
+        "exclude_glob": "*Test*",
+        "message": "UseCase에서 Repository 직접 참조 절대 금지 — DomainService를 경유하세요. UseCase는 DomainService만 의존합니다.",
+        "severity": "error"
+      },
+      {
+        "id": "no-gateway-in-usecase",
+        "pattern": "Gateway",
+        "file_glob": "*UseCase*.kt",
+        "exclude_glob": "*Test*",
+        "message": "UseCase에서 Gateway 직접 참조 금지 — DomainService를 경유하세요.",
+        "severity": "error"
+      },
+      {
+        "id": "no-publisher-in-usecase",
+        "pattern": "EventPublisher|Publisher",
+        "file_glob": "*UseCase*.kt",
+        "exclude_glob": "*Test*",
+        "message": "UseCase에서 EventPublisher 직접 참조 금지 — DomainService가 이벤트 발행을 담당합니다.",
+        "severity": "error"
+      },
+      {
+        "id": "no-if-throw-in-usecase",
+        "pattern": "if\\s*\\(!?\\w+\\.\\w+\\(.*\\)\\)\\s*\\{?\\s*throw",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에서 if+throw 패턴 금지 — Entity에 validate*/require* 메서드로 캡슐화하세요.",
+        "severity": "error"
+      },
+      {
+        "id": "no-status-check-in-usecase",
+        "pattern": "\\.status\\.canTransitTo|\\.status\\s*(==|!=)\\s*\\w+Status",
+        "file_glob": "*UseCase*.kt",
+        "message": "UseCase에서 상태 검증 금지 — Entity의 상태 전이 메서드 내부에 캡슐화.",
+        "severity": "error"
+      },
+      {
         "id": "no-cross-domain-import",
         "pattern": "import com\\.rental\\.commerce\\.domain\\.(product|user|notification)\\.",
         "file_glob": "*/domain/rental/**/*.kt",
@@ -320,15 +358,53 @@
         ]
       },
       "application": {
-        "description": "UseCase 단위 오케스트레이션 — Domain Service/Repository를 호출하여 aggregate한다",
+        "description": "UseCase 단위 오케스트레이션 — DomainService만 호출. Repository/Gateway/EventPublisher 직접 참조 절대 금지.",
         "allowed_dependency": ["domain"],
         "rules": [
-          "UseCase는 도메인 서비스와 리포지토리를 호출하여 오케스트레이션만 수행한다",
+          "UseCase는 DomainService만 호출하여 오케스트레이션한다 — Repository/Gateway/EventPublisher 직접 참조 절대 금지",
           "비즈니스 로직(검증, 상태 전이, 계산)은 UseCase에 작성하지 않는다 — Entity/Domain Service에 위임한다",
           "UseCase 1개 = 행위 1개 = 클래스 1개",
           "@Transactional은 UseCase에 선언한다",
-          "Infrastructure 구현체를 직접 참조하지 않는다 — Domain interface(Port)를 통해서만 접근한다"
-        ]
+          "Infrastructure 구현체를 직접 참조하지 않는다 — Domain interface(Port)를 통해서만 접근한다",
+          "UseCase execute() 메서드는 10줄 이내 — 초과하면 DomainService로 위임이 부족한 것",
+          "UseCase에 if+throw, .status.canTransitTo(), private fun validate* 금지 — Entity/DomainService에 캡슐화"
+        ],
+        "examples": {
+          "bad": [
+            "// ❌ UseCase에서 Repository 직접 호출 + if+throw 나열",
+            "val product = productRepository.findById(command.productId)",
+            "    ?: throw ResourceNotFoundException(...)",
+            "if (product.isOwnedBy(command.renterId)) {",
+            "    throw BusinessException(errorCode = ErrorCode.FORBIDDEN, ...)",
+            "}",
+            "product.validateAvailableForRental()",
+            "",
+            "// 문제점:",
+            "// 1. productRepository 직접 참조 (DomainService 경유해야 함)",
+            "// 2. if (product.isOwnedBy()) throw — Entity에 캡슐화해야 함",
+            "// 3. 조회 + 검증 + 실행이 UseCase에 나열 (트랜잭션 스크립트)"
+          ],
+          "good": [
+            "// ✅ UseCase는 DomainService만 호출, 검증은 Entity 내부",
+            "fun execute(command: RequestRentalCommand): RequestRentalResult {",
+            "    val result = rentalDomainService.requestRental(command)",
+            "    return RequestRentalResult.of(result)",
+            "}",
+            "",
+            "// DomainService에서 조회 + 검증 + 실행",
+            "fun requestRental(command: RequestRentalCommand): Rental {",
+            "    val product = productDomainService.getProductById(command.productId)",
+            "    product.validateNotOwnedBy(command.renterId)  // Entity 내부에서 throw",
+            "    product.validateAvailableForRental()           // Entity 내부에서 throw",
+            "    ...",
+            "}",
+            "",
+            "// Entity 내부 캡슐화",
+            "fun validateNotOwnedBy(userId: Long) {",
+            "    if (isOwnedBy(userId)) throw SelfRentalException(...)",
+            "}"
+          ]
+        }
       },
       "domain": {
         "description": "순수 비즈니스 로직 — Rich Domain Model, 외부 의존 없음",
