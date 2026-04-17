@@ -1,7 +1,10 @@
 package com.rental.commerce.application.rental
 
+import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
+import com.rental.commerce.domain.rental.RentalQueryCondition
 import com.rental.commerce.domain.rental.RentalStatus
 import java.time.ZonedDateTime
 import org.springframework.stereotype.Service
@@ -9,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 
 data class GetMyRentalsCommand(
     val userId: Long,
+    val statusFilter: RentalStatus? = null,
+    val pageQuery: PageQuery = PageQuery(page = 0, size = 20),
 )
 
 data class RentalSummaryResult(
@@ -41,8 +46,17 @@ class GetMyRentalsUseCase(
     private val rentalDomainService: RentalDomainService,
 ) {
 
-    fun execute(command: GetMyRentalsCommand): List<RentalSummaryResult> {
-        val rentals = rentalDomainService.getRentalsByUserId(command.userId)
-        return rentals.map { RentalSummaryResult.from(it) }
+    fun execute(command: GetMyRentalsCommand): PageResult<RentalSummaryResult> {
+        val condition = RentalQueryCondition(
+            userId = command.userId,
+            statusFilter = command.statusFilter,
+            pageQuery = command.pageQuery,
+        )
+        val page = rentalDomainService.getMyRentals(condition)
+        return PageResult(
+            content = page.content.map { RentalSummaryResult.from(it) },
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+        )
     }
 }

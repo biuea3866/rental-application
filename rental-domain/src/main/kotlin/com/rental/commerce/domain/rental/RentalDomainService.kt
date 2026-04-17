@@ -1,6 +1,7 @@
 package com.rental.commerce.domain.rental
 
 import com.rental.commerce.domain.common.InvalidStateTransitionException
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.PaymentFailedException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.RentalNotFoundException
@@ -24,6 +25,7 @@ class RentalDomainService(
     private val rentalPaymentRepository: RentalPaymentRepository,
     private val paymentGateway: PaymentGateway,
     private val rentalEventPublisher: RentalEventPublisher,
+    private val rentalQueryRepository: RentalQueryRepository,
 ) {
 
     /**
@@ -79,6 +81,21 @@ class RentalDomainService(
             renterId = userId,
             lenderId = userId,
         )
+    }
+
+    /**
+     * 내 대여 목록 조회 — 상태 필터 + 페이지네이션 지원 (QueryDSL).
+     */
+    fun getMyRentals(condition: RentalQueryCondition): PageResult<Rental> {
+        return rentalQueryRepository.findMyRentals(condition)
+    }
+
+    /**
+     * 대여 상세 조회 — Rental + RentalPayment JOIN (QueryDSL).
+     */
+    fun getRentalDetail(rentalId: Long): RentalWithPayment {
+        return rentalQueryRepository.findRentalWithPayment(rentalId)
+            ?: throw RentalNotFoundException("대여를 찾을 수 없습니다. rentalId=$rentalId")
     }
 
     /**

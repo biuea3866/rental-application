@@ -18,11 +18,13 @@ class RentalDomainServiceTest : BehaviorSpec({
         val rentalPaymentRepository = mockk<RentalPaymentRepository>()
         val paymentGateway = mockk<PaymentGateway>()
         val rentalEventPublisher = mockk<RentalEventPublisher>()
+        val rentalQueryRepository = mockk<RentalQueryRepository>()
         return repo to RentalDomainService(
             rentalRepository = repo,
             rentalPaymentRepository = rentalPaymentRepository,
             paymentGateway = paymentGateway,
             rentalEventPublisher = rentalEventPublisher,
+            rentalQueryRepository = rentalQueryRepository,
         )
     }
 
@@ -290,6 +292,147 @@ class RentalDomainServiceTest : BehaviorSpec({
                 }
 
                 verify(exactly = 0) { repo.save(any()) }
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // calculateTotalAmount — 추가 엣지 케이스
+    // ──────────────────────────────────────────────────────────────────────────
+
+    Given("calculateTotalAmount() — 보증금 0원 엣지 케이스") {
+
+        When("보증금이 0원이고 일 단가 10_000원, 5일인 경우") {
+            val (_, service) = newMocks()
+            val startDate = ZonedDateTime.now().plusDays(1)
+            val endDate = startDate.plusDays(5)
+
+            Then("결과는 10_000 × 5 = 50_000원이다") {
+                val result = service.calculateTotalAmount(
+                    dailyPrice = 10_000L,
+                    startDate = startDate,
+                    endDate = endDate,
+                    depositAmount = 0L,
+                )
+                result shouldBe 50_000L
+            }
+        }
+    }
+
+    Given("calculateTotalAmount() — 일 단가 0원 엣지 케이스") {
+
+        When("일 단가가 0원이고 보증금 30_000원인 경우") {
+            val (_, service) = newMocks()
+            val startDate = ZonedDateTime.now().plusDays(1)
+            val endDate = startDate.plusDays(7)
+
+            Then("결과는 0 × 7 + 30_000 = 30_000원이다") {
+                val result = service.calculateTotalAmount(
+                    dailyPrice = 0L,
+                    startDate = startDate,
+                    endDate = endDate,
+                    depositAmount = 30_000L,
+                )
+                result shouldBe 30_000L
+            }
+        }
+    }
+
+    Given("calculateTotalAmount() — 1일 최소 기간") {
+
+        When("기간이 정확히 1일(startDate + 1일 = endDate)인 경우") {
+            val (_, service) = newMocks()
+            val startDate = ZonedDateTime.now().plusDays(1)
+            val endDate = startDate.plusDays(1)
+
+            Then("결과는 dailyPrice × 1 + depositAmount이다") {
+                val result = service.calculateTotalAmount(
+                    dailyPrice = 15_000L,
+                    startDate = startDate,
+                    endDate = endDate,
+                    depositAmount = 10_000L,
+                )
+                result shouldBe 25_000L
+            }
+        }
+    }
+
+    Given("calculateTotalAmount() — 최대 기간 30일") {
+
+        When("기간이 30일이고 일 단가 10_000원, 보증금 100_000원인 경우") {
+            val (_, service) = newMocks()
+            val startDate = ZonedDateTime.now().plusDays(1)
+            val endDate = startDate.plusDays(30)
+
+            Then("결과는 10_000 × 30 + 100_000 = 400_000원이다") {
+                val result = service.calculateTotalAmount(
+                    dailyPrice = 10_000L,
+                    startDate = startDate,
+                    endDate = endDate,
+                    depositAmount = 100_000L,
+                )
+                result shouldBe 400_000L
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // validatePeriodAvailability — 추가 엣지 케이스
+    // ──────────────────────────────────────────────────────────────────────────
+
+    Given("validatePeriodAvailability() — excludeRentalId 적용") {
+
+        When("동일 rentalId를 excludeRentalId로 전달하면 중복 아닌 것으로 처리된다") {
+            val (repo, service) = newMocks()
+            val productId = 10L
+            val startDate = ZonedDateTime.now().plusDays(1)
+            val endDate = ZonedDateTime.now().plusDays(7)
+            val excludeRentalId = 99L
+
+            every {
+                repo.existsOverlappingRental(productId, startDate, endDate, excludeRentalId)
+            } returns false
+
+            Then("예외 없이 통과한다") {
+                service.validatePeriodAvailability(productId, startDate, endDate, excludeRentalId)
+
+                verify(exactly = 1) {
+                    repo.existsOverlappingRental(productId, startDate, endDate, excludeRentalId)
+                }
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // getRentalsByUserId
+    // ──────────────────────────────────────────────────────────────────────────
+
+    Given("getRentalsByUserId() — 사용자의 대여 목록 조회") {
+
+        When("userId가 renterId 또는 lenderId인 대여가 2건 있는 경우") {
+            val (repo, service) = newMocks()
+            val userId = 1L
+            val rental1 = createRental(renterId = userId, lenderId = 2L)
+            val rental2 = createRental(renterId = 3L, lenderId = userId)
+
+            every { repo.findAllByRenterIdOrLenderId(userId, userId) } returns listOf(rental1, rental2)
+
+            Then("2건의 Rental 리스트를 반환한다") {
+                val result = service.getRentalsByUserId(userId)
+                result.size shouldBe 2
+                verify(exactly = 1) { repo.findAllByRenterIdOrLenderId(userId, userId) }
+            }
+        }
+
+        When("해당 userId가 참여한 대여가 없는 경우") {
+            val (repo, service) = newMocks()
+            val userId = 999L
+
+            every { repo.findAllByRenterIdOrLenderId(userId, userId) } returns emptyList()
+
+            Then("빈 리스트를 반환한다") {
+                val result = service.getRentalsByUserId(userId)
+                result shouldBe emptyList()
             }
         }
     }

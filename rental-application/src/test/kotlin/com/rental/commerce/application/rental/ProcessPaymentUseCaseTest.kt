@@ -4,6 +4,7 @@ import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.common.PaymentFailedException
+import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.PaymentMethod
 import com.rental.commerce.domain.rental.PaymentStatus
@@ -274,6 +275,105 @@ class ProcessPaymentUseCaseTest : BehaviorSpec({
                 }
 
                 exception.errorCode shouldBe ErrorCode.FORBIDDEN
+            }
+        }
+
+        When("결제 금액과 대여 금액이 다른 경우 DomainService가 예외를 던지면") {
+            Then("PaymentFailedException 이 전파된다") {
+                val rental = buildApprovedRental()
+                val wrongAmount = amount - 1L
+
+                val command = ProcessPaymentCommand(
+                    rentalId = rentalId,
+                    renterId = renterId,
+                    paymentKey = paymentKey,
+                    orderId = orderId,
+                    amount = wrongAmount,
+                    paymentMethod = PaymentMethod.CARD,
+                )
+
+                every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every {
+                    rentalDomainService.processPayment(
+                        rental = rental,
+                        renterId = renterId,
+                        orderId = orderId,
+                        amount = wrongAmount,
+                        paymentKey = paymentKey,
+                        paymentMethod = PaymentMethod.CARD,
+                    )
+                } throws PaymentFailedException(message = "결제 금액 불일치")
+
+                shouldThrow<PaymentFailedException> {
+                    useCase.execute(command)
+                }
+            }
+        }
+
+        When("결제 방법이 KAKAO_PAY인 경우 정상 결제 요청이 처리되면") {
+            Then("ProcessPaymentResult가 반환되고 paymentStatus가 COMPLETED이다") {
+                val rental = buildApprovedRental()
+
+                val command = ProcessPaymentCommand(
+                    rentalId = rentalId,
+                    renterId = renterId,
+                    paymentKey = paymentKey,
+                    orderId = orderId,
+                    amount = amount,
+                    paymentMethod = PaymentMethod.KAKAO_PAY,
+                )
+
+                val completedPayment = RentalPayment.create(
+                    rentalId = rentalId,
+                    amount = amount,
+                    paymentMethod = PaymentMethod.KAKAO_PAY,
+                    orderId = orderId,
+                ).also { it.complete(paymentKey) }
+
+                every { rentalDomainService.getRentalById(rentalId) } returns rental
+                every {
+                    rentalDomainService.processPayment(
+                        rental = rental,
+                        renterId = renterId,
+                        orderId = orderId,
+                        amount = amount,
+                        paymentKey = paymentKey,
+                        paymentMethod = PaymentMethod.KAKAO_PAY,
+                    )
+                } answers {
+                    rental.markPaid()
+                    completedPayment
+                }
+
+                val result = useCase.execute(command)
+
+                result.paymentStatus shouldBe PaymentStatus.COMPLETED
+                result.rentalStatus shouldBe RentalStatus.PAID
+            }
+        }
+
+        When("존재하지 않는 rentalId로 결제를 시도하면") {
+            Then("DomainService의 getRentalById가 던진 예외가 그대로 전파된다") {
+                val nonExistentRentalId = 9999L
+                val command = ProcessPaymentCommand(
+                    rentalId = nonExistentRentalId,
+                    renterId = renterId,
+                    paymentKey = paymentKey,
+                    orderId = orderId,
+                    amount = amount,
+                    paymentMethod = PaymentMethod.CARD,
+                )
+
+                every { rentalDomainService.getRentalById(nonExistentRentalId) } throws
+                    RentalNotFoundException("대여를 찾을 수 없습니다. rentalId=$nonExistentRentalId")
+
+                shouldThrow<RentalNotFoundException> {
+                    useCase.execute(command)
+                }
+
+                verify(exactly = 0) {
+                    rentalDomainService.processPayment(any(), any(), any(), any(), any(), any())
+                }
             }
         }
     }
