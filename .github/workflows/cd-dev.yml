@@ -127,7 +127,11 @@ jobs:
               echo "✅ Success (HTTP $HTTP_CODE)"
               exit 0
             elif [ "$HTTP_CODE" = "409" ]; then
-              echo "⚠️ SHA conflict (409), retrying in 3s..."
+              echo "⚠️ 409 response body:"
+              cat /tmp/put_response.json 2>/dev/null || true
+              echo ""
+              echo "FILE_SHA=$FILE_SHA"
+              echo "Retrying in 3s..."
               sleep 3
             else
               echo "❌ Unexpected HTTP $HTTP_CODE"
