@@ -15,12 +15,11 @@ import java.time.ZonedDateTime
 
 class RentalStatusChangedEventWorkerTest : BehaviorSpec({
 
-    val notificationDomainService: NotificationDomainService = mockk()
-    val worker = RentalStatusChangedEventWorker(notificationDomainService)
-
     given("RentalStatusChangedEventWorker — APPROVED 이벤트 수신") {
 
         `when`("REQUESTED → APPROVED 이벤트가 들어오면") {
+            val notificationDomainService: NotificationDomainService = mockk()
+            val worker = RentalStatusChangedEventWorker(notificationDomainService)
             val event = RentalStatusChangedEvent(
                 rentalId = 1L,
                 renterId = 10L,
@@ -48,6 +47,8 @@ class RentalStatusChangedEventWorkerTest : BehaviorSpec({
     given("RentalStatusChangedEventWorker — RETURNED 이벤트 수신") {
 
         `when`("IN_USE → RETURNED 이벤트가 들어오면") {
+            val notificationDomainService: NotificationDomainService = mockk()
+            val worker = RentalStatusChangedEventWorker(notificationDomainService)
             val event = RentalStatusChangedEvent(
                 rentalId = 2L,
                 renterId = 10L,
@@ -74,6 +75,8 @@ class RentalStatusChangedEventWorkerTest : BehaviorSpec({
     given("RentalStatusChangedEventWorker — CANCELLED 이벤트 수신") {
 
         `when`("APPROVED → CANCELLED 이벤트가 들어오면") {
+            val notificationDomainService: NotificationDomainService = mockk()
+            val worker = RentalStatusChangedEventWorker(notificationDomainService)
             val event = RentalStatusChangedEvent(
                 rentalId = 3L,
                 renterId = 10L,
@@ -82,19 +85,26 @@ class RentalStatusChangedEventWorkerTest : BehaviorSpec({
                 toStatus = RentalStatus.CANCELLED,
                 occurredAt = ZonedDateTime.now(),
             )
-            every { notificationDomainService.save(any()) } answers { firstArg() }
+            val notificationSlot = slot<Notification>()
+            every { notificationDomainService.save(capture(notificationSlot)) } answers { firstArg() }
 
             worker.handle(event)
 
-            then("renterId 에게 SYSTEM 알림을 저장한다") {
+            then("renterId 에게 RENTAL_CANCELLED 알림을 저장한다") {
                 verify(exactly = 1) { notificationDomainService.save(any()) }
+                val saved = notificationSlot.captured
+                saved.userId shouldBe 10L
+                saved.notificationType shouldBe NotificationType.RENTAL_CANCELLED
+                saved.referenceId shouldBe 3L
             }
         }
     }
 
     given("RentalStatusChangedEventWorker — 알림 불필요 이벤트 수신") {
 
-        `when`("REQUESTED → REQUESTED 전이처럼 알림 불필요 상태 변경이면") {
+        `when`("REQUESTED → PAID 전이처럼 알림 불필요 상태 변경이면") {
+            val notificationDomainService: NotificationDomainService = mockk(relaxed = true)
+            val worker = RentalStatusChangedEventWorker(notificationDomainService)
             val event = RentalStatusChangedEvent(
                 rentalId = 4L,
                 renterId = 10L,
