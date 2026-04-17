@@ -1,7 +1,5 @@
 package com.rental.commerce.application.rental
 
-import com.rental.commerce.domain.common.BusinessException
-import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
@@ -65,14 +63,7 @@ class GetRentalDetailUseCase(
 
     fun execute(command: GetRentalDetailCommand): RentalDetailResult {
         val rental = rentalDomainService.getRentalById(command.rentalId)
-
-        if (!rental.isParticipant(command.userId)) {
-            throw BusinessException(
-                errorCode = ErrorCode.FORBIDDEN,
-                message = "대여 조회 권한이 없습니다. rentalId=${command.rentalId}",
-            )
-        }
-
+        rental.verifyParticipant(command.userId)
         return RentalDetailResult.from(rental)
     }
 }
