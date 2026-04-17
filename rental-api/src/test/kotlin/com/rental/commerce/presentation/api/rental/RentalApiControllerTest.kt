@@ -554,7 +554,11 @@ class RentalApiControllerTest : BehaviorSpec({
                     )
                 )
 
-                every { getMyRentalsUseCase.execute(any()) } returns summaries
+                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                    content = summaries,
+                    totalElements = 1,
+                    totalPages = 1,
+                )
 
                 val result = mockMvc.get("/api/v1/my-rentals") {
                     header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
@@ -562,17 +566,21 @@ class RentalApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isOk() }
-                    jsonPath("$.rentals.length()") { value(1) }
-                    jsonPath("$.rentals[0].rentalId") { value(1001) }
-                    jsonPath("$.rentals[0].productId") { value(42) }
-                    jsonPath("$.rentals[0].status") { value("IN_USE") }
+                    jsonPath("$.content.length()") { value(1) }
+                    jsonPath("$.content[0].rentalId") { value(1001) }
+                    jsonPath("$.content[0].productId") { value(42) }
+                    jsonPath("$.content[0].status") { value("IN_USE") }
                 }
             }
         }
 
         When("대여 내역이 없는 경우") {
             Then("200 OK와 빈 목록이 반환된다") {
-                every { getMyRentalsUseCase.execute(any()) } returns emptyList()
+                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                    content = emptyList(),
+                    totalElements = 0,
+                    totalPages = 0,
+                )
 
                 val result = mockMvc.get("/api/v1/my-rentals") {
                     header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
@@ -580,7 +588,7 @@ class RentalApiControllerTest : BehaviorSpec({
 
                 result.andExpect {
                     status { isOk() }
-                    jsonPath("$.rentals.length()") { value(0) }
+                    jsonPath("$.content.length()") { value(0) }
                 }
             }
         }
@@ -618,6 +626,7 @@ class RentalApiControllerTest : BehaviorSpec({
                     startedAt = now.plusDays(1),
                     returnedAt = null,
                     cancelledAt = null,
+                    payment = null,
                 )
 
                 every { getRentalDetailUseCase.execute(any()) } returns detail
