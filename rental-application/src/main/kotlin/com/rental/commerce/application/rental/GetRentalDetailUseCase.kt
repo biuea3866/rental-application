@@ -1,9 +1,13 @@
 package com.rental.commerce.application.rental
 
 import com.rental.commerce.domain.rental.DeliveryInfo
+import com.rental.commerce.domain.rental.PaymentMethod
+import com.rental.commerce.domain.rental.PaymentStatus
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
+import com.rental.commerce.domain.rental.RentalPayment
 import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.rental.RentalWithPayment
 import java.time.ZonedDateTime
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -12,6 +16,30 @@ data class GetRentalDetailCommand(
     val rentalId: Long,
     val userId: Long,
 )
+
+data class RentalPaymentResult(
+    val paymentId: Long,
+    val amount: Long,
+    val paymentMethod: PaymentMethod,
+    val status: PaymentStatus,
+    val externalPaymentId: String?,
+    val orderId: String,
+    val paidAt: ZonedDateTime?,
+    val refundedAt: ZonedDateTime?,
+) {
+    companion object {
+        fun from(payment: RentalPayment): RentalPaymentResult = RentalPaymentResult(
+            paymentId = payment.id,
+            amount = payment.amount,
+            paymentMethod = payment.paymentMethod,
+            status = payment.status,
+            externalPaymentId = payment.externalPaymentId,
+            orderId = payment.orderId,
+            paidAt = payment.paidAt,
+            refundedAt = payment.refundedAt,
+        )
+    }
+}
 
 data class RentalDetailResult(
     val rentalId: Long,
@@ -31,27 +59,32 @@ data class RentalDetailResult(
     val startedAt: ZonedDateTime?,
     val returnedAt: ZonedDateTime?,
     val cancelledAt: ZonedDateTime?,
+    val payment: RentalPaymentResult?,
 ) {
     companion object {
-        fun from(rental: Rental): RentalDetailResult = RentalDetailResult(
-            rentalId = rental.id,
-            renterId = rental.renterId,
-            lenderId = rental.lenderId,
-            productId = rental.productId,
-            status = rental.status,
-            startDate = rental.startDate,
-            endDate = rental.endDate,
-            totalAmount = rental.totalAmount,
-            depositAmount = rental.depositAmount,
-            deliveryInfo = rental.deliveryInfo,
-            cancelReason = rental.cancelReason,
-            requestedAt = rental.requestedAt,
-            approvedAt = rental.approvedAt,
-            paidAt = rental.paidAt,
-            startedAt = rental.startedAt,
-            returnedAt = rental.returnedAt,
-            cancelledAt = rental.cancelledAt,
-        )
+        fun from(rentalWithPayment: RentalWithPayment): RentalDetailResult {
+            val rental = rentalWithPayment.rental
+            return RentalDetailResult(
+                rentalId = rental.id,
+                renterId = rental.renterId,
+                lenderId = rental.lenderId,
+                productId = rental.productId,
+                status = rental.status,
+                startDate = rental.startDate,
+                endDate = rental.endDate,
+                totalAmount = rental.totalAmount,
+                depositAmount = rental.depositAmount,
+                deliveryInfo = rental.deliveryInfo,
+                cancelReason = rental.cancelReason,
+                requestedAt = rental.requestedAt,
+                approvedAt = rental.approvedAt,
+                paidAt = rental.paidAt,
+                startedAt = rental.startedAt,
+                returnedAt = rental.returnedAt,
+                cancelledAt = rental.cancelledAt,
+                payment = rentalWithPayment.payment?.let { RentalPaymentResult.from(it) },
+            )
+        }
     }
 }
 
@@ -62,8 +95,8 @@ class GetRentalDetailUseCase(
 ) {
 
     fun execute(command: GetRentalDetailCommand): RentalDetailResult {
-        val rental = rentalDomainService.getRentalById(command.rentalId)
-        rental.verifyParticipant(command.userId)
-        return RentalDetailResult.from(rental)
+        val rentalWithPayment = rentalDomainService.getRentalDetail(command.rentalId)
+        rentalWithPayment.rental.verifyParticipant(command.userId)
+        return RentalDetailResult.from(rentalWithPayment)
     }
 }

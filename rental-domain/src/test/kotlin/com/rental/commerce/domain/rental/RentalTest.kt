@@ -462,4 +462,258 @@ class RentalTest : BehaviorSpec({
             }
         }
     }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // 엣지 케이스: 상태 전이 순서 및 이벤트 발행 순서
+    // ────────────────────────────────────────────────────────────────────────
+
+    Given("이벤트 발행 순서 — 전체 정상 플로우 순차 상태 전이") {
+
+        When("REQUESTED → APPROVED → PAID → IN_USE → RETURNED 순으로 전이하면") {
+            val rental = createRental()
+            rental.approve()
+            val approveEvents = rental.pullEvents()
+            rental.markPaid()
+            val paidEvents = rental.pullEvents()
+            rental.startRental()
+            val startEvents = rental.pullEvents()
+            rental.returnRental()
+            val returnEvents = rental.pullEvents()
+
+            Then("각 단계마다 정확히 1개의 RentalStatusChangedEvent가 발행된다") {
+                approveEvents shouldHaveSize 1
+                paidEvents shouldHaveSize 1
+                startEvents shouldHaveSize 1
+                returnEvents shouldHaveSize 1
+            }
+
+            Then("각 이벤트의 fromStatus, toStatus가 전이 순서와 일치한다") {
+                val approveEvent = approveEvents.first().also { it.shouldBeInstanceOf<RentalStatusChangedEvent>() } as RentalStatusChangedEvent
+                approveEvent.fromStatus shouldBe RentalStatus.REQUESTED
+                approveEvent.toStatus shouldBe RentalStatus.APPROVED
+
+                val paidEvent = paidEvents.first().also { it.shouldBeInstanceOf<RentalStatusChangedEvent>() } as RentalStatusChangedEvent
+                paidEvent.fromStatus shouldBe RentalStatus.APPROVED
+                paidEvent.toStatus shouldBe RentalStatus.PAID
+
+                val startEvent = startEvents.first().also { it.shouldBeInstanceOf<RentalStatusChangedEvent>() } as RentalStatusChangedEvent
+                startEvent.fromStatus shouldBe RentalStatus.PAID
+                startEvent.toStatus shouldBe RentalStatus.IN_USE
+
+                val returnEvent = returnEvents.first().also { it.shouldBeInstanceOf<RentalStatusChangedEvent>() } as RentalStatusChangedEvent
+                returnEvent.fromStatus shouldBe RentalStatus.IN_USE
+                returnEvent.toStatus shouldBe RentalStatus.RETURNED
+            }
+
+            Then("최종 status는 RETURNED이다") {
+                rental.status shouldBe RentalStatus.RETURNED
+            }
+        }
+    }
+
+    Given("취소 후 재전이 불가 — CANCELLED는 terminal state") {
+
+        When("REQUESTED 상태에서 cancel() 후 approve()를 시도하면") {
+            val rental = createRental()
+            rental.cancel(reason = "취소 후 재승인 시도")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.approve()
+                }
+            }
+        }
+
+        When("APPROVED 상태에서 cancel() 후 markPaid()를 시도하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.cancel(reason = "취소 후 결제 시도")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.markPaid()
+                }
+            }
+        }
+
+        When("PAID 상태에서 cancel() 후 startRental()을 시도하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+            rental.cancel(reason = "결제 후 취소 후 시작 시도")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.startRental()
+                }
+            }
+        }
+
+        When("CANCELLED 상태에서 cancel()을 다시 호출하면") {
+            val rental = createRental()
+            rental.cancel(reason = "첫 취소")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.cancel(reason = "중복 취소 시도")
+                }
+            }
+        }
+    }
+
+    Given("RETURNED 상태 — terminal state 전이 불가") {
+
+        When("RETURNED 상태에서 cancel()을 시도하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+            rental.startRental()
+            rental.pullEvents()
+            rental.returnRental()
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.cancel(reason = "반납 후 취소 시도")
+                }
+            }
+        }
+
+        When("RETURNED 상태에서 approve()를 시도하면") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+            rental.startRental()
+            rental.pullEvents()
+            rental.returnRental()
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.approve()
+                }
+            }
+        }
+    }
+
+    Given("reject() 후 재전이 불가 — reject()는 CANCELLED terminal state") {
+
+        When("reject() 후 approve()를 시도하면") {
+            val rental = createRental()
+            rental.reject(reason = "대여 불가")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.approve()
+                }
+            }
+        }
+
+        When("reject() 후 markPaid()를 시도하면") {
+            val rental = createRental()
+            rental.reject(reason = "대여 불가")
+            rental.pullEvents()
+
+            Then("InvalidStateTransitionException이 발생한다") {
+                shouldThrow<InvalidStateTransitionException> {
+                    rental.markPaid()
+                }
+            }
+        }
+    }
+
+    Given("이벤트 발행 — renterId, lenderId가 이벤트에 정확히 포함된다") {
+
+        When("renterId=1, lenderId=2로 생성한 대여에서 approve()를 호출하면") {
+            val rental = createRental(renterId = 1L, lenderId = 2L)
+            rental.approve()
+            val events = rental.pullEvents()
+
+            Then("이벤트의 renterId=1, lenderId=2이다") {
+                val event = events.first().also { it.shouldBeInstanceOf<RentalStatusChangedEvent>() } as RentalStatusChangedEvent
+                event.renterId shouldBe 1L
+                event.lenderId shouldBe 2L
+            }
+        }
+    }
+
+    Given("cancel() — cancel 사유가 정확히 저장된다") {
+
+        When("REQUESTED 상태에서 빈 문자열 사유로 cancel()을 호출하면") {
+            val rental = createRental()
+            rental.cancel(reason = "")
+
+            Then("cancelReason이 빈 문자열로 저장된다") {
+                rental.cancelReason shouldBe ""
+            }
+        }
+
+        When("REQUESTED 상태에서 최대 길이(500자) 사유로 cancel()을 호출하면") {
+            val rental = createRental()
+            val longReason = "취소".repeat(250)
+            rental.cancel(reason = longReason)
+
+            Then("cancelReason이 해당 문자열로 저장된다") {
+                rental.cancelReason shouldBe longReason
+            }
+        }
+    }
+
+    Given("isPaid() — 모든 비-PAID 상태에서 false를 반환한다") {
+
+        When("REQUESTED 상태인 경우") {
+            val rental = createRental()
+            Then("false를 반환한다") { rental.isPaid() shouldBe false }
+        }
+
+        When("APPROVED 상태인 경우") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            Then("false를 반환한다") { rental.isPaid() shouldBe false }
+        }
+
+        When("IN_USE 상태인 경우") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+            rental.startRental()
+            rental.pullEvents()
+            Then("false를 반환한다") { rental.isPaid() shouldBe false }
+        }
+
+        When("RETURNED 상태인 경우") {
+            val rental = createRental()
+            rental.approve()
+            rental.pullEvents()
+            rental.markPaid()
+            rental.pullEvents()
+            rental.startRental()
+            rental.pullEvents()
+            rental.returnRental()
+            rental.pullEvents()
+            Then("false를 반환한다") { rental.isPaid() shouldBe false }
+        }
+
+        When("CANCELLED 상태인 경우") {
+            val rental = createRental()
+            rental.cancel(reason = "취소")
+            rental.pullEvents()
+            Then("false를 반환한다") { rental.isPaid() shouldBe false }
+        }
+    }
 })
