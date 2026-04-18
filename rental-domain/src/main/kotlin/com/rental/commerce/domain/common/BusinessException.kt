@@ -59,3 +59,11 @@ class ReviewAlreadyExistsException(
 class ReviewNotFoundException(
     message: String = ErrorCode.REVIEW_NOT_FOUND.message,
 ) : BusinessException(ErrorCode.REVIEW_NOT_FOUND, message)
+
+class ChatAccessDeniedException(
+    message: String = ErrorCode.CHAT_ACCESS_DENIED.message,
+) : BusinessException(ErrorCode.CHAT_ACCESS_DENIED, message)
+
+class ChatRoomNotFoundException(
+    message: String = ErrorCode.CHAT_ROOM_NOT_FOUND.message,
+) : BusinessException(ErrorCode.CHAT_ROOM_NOT_FOUND, message)
