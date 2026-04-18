@@ -10,5 +10,6 @@ data class RentalStatusChangedEvent(
     val lenderId: Long,
     val fromStatus: RentalStatus,
     val toStatus: RentalStatus,
+    val rentalAmount: Long = 0L,
     override val occurredAt: ZonedDateTime = ZonedDateTime.now(),
 ) : DomainEvent

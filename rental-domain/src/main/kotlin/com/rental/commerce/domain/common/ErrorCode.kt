@@ -71,6 +71,12 @@ enum class ErrorCode(
     // 404 — Chat
     CHAT_ROOM_NOT_FOUND(404, "CHAT_ROOM_NOT_FOUND", "채팅방을 찾을 수 없습니다"),
 
+    // 409 — Settlement
+    SETTLEMENT_ALREADY_EXISTS(409, "SETTLEMENT_ALREADY_EXISTS", "이미 정산이 생성된 대여입니다"),
+
+    // 422 — Settlement
+    SETTLEMENT_ALREADY_PROCESSED(422, "SETTLEMENT_ALREADY_PROCESSED", "이미 처리된 정산입니다"),
+
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(500, "EXTERNAL_API_ERROR", "외부 서비스 호출에 실패했습니다"),
