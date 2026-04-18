@@ -183,6 +183,17 @@ class Rental private constructor(
 
     fun isPaid(): Boolean = status == RentalStatus.PAID
 
+    fun isReturned(): Boolean = status == RentalStatus.RETURNED
+
+    fun validateReturned() {
+        if (!isReturned()) {
+            throw BusinessException(
+                errorCode = ErrorCode.REVIEW_RENTAL_NOT_RETURNED,
+                message = "반납 완료된 대여에만 리뷰를 작성할 수 있습니다. rentalId=$id, status=${status.name}",
+            )
+        }
+    }
+
     private fun requireStatus(expected: RentalStatus, action: String) {
         if (status != expected) {
             throw InvalidStateTransitionException(

@@ -59,6 +59,12 @@ enum class ErrorCode(
     // 404 — Review
     REVIEW_NOT_FOUND(404, "REVIEW_NOT_FOUND", "리뷰를 찾을 수 없습니다"),
 
+    // 422 — Review
+    REVIEW_RENTAL_NOT_RETURNED(422, "REVIEW_RENTAL_NOT_RETURNED", "반납 완료된 대여에만 리뷰를 작성할 수 있습니다"),
+
+    // 403 — Review
+    REVIEW_FORBIDDEN(403, "REVIEW_FORBIDDEN", "본인의 대여에만 리뷰를 작성할 수 있습니다"),
+
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(500, "EXTERNAL_API_ERROR", "외부 서비스 호출에 실패했습니다"),
