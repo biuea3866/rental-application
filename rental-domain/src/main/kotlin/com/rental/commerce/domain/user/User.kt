@@ -40,6 +40,9 @@ class User(
     @Column(length = 255)
     var socialProviderId: String? = null,
 
+    @Column(name = "is_suspended", nullable = false)
+    var isSuspended: Boolean = false,
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -88,6 +91,16 @@ class User(
         this.socialProvider = provider
         this.socialProviderId = providerId
     }
+
+    fun suspend() {
+        isSuspended = true
+    }
+
+    fun activate() {
+        isSuspended = false
+    }
+
+    fun isActive(): Boolean = !isSuspended
 
     companion object {
         private const val SOCIAL_LOGIN_PASSWORD_MARKER = "SOCIAL_LOGIN"
