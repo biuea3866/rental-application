@@ -82,10 +82,14 @@ class RentalQueryRepositoryImpl(
     private fun buildMyRentalsCondition(condition: RentalQueryCondition): BooleanBuilder {
         val builder = BooleanBuilder()
 
-        builder.and(
-            rental.renterId.eq(condition.userId)
-                .or(rental.lenderId.eq(condition.userId))
-        )
+        when (condition.role?.uppercase()) {
+            "RENTER" -> builder.and(rental.renterId.eq(condition.userId))
+            "LENDER" -> builder.and(rental.lenderId.eq(condition.userId))
+            else -> builder.and(
+                rental.renterId.eq(condition.userId)
+                    .or(rental.lenderId.eq(condition.userId))
+            )
+        }
 
         condition.statusFilter?.let { status ->
             builder.and(rental.status.eq(status))

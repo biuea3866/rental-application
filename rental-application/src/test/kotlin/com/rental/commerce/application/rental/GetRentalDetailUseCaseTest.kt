@@ -3,6 +3,8 @@ package com.rental.commerce.application.rental
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.RentalNotFoundException
+import com.rental.commerce.domain.product.Product
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.PaymentMethod
 import com.rental.commerce.domain.rental.PaymentStatus
@@ -11,6 +13,8 @@ import com.rental.commerce.domain.rental.RentalDomainService
 import com.rental.commerce.domain.rental.RentalPayment
 import com.rental.commerce.domain.rental.RentalStatus
 import com.rental.commerce.domain.rental.RentalWithPayment
+import com.rental.commerce.domain.user.User
+import com.rental.commerce.domain.user.UserDomainService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -25,7 +29,9 @@ import java.time.ZonedDateTime
 class GetRentalDetailUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val useCase = GetRentalDetailUseCase(rentalDomainService)
+    val userDomainService = mockk<UserDomainService>()
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = GetRentalDetailUseCase(rentalDomainService, userDomainService, productDomainService)
 
     val now = ZonedDateTime.now()
     val renterId = 10L
@@ -58,12 +64,25 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
         orderId = "RC-0001-1713063600000",
     )
 
-    beforeEach { clearMocks(rentalDomainService) }
+    val renterUser = mockk<User>().also {
+        every { it.id } returns renterId
+        every { it.name } returns "홍길동"
+    }
+    val lenderUser = mockk<User>().also {
+        every { it.id } returns lenderId
+        every { it.name } returns "김등록자"
+    }
+    val product = mockk<Product>().also {
+        every { it.productId } returns 42L
+        every { it.name } returns "캠핑 텐트"
+    }
+
+    beforeEach { clearMocks(rentalDomainService, userDomainService, productDomainService) }
 
     Given("대여 상세 조회 시") {
 
         When("참여자(renterId)가 조회하면") {
-            Then("Rental + RentalPayment 정보가 반환된다") {
+            Then("Rental + RentalPayment + renter/lender/product 중첩 객체가 반환된다") {
                 val rental = createRental()
                 rental.approve()
                 val payment = createPayment()
@@ -73,6 +92,9 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
                     rental = rental,
                     payment = payment,
                 )
+                every { userDomainService.findById(renterId) } returns renterUser
+                every { userDomainService.findById(lenderId) } returns lenderUser
+                every { productDomainService.getProductById(42L) } returns product
 
                 val command = GetRentalDetailCommand(rentalId = rentalId, userId = renterId)
                 val result = useCase.execute(command)
@@ -80,6 +102,12 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
                 result.rentalId shouldBe rental.id
                 result.renterId shouldBe renterId
                 result.lenderId shouldBe lenderId
+                result.renter.userId shouldBe renterId
+                result.renter.name shouldBe "홍길동"
+                result.lender.userId shouldBe lenderId
+                result.lender.name shouldBe "김등록자"
+                result.product.productId shouldBe 42L
+                result.product.name shouldBe "캠핑 텐트"
                 result.status shouldBe RentalStatus.APPROVED
                 val paymentResult = result.payment.shouldNotBeNull()
                 paymentResult.paymentMethod shouldBe PaymentMethod.CARD
@@ -96,11 +124,15 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
                     rental = rental,
                     payment = null,
                 )
+                every { userDomainService.findById(renterId) } returns renterUser
+                every { userDomainService.findById(lenderId) } returns lenderUser
+                every { productDomainService.getProductById(42L) } returns product
 
                 val command = GetRentalDetailCommand(rentalId = rentalId, userId = lenderId)
                 val result = useCase.execute(command)
 
                 result.lenderId shouldBe lenderId
+                result.lender.name shouldBe "김등록자"
                 result.payment.shouldBeNull()
             }
         }
@@ -113,12 +145,16 @@ class GetRentalDetailUseCaseTest : BehaviorSpec({
                     rental = rental,
                     payment = null,
                 )
+                every { userDomainService.findById(renterId) } returns renterUser
+                every { userDomainService.findById(lenderId) } returns lenderUser
+                every { productDomainService.getProductById(42L) } returns product
 
                 val command = GetRentalDetailCommand(rentalId = rentalId, userId = renterId)
                 val result = useCase.execute(command)
 
                 result.payment.shouldBeNull()
                 result.status shouldBe RentalStatus.REQUESTED
+                result.renter.name shouldBe "홍길동"
             }
         }
 
