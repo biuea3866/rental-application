@@ -50,6 +50,14 @@ enum class ErrorCode(
     RENTER_PROFILE_ALREADY_EXISTS(409, "RENTER_PROFILE_ALREADY_EXISTS", "이미 대여자 프로필이 존재합니다"),
     RENTAL_PERIOD_CONFLICT(409, "RENTAL_PERIOD_CONFLICT", "해당 기간에 이미 대여 신청이 존재합니다"),
     ALREADY_PAID(409, "ALREADY_PAID", "이미 결제가 완료된 대여입니다"),
+    REVIEW_ALREADY_EXISTS(409, "REVIEW_ALREADY_EXISTS", "이미 리뷰가 작성된 대여입니다"),
+
+    // 400 — Review
+    REVIEW_INVALID_RATING(400, "REVIEW_INVALID_RATING", "rating은 1~5 사이어야 합니다"),
+    REVIEW_CONTENT_TOO_SHORT(400, "REVIEW_CONTENT_TOO_SHORT", "리뷰 내용은 10~500자 사이어야 합니다"),
+
+    // 404 — Review
+    REVIEW_NOT_FOUND(404, "REVIEW_NOT_FOUND", "리뷰를 찾을 수 없습니다"),
 
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
