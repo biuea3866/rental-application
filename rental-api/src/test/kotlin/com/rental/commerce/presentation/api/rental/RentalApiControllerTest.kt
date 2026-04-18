@@ -534,6 +534,44 @@ class RentalApiControllerTest : BehaviorSpec({
     }
 
     // ──────────────────────────────────────────────────────────
+    // PATCH /api/v1/rentals/{id}/cancel — 취소 (BUG-S2-001: FE 기준)
+    // ──────────────────────────────────────────────────────────
+    Given("PATCH /api/v1/rentals/{id}/cancel") {
+
+        When("대여자가 reason을 포함하여 PATCH /cancel로 취소하면") {
+            Then("200 OK가 반환된다 (FE 호환 엔드포인트)") {
+                justRun { cancelRentalUseCase.execute(any()) }
+
+                val result = mockMvc.patch("/api/v1/rentals/1001/cancel") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = """{"reason": "일정이 변경되었습니다."}"""
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
+
+                result.andExpect {
+                    status { isOk() }
+                }
+
+                verify { cancelRentalUseCase.execute(any()) }
+            }
+        }
+
+        When("reason이 누락된 경우 PATCH /cancel 요청") {
+            Then("400 Bad Request가 반환된다") {
+                val result = mockMvc.patch("/api/v1/rentals/1001/cancel") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = """{}"""
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
+
+                result.andExpect {
+                    status { isBadRequest() }
+                }
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────
     // GET /api/v1/my-rentals — 내 대여 목록
     // ──────────────────────────────────────────────────────────
     Given("GET /api/v1/my-rentals") {
@@ -545,6 +583,8 @@ class RentalApiControllerTest : BehaviorSpec({
                     RentalSummaryResult(
                         rentalId = 1001L,
                         productId = 42L,
+                        productName = "캠핑 텐트",
+                        productThumbnailUrl = "https://cdn.example.com/tent.jpg",
                         status = RentalStatus.IN_USE,
                         startDate = now.plusDays(1),
                         endDate = now.plusDays(8),
@@ -569,6 +609,7 @@ class RentalApiControllerTest : BehaviorSpec({
                     jsonPath("$.content.length()") { value(1) }
                     jsonPath("$.content[0].rentalId") { value(1001) }
                     jsonPath("$.content[0].productId") { value(42) }
+                    jsonPath("$.content[0].productName") { value("캠핑 텐트") }
                     jsonPath("$.content[0].status") { value("IN_USE") }
                 }
             }
@@ -595,18 +636,87 @@ class RentalApiControllerTest : BehaviorSpec({
     }
 
     // ──────────────────────────────────────────────────────────
+    // GET /api/v1/rentals?role=RENTER|LENDER — 내 대여 목록 (BUG-S2-002: FE 기준)
+    // ──────────────────────────────────────────────────────────
+    Given("GET /api/v1/rentals?role=RENTER") {
+
+        When("role=RENTER 파라미터로 대여 목록을 조회하면") {
+            Then("200 OK와 대여 목록이 반환된다 (FE 호환 엔드포인트)") {
+                val now = ZonedDateTime.now()
+                val summaries = listOf(
+                    RentalSummaryResult(
+                        rentalId = 2001L,
+                        productId = 55L,
+                        productName = "자전거",
+                        productThumbnailUrl = null,
+                        status = RentalStatus.REQUESTED,
+                        startDate = now.plusDays(3),
+                        endDate = now.plusDays(10),
+                        totalAmount = 50000L,
+                        depositAmount = 20000L,
+                        requestedAt = now,
+                    )
+                )
+
+                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                    content = summaries,
+                    totalElements = 1,
+                    totalPages = 1,
+                )
+
+                val result = mockMvc.get("/api/v1/rentals") {
+                    param("role", "RENTER")
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
+
+                result.andExpect {
+                    status { isOk() }
+                    jsonPath("$.content.length()") { value(1) }
+                    jsonPath("$.content[0].rentalId") { value(2001) }
+                    jsonPath("$.content[0].productName") { value("자전거") }
+                }
+            }
+        }
+
+        When("role 파라미터 없이 /rentals를 조회하면") {
+            Then("200 OK와 전체 대여 목록이 반환된다") {
+                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                    content = emptyList(),
+                    totalElements = 0,
+                    totalPages = 0,
+                )
+
+                val result = mockMvc.get("/api/v1/rentals") {
+                    header(AuthenticatedRequestWrapper.HEADER_USER_ID, "1")
+                }
+
+                result.andExpect {
+                    status { isOk() }
+                }
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────
     // GET /api/v1/rentals/{id} — 대여 상세
     // ──────────────────────────────────────────────────────────
     Given("GET /api/v1/rentals/{id}") {
 
         When("참여자가 정상적으로 대여 상세를 조회하면") {
-            Then("200 OK와 대여 상세 정보가 반환된다") {
+            Then("200 OK와 대여 상세 정보가 반환된다 (renter/lender 중첩 객체 포함)") {
                 val now = ZonedDateTime.now()
                 val detail = RentalDetailResult(
                     rentalId = 1001L,
                     renterId = 1L,
                     lenderId = 2L,
                     productId = 42L,
+                    renter = RentalDetailResult.UserInfo(userId = 1L, name = "홍길동"),
+                    lender = RentalDetailResult.UserInfo(userId = 2L, name = "김등록자"),
+                    product = RentalDetailResult.ProductInfo(
+                        productId = 42L,
+                        name = "캠핑 텐트",
+                        thumbnailUrl = "https://cdn.example.com/tent.jpg",
+                    ),
                     status = RentalStatus.IN_USE,
                     startDate = now.plusDays(1),
                     endDate = now.plusDays(8),
@@ -640,6 +750,12 @@ class RentalApiControllerTest : BehaviorSpec({
                     jsonPath("$.rentalId") { value(1001) }
                     jsonPath("$.renterId") { value(1) }
                     jsonPath("$.lenderId") { value(2) }
+                    jsonPath("$.renter.userId") { value(1) }
+                    jsonPath("$.renter.name") { value("홍길동") }
+                    jsonPath("$.lender.userId") { value(2) }
+                    jsonPath("$.lender.name") { value("김등록자") }
+                    jsonPath("$.product.productId") { value(42) }
+                    jsonPath("$.product.name") { value("캠핑 텐트") }
                     jsonPath("$.productId") { value(42) }
                     jsonPath("$.status") { value("IN_USE") }
                     jsonPath("$.totalAmount") { value(120000) }

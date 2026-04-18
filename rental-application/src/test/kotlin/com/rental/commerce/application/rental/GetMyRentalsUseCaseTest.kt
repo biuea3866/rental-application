@@ -3,6 +3,8 @@ package com.rental.commerce.application.rental
 import com.rental.commerce.domain.common.PageQuery
 import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.RentalNotFoundException
+import com.rental.commerce.domain.product.Product
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
@@ -10,6 +12,7 @@ import com.rental.commerce.domain.rental.RentalQueryCondition
 import com.rental.commerce.domain.rental.RentalStatus
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
@@ -21,7 +24,8 @@ import java.time.ZonedDateTime
 class GetMyRentalsUseCaseTest : BehaviorSpec({
 
     val rentalDomainService = mockk<RentalDomainService>()
-    val useCase = GetMyRentalsUseCase(rentalDomainService)
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = GetMyRentalsUseCase(rentalDomainService, productDomainService)
 
     val deliveryInfo = DeliveryInfo(
         recipientName = "홍길동",
@@ -46,7 +50,13 @@ class GetMyRentalsUseCaseTest : BehaviorSpec({
         return rental
     }
 
-    beforeEach { clearMocks(rentalDomainService) }
+    beforeEach { clearMocks(rentalDomainService, productDomainService) }
+
+    fun mockProductNoImage(productId: Long, name: String): Product =
+        mockk<Product>().also {
+            every { it.productId } returns productId
+            every { it.name } returns name
+        }
 
     Given("내 대여 목록 조회 시") {
 
@@ -64,6 +74,7 @@ class GetMyRentalsUseCaseTest : BehaviorSpec({
                     totalElements = 2L,
                     totalPages = 1,
                 )
+                every { productDomainService.getProductById(42L) } returns mockProductNoImage(42L, "캠핑 텐트")
 
                 val command = GetMyRentalsCommand(
                     userId = userId,
@@ -77,6 +88,7 @@ class GetMyRentalsUseCaseTest : BehaviorSpec({
                 conditionSlot.captured.userId shouldBe userId
                 conditionSlot.captured.statusFilter shouldBe null
                 conditionSlot.captured.pageQuery shouldBe PageQuery(page = 0, size = 20)
+                result.content[0].productName shouldBe "캠핑 텐트"
                 verify(exactly = 1) { rentalDomainService.getMyRentals(any()) }
             }
         }
@@ -92,6 +104,7 @@ class GetMyRentalsUseCaseTest : BehaviorSpec({
                     totalElements = 1L,
                     totalPages = 1,
                 )
+                every { productDomainService.getProductById(42L) } returns mockProductNoImage(42L, "캠핑 텐트")
 
                 val command = GetMyRentalsCommand(
                     userId = userId,
@@ -142,6 +155,31 @@ class GetMyRentalsUseCaseTest : BehaviorSpec({
                 useCase.execute(command)
 
                 conditionSlot.captured.pageQuery shouldBe PageQuery(page = 2, size = 10)
+            }
+        }
+
+        When("대여 목록의 상품 이름과 썸네일 URL을 조회하면") {
+            Then("productName과 productThumbnailUrl이 RentalSummaryResult에 포함된다") {
+                val userId = 10L
+                val rental = createRental(renterId = userId, status = RentalStatus.REQUESTED)
+                val product = mockk<Product>().also {
+                    every { it.productId } returns 42L
+                    every { it.name } returns "최신 캠핑 텐트"
+                }
+
+                every { rentalDomainService.getMyRentals(any()) } returns PageResult(
+                    content = listOf(rental),
+                    totalElements = 1L,
+                    totalPages = 1,
+                )
+                every { productDomainService.getProductById(42L) } returns product
+
+                val command = GetMyRentalsCommand(userId = userId)
+                val result = useCase.execute(command)
+
+                result.content shouldHaveSize 1
+                result.content[0].productName shouldBe "최신 캠핑 텐트"
+                result.content[0].productThumbnailUrl.shouldBeNull()
             }
         }
     }

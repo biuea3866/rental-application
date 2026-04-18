@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -112,11 +113,34 @@ class RentalApiController(
         return ResponseEntity.ok().build()
     }
 
+    /** BUG-S2-001: FE는 PATCH /cancel 사용 — 하위 호환 엔드포인트 추가 */
+    @PatchMapping("/rentals/{rentalId}/cancel")
+    fun cancelRentalPatch(
+        @AuthenticatedMember userId: Long,
+        @PathVariable rentalId: Long,
+        @Valid @RequestBody request: CancelRentalRequest,
+    ): ResponseEntity<Unit> {
+        cancelRentalUseCase.execute(request.toCommand(userId, rentalId))
+        return ResponseEntity.ok().build()
+    }
+
     @GetMapping("/my-rentals")
     fun getMyRentals(
         @AuthenticatedMember userId: Long,
     ): ResponseEntity<PageResult<RentalSummaryResult>> {
         val results = getMyRentalsUseCase.execute(GetMyRentalsCommand(userId = userId))
+        return ResponseEntity.ok(results)
+    }
+
+    /** BUG-S2-002: FE는 GET /rentals?role=RENTER|LENDER 사용 — 하위 호환 엔드포인트 추가 */
+    @GetMapping("/rentals")
+    fun getMyRentalsByRole(
+        @AuthenticatedMember userId: Long,
+        @RequestParam(required = false) role: String?,
+    ): ResponseEntity<PageResult<RentalSummaryResult>> {
+        val results = getMyRentalsUseCase.execute(
+            GetMyRentalsCommand(userId = userId, role = role),
+        )
         return ResponseEntity.ok(results)
     }
 
