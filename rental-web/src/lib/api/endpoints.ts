@@ -44,12 +44,15 @@ export const ENDPOINTS = {
   RENTALS: {
     BASE: `${API_VERSION}/rentals`,
     BY_ID: (id: string | number) => `${API_VERSION}/rentals/${id}`,
+    /** BUG-S2-002: BE는 GET /api/v1/rentals?role=RENTER|LENDER 파라미터를 지원하도록 수정 중.
+     *  FE는 BASE(/api/v1/rentals)에 role 쿼리 파라미터를 추가하여 호출 — 일치 확인됨. */
     MY_RENTALS: `${API_VERSION}/rentals`,
     APPROVE: (id: string | number) => `${API_VERSION}/rentals/${id}/approve`,
     REJECT: (id: string | number) => `${API_VERSION}/rentals/${id}/reject`,
     PAYMENT: (id: string | number) => `${API_VERSION}/rentals/${id}/payment`,
     START: (id: string | number) => `${API_VERSION}/rentals/${id}/start`,
     RETURN: (id: string | number) => `${API_VERSION}/rentals/${id}/return`,
+    /** BUG-S2-001: BE가 PATCH /cancel 엔드포인트를 추가하도록 수정 중. FE는 이미 올바른 메서드 사용. */
     CANCEL: (id: string | number) => `${API_VERSION}/rentals/${id}/cancel`,
   },
 
