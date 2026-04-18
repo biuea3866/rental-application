@@ -218,6 +218,7 @@ class Rental private constructor(
                 lenderId = lenderId,
                 fromStatus = from,
                 toStatus = to,
+                rentalAmount = totalAmount,
             )
         )
     }
