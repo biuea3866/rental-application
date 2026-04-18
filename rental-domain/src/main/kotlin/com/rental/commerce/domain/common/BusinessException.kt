@@ -51,3 +51,11 @@ class PaymentFailedException(
 class AlreadyPaidException(
     message: String = ErrorCode.ALREADY_PAID.message,
 ) : BusinessException(ErrorCode.ALREADY_PAID, message)
+
+class ReviewAlreadyExistsException(
+    message: String = ErrorCode.REVIEW_ALREADY_EXISTS.message,
+) : BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS, message)
+
+class ReviewNotFoundException(
+    message: String = ErrorCode.REVIEW_NOT_FOUND.message,
+) : BusinessException(ErrorCode.REVIEW_NOT_FOUND, message)
