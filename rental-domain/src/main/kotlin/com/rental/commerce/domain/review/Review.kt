@@ -31,18 +31,13 @@ class Review private constructor(
     @Column(name = "product_id", nullable = false)
     val productId: Long,
 
-    rating: Int,
-    content: String,
-
-) : BaseEntity() {
-
     @Column(name = "rating", nullable = false)
-    var rating: Int = rating
-        private set
+    var rating: Int,
 
     @Column(name = "content", nullable = false, length = 500)
-    var content: String = content
-        private set
+    var content: String,
+
+) : BaseEntity() {
 
     init {
         validateRating(rating)
