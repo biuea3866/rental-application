@@ -16,17 +16,14 @@ function formatAmount(amount: number): string {
   return amount.toLocaleString("ko-KR") + "원";
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "-";
   const date = new Date(dateString);
   return date.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
-}
-
-function formatRate(rate: number): string {
-  return (rate * 100).toFixed(0) + "%";
 }
 
 interface SettlementCardProps {
@@ -49,7 +46,8 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
         >
           {statusStyle.label}
         </span>
-        <span className="text-xs text-gray-400">{formatDate(settlement.createdAt)}</span>
+        {/* BE 필드: settledAt (nullable) */}
+        <span className="text-xs text-gray-400">{formatDate(settlement.settledAt)}</span>
       </div>
 
       {/* 대여 ID */}
@@ -63,9 +61,10 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
           <span className="text-gray-500">대여 금액</span>
           <span className="text-gray-900 font-medium">{formatAmount(settlement.amount)}</span>
         </div>
+        {/* BE 필드: commission (단일 금액, commissionRate/commissionAmount 없음) */}
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">수수료 ({formatRate(settlement.commissionRate)})</span>
-          <span className="text-red-500">-{formatAmount(settlement.commissionAmount)}</span>
+          <span className="text-gray-500">수수료</span>
+          <span className="text-red-500">-{formatAmount(settlement.commission)}</span>
         </div>
         <div className="flex justify-between text-sm font-semibold pt-1 border-t border-gray-100">
           <span className="text-gray-700">실수령 금액</span>

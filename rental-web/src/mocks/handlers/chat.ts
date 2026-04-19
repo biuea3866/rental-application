@@ -1,6 +1,7 @@
 import { http, HttpResponse, delay } from "msw";
 import type {
   ChatRoomResponse,
+  ChatRoomListResponse,
   ChatMessageResponse,
   ChatMessageListResponse,
   CreateChatRoomRequest,
@@ -33,34 +34,35 @@ export const STUB_CHAT_ROOMS: ChatRoomResponse[] = [
   },
 ];
 
+// BE 필드: messageId, sentAt (chatMessageId, createdAt 아님)
 export const STUB_CHAT_MESSAGES: ChatMessageResponse[] = [
   {
-    chatMessageId: 101,
+    messageId: 101,
     chatRoomId: 1,
     senderId: 22,
     content: "안녕하세요! 대여 문의 주셔서 감사합니다.",
-    createdAt: "2026-04-14T10:05:00+09:00",
+    sentAt: "2026-04-14T10:05:00+09:00",
   },
   {
-    chatMessageId: 102,
+    messageId: 102,
     chatRoomId: 1,
     senderId: 11,
     content: "네, 5월 1일부터 7일간 대여 가능한지 여쭤봤습니다.",
-    createdAt: "2026-04-14T10:06:00+09:00",
+    sentAt: "2026-04-14T10:06:00+09:00",
   },
   {
-    chatMessageId: 103,
+    messageId: 103,
     chatRoomId: 1,
     senderId: 22,
     content: "해당 기간 대여 가능합니다. 배송 주소를 알려주시면 진행할게요.",
-    createdAt: "2026-04-14T10:08:00+09:00",
+    sentAt: "2026-04-14T10:08:00+09:00",
   },
   {
-    chatMessageId: 104,
+    messageId: 104,
     chatRoomId: 1,
     senderId: 11,
     content: "감사합니다! 서울시 강남구 테헤란로 123으로 부탁드립니다.",
-    createdAt: "2026-04-15T11:00:00+09:00",
+    sentAt: "2026-04-15T11:00:00+09:00",
   },
 ];
 
@@ -75,12 +77,12 @@ export function resetChatHandlerState(): void {
 }
 
 // ========================================
-// MSW 핸들러
+// MSW 핸들러 — BE 경로: /api/v1/chat-rooms
 // ========================================
 
 export const chatHandlers = [
-  // 채팅방 생성 — POST /api/v1/chat/rooms
-  http.post(`${BASE_URL}/api/v1/chat/rooms`, async ({ request }) => {
+  // 채팅방 생성 — POST /api/v1/chat-rooms
+  http.post(`${BASE_URL}/api/v1/chat-rooms`, async ({ request }) => {
     await delay(200);
     const body = (await request.json()) as CreateChatRoomRequest;
     const newRoom: ChatRoomResponse = {
@@ -94,15 +96,17 @@ export const chatHandlers = [
     return HttpResponse.json(newRoom, { status: 201 });
   }),
 
-  // 채팅방 목록 조회 — GET /api/v1/chat/rooms
-  http.get(`${BASE_URL}/api/v1/chat/rooms`, async () => {
+  // 채팅방 목록 조회 — GET /api/v1/chat-rooms (BE: { chatRooms: [...] })
+  http.get(`${BASE_URL}/api/v1/chat-rooms`, async () => {
     await delay(150);
-    return HttpResponse.json(stubRooms);
+    const response: ChatRoomListResponse = { chatRooms: stubRooms };
+    return HttpResponse.json(response);
   }),
 
-  // 채팅 메시지 목록 조회 — GET /api/v1/chat/rooms/:roomId/messages
+  // 채팅 메시지 목록 조회 — GET /api/v1/chat-rooms/:roomId/messages
+  // BE: GetChatMessagesResult { messages: { content, totalElements, totalPages } }
   http.get(
-    `${BASE_URL}/api/v1/chat/rooms/:roomId/messages`,
+    `${BASE_URL}/api/v1/chat-rooms/:roomId/messages`,
     async ({ params, request }) => {
       await delay(150);
       const roomId = Number(params.roomId);
@@ -119,27 +123,29 @@ export const chatHandlers = [
       const content = roomMessages.slice(start, start + size);
 
       const response: ChatMessageListResponse = {
-        content,
-        totalElements,
-        totalPages,
+        messages: {
+          content,
+          totalElements,
+          totalPages,
+        },
       };
       return HttpResponse.json(response);
     }
   ),
 
-  // 채팅 메시지 전송 — POST /api/v1/chat/rooms/:roomId/messages
+  // 채팅 메시지 전송 — POST /api/v1/chat-rooms/:roomId/messages
   http.post(
-    `${BASE_URL}/api/v1/chat/rooms/:roomId/messages`,
+    `${BASE_URL}/api/v1/chat-rooms/:roomId/messages`,
     async ({ params, request }) => {
       await delay(100);
       const roomId = Number(params.roomId);
       const body = (await request.json()) as { content: string };
       const newMessage: ChatMessageResponse = {
-        chatMessageId: nextMessageId++,
+        messageId: nextMessageId++,
         chatRoomId: roomId,
         senderId: 11,
         content: body.content,
-        createdAt: new Date().toISOString(),
+        sentAt: new Date().toISOString(),
       };
       stubMessages.push(newMessage);
       return HttpResponse.json(newMessage, { status: 201 });

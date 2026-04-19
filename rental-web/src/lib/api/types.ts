@@ -441,8 +441,10 @@ export interface ReviewResponse {
   createdAt: string;
 }
 
+/** BE ReviewListResult: { reviews, totalElements, totalPages } */
 export interface ReviewListResponse {
-  content: ReviewResponse[];
+  /** BE 필드명: reviews (content 아님) */
+  reviews: ReviewResponse[];
   totalElements: number;
   totalPages: number;
 }
@@ -460,18 +462,21 @@ export interface CreateReviewRequest {
 
 export type SettlementStatus = "PENDING" | "COMPLETED";
 
+/** BE SettlementResult 기준: commission(수수료 금액), netAmount, settledAt */
 export interface SettlementResponse {
   settlementId: number;
   lenderId: number;
   rentalId: number;
   amount: number;
-  commissionRate: number;
-  commissionAmount: number;
+  /** BE 필드: commission (commissionRate/commissionAmount 분리 없음) */
+  commission: number;
   netAmount: number;
   status: SettlementStatus;
-  createdAt: string;
+  /** BE 필드: settledAt (createdAt 아님) */
+  settledAt: string | null;
 }
 
+/** BE PageResult<SettlementResult>: { content, totalElements, totalPages } */
 export interface SettlementListResponse {
   content: SettlementResponse[];
   totalElements: number;
@@ -482,7 +487,7 @@ export interface SettlementListResponse {
 // 채팅 타입
 // ========================================
 
-/** 채팅방 응답 */
+/** 채팅방 응답 (단건 생성/조회) — BE CreateChatRoomResult 기준 */
 export interface ChatRoomResponse {
   chatRoomId: number;
   rentalId: number;
@@ -491,20 +496,31 @@ export interface ChatRoomResponse {
   createdAt: string;
 }
 
-/** 채팅 메시지 응답 */
+/** 채팅방 목록 응답 — BE GetChatRoomsResult: { chatRooms: [...] } */
+export interface ChatRoomListResponse {
+  /** BE 필드: chatRooms (직접 배열 아님) */
+  chatRooms: ChatRoomResponse[];
+}
+
+/** 채팅 메시지 응답 — BE GetChatMessagesResult.MessageSummary 기준 */
 export interface ChatMessageResponse {
-  chatMessageId: number;
+  /** BE 필드: messageId (chatMessageId 아님) */
+  messageId: number;
   chatRoomId: number;
   senderId: number;
   content: string;
-  createdAt: string;
+  /** BE 필드: sentAt (createdAt 아님) */
+  sentAt: string;
 }
 
-/** 채팅 메시지 목록 응답 (페이지네이션) */
+/** 채팅 메시지 목록 응답 — BE GetChatMessagesResult: { messages: PageResult<MessageSummary> } */
 export interface ChatMessageListResponse {
-  content: ChatMessageResponse[];
-  totalElements: number;
-  totalPages: number;
+  /** BE 필드: messages (PageResult 래핑) */
+  messages: {
+    content: ChatMessageResponse[];
+    totalElements: number;
+    totalPages: number;
+  };
 }
 
 /** 채팅방 생성 요청 */

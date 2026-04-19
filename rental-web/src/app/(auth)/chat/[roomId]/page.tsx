@@ -35,13 +35,14 @@ export default function ChatRoomPage() {
     enabled: !!roomId,
   });
 
-  const historicalMessages = data?.data?.content ?? [];
+  // BE: GetChatMessagesResult { messages: { content, totalElements, totalPages } }
+  const historicalMessages = data?.data?.messages?.content ?? [];
 
   // WebSocket 메시지 수신
   const handleNewMessage = useCallback((msg: ChatMessageResponse) => {
     setLiveMessages((prev) => {
-      // 중복 방지
-      if (prev.some((m) => m.chatMessageId === msg.chatMessageId)) return prev;
+      // 중복 방지 (BE 필드: messageId)
+      if (prev.some((m) => m.messageId === msg.messageId)) return prev;
       return [...prev, msg];
     });
   }, []);
@@ -51,15 +52,15 @@ export default function ChatRoomPage() {
     onMessage: handleNewMessage,
   });
 
-  // 모든 메시지 병합 (히스토리 + 실시간, 시간순)
+  // 모든 메시지 병합 (히스토리 + 실시간, 시간순) — BE 필드: messageId, sentAt
   const allMessages = [...historicalMessages, ...liveMessages]
     .filter(
       (msg, idx, arr) =>
-        arr.findIndex((m) => m.chatMessageId === msg.chatMessageId) === idx
+        arr.findIndex((m) => m.messageId === msg.messageId) === idx
     )
     .sort(
       (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
     );
 
   // 새 메시지 수신 시 스크롤 하단으로
@@ -130,16 +131,17 @@ export default function ChatRoomPage() {
         {!isLoading &&
           allMessages.map((msg, idx) => {
             const prevMsg = allMessages[idx - 1];
+            // BE 필드: sentAt
             const showDateSep =
-              !prevMsg || !isSameDay(prevMsg.createdAt, msg.createdAt);
+              !prevMsg || !isSameDay(prevMsg.sentAt, msg.sentAt);
             const isMine = msg.senderId === user?.id;
 
             return (
-              <div key={msg.chatMessageId}>
-                {showDateSep && <DateSeparator date={msg.createdAt} />}
+              <div key={msg.messageId}>
+                {showDateSep && <DateSeparator date={msg.sentAt} />}
                 <ChatBubble
                   content={msg.content}
-                  createdAt={msg.createdAt}
+                  createdAt={msg.sentAt}
                   isMine={isMine}
                 />
               </div>

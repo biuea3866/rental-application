@@ -8,16 +8,16 @@ import type { SettlementResponse } from "@/lib/api/types";
 // RC-FE-320
 // ========================================
 
+// BE SettlementResult 기준: commission, netAmount, settledAt
 const STUB_SETTLEMENT_COMPLETED: SettlementResponse = {
   settlementId: 1,
   lenderId: 22,
   rentalId: 1001,
   amount: 120000,
-  commissionRate: 0.1,
-  commissionAmount: 12000,
+  commission: 12000,
   netAmount: 108000,
   status: "COMPLETED",
-  createdAt: "2026-04-12T10:00:00+09:00",
+  settledAt: "2026-04-12T10:00:00+09:00",
 };
 
 const STUB_SETTLEMENT_PENDING: SettlementResponse = {
@@ -25,11 +25,10 @@ const STUB_SETTLEMENT_PENDING: SettlementResponse = {
   lenderId: 22,
   rentalId: 1002,
   amount: 75000,
-  commissionRate: 0.1,
-  commissionAmount: 7500,
+  commission: 7500,
   netAmount: 67500,
   status: "PENDING",
-  createdAt: "2026-04-14T11:00:00+09:00",
+  settledAt: null,
 };
 
 describe("SettlementCard", () => {
