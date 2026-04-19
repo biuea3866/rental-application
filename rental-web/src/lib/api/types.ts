@@ -428,6 +428,79 @@ export interface RentalStatusChangeResponse {
 }
 
 // ========================================
+// 채팅 타입
+// ========================================
+
+/** 채팅방 응답 */
+export interface ChatRoomResponse {
+  chatRoomId: number;
+  rentalId: number;
+  renterId: number;
+  lenderId: number;
+  createdAt: string;
+}
+
+/** 채팅 메시지 응답 */
+export interface ChatMessageResponse {
+  chatMessageId: number;
+  chatRoomId: number;
+  senderId: number;
+  content: string;
+  createdAt: string;
+}
+
+/** 채팅 메시지 목록 응답 (페이지네이션) */
+export interface ChatMessageListResponse {
+  content: ChatMessageResponse[];
+  totalElements: number;
+  totalPages: number;
+}
+
+/** 채팅방 생성 요청 */
+export interface CreateChatRoomRequest {
+  rentalId: number;
+  renterId: number;
+  lenderId: number;
+}
+
+/** 채팅 메시지 전송 요청 */
+export interface SendChatMessageRequest {
+  content: string;
+}
+
+// ========================================
+// 관리자 타입
+// ========================================
+
+/** 관리자 대시보드 응답 */
+export interface AdminDashboardResponse {
+  rentalCounts: Record<string, number>;
+  dailyRevenue: { date: string; amount: number }[];
+  weeklyRevenue: { weekStart: string; amount: number }[];
+}
+
+/** 관리자 대여 목록 아이템 */
+export interface AdminRentalResponse {
+  rentalId: number;
+  renterId: number;
+  lenderId: number;
+  productId: number;
+  productName: string;
+  status: RentalStatus;
+  totalAmount: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+/** 관리자 대여 목록 응답 (페이지네이션) */
+export interface AdminRentalListResponse {
+  content: AdminRentalResponse[];
+  totalElements: number;
+  totalPages: number;
+}
+
+// ========================================
 // 알림 타입
 // ========================================
 

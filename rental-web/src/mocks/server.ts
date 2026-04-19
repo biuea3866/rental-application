@@ -4,6 +4,8 @@ import { productHandlers } from "./handlers/product";
 import { mypageHandlers } from "./handlers/mypage";
 import { notificationHandlers } from "./handlers/notification";
 import { rentalHandlers } from "./handlers/rental";
+import { chatHandlers } from "./handlers/chat";
+import { adminHandlers } from "./handlers/admin";
 
 // ========================================
 // MSW 서버 설정 (테스트용)
@@ -14,5 +16,7 @@ export const server = setupServer(
   ...productHandlers,
   ...mypageHandlers,
   ...notificationHandlers,
-  ...rentalHandlers
+  ...rentalHandlers,
+  ...chatHandlers,
+  ...adminHandlers
 );
