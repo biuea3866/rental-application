@@ -81,11 +81,15 @@ def check_code_patterns(rules, tool_input):
     violations = []
     for rule in forbidden.get("rules", []):
         file_glob = rule.get("file_glob", "*")
-        if not fnmatch(Path(file_path).name, file_glob):
+        file_globs = [g.strip() for g in file_glob.split(",")]
+        filename = Path(file_path).name
+        if not any(fnmatch(filename, g) for g in file_globs):
             continue
         exclude_glob = rule.get("exclude_glob")
-        if exclude_glob and fnmatch(file_path, exclude_glob):
-            continue
+        if exclude_glob:
+            exclude_globs = [g.strip() for g in exclude_glob.split(",")]
+            if any(fnmatch(file_path, g) or fnmatch(filename, g) for g in exclude_globs):
+                continue
         pattern = rule["pattern"]
         if re.search(pattern, content):
             severity = rule.get("severity", "error")

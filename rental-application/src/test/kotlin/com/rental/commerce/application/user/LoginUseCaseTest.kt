@@ -8,7 +8,7 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.common.UnauthorizedException
 import com.rental.commerce.domain.user.User
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -18,11 +18,11 @@ import io.mockk.mockk
 
 class LoginUseCaseTest : BehaviorSpec({
 
-    val userRepository = mockk<UserRepository>()
+    val userDomainService = mockk<UserDomainService>()
     val passwordHasher = mockk<PasswordHasher>()
     val tokenProvider = mockk<TokenProvider>()
     val refreshTokenService = mockk<RefreshTokenService>()
-    val useCase = LoginUseCase(userRepository, passwordHasher, tokenProvider, refreshTokenService)
+    val useCase = LoginUseCase(userDomainService, passwordHasher, tokenProvider, refreshTokenService)
 
     Given("로그인 요청 시") {
 
@@ -41,7 +41,7 @@ class LoginUseCaseTest : BehaviorSpec({
                 id = 1L,
             )
 
-            every { userRepository.findByEmail(command.email) } returns user
+            every { userDomainService.findByEmail(command.email) } returns user
             every { passwordHasher.matches("password123!", "bcrypt_hashed") } returns true
             every { tokenProvider.createAccessToken(1L, "RENTER") } returns "access_token_123"
             every { refreshTokenService.issueRefreshToken(1L) } returns RefreshTokenResult(
@@ -75,7 +75,8 @@ class LoginUseCaseTest : BehaviorSpec({
                 password = "password123!",
             )
 
-            every { userRepository.findByEmail(command.email) } returns null
+            every { userDomainService.findByEmail(command.email) } throws
+                ResourceNotFoundException(errorCode = ErrorCode.USER_NOT_FOUND)
 
             Then("USER_NOT_FOUND 에러가 발생한다") {
                 val exception = shouldThrow<ResourceNotFoundException> {
@@ -100,7 +101,7 @@ class LoginUseCaseTest : BehaviorSpec({
                 id = 1L,
             )
 
-            every { userRepository.findByEmail(command.email) } returns user
+            every { userDomainService.findByEmail(command.email) } returns user
             every { passwordHasher.matches("wrong_password", "bcrypt_hashed") } returns false
 
             Then("INVALID_PASSWORD 에러가 발생한다") {

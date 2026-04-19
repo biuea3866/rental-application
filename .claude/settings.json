@@ -2,8 +2,25 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/biuea/feature/flag_project/rental-commerce/.claude/harness-check.py file-guard"
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/biuea/feature/flag_project/rental-commerce/.claude/harness-check.py code-pattern"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/biuea/feature/flag_project/rental-commerce/.claude/harness-check.py git-guard"
+          },
           {
             "type": "command",
             "command": "bash /Users/biuea/feature/flag_project/rental-commerce/.claude/hooks/pre-pr-gate.sh"
@@ -20,6 +37,17 @@
           {
             "type": "command",
             "command": "bash /Users/biuea/feature/flag_project/rental-commerce/.claude/hooks/agent-harness-inject.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/biuea/feature/flag_project/rental-commerce/.claude/harness-check.py build-check"
           }
         ]
       }

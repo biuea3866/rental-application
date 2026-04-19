@@ -3,13 +3,13 @@ package com.rental.commerce.application.user
 import com.rental.commerce.application.auth.RefreshTokenResult
 import com.rental.commerce.application.auth.RefreshTokenService
 import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.DuplicateResourceException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PasswordHasher
 import com.rental.commerce.domain.common.PhoneVerificationStore
 import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserDomainService
-import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -23,14 +23,13 @@ import io.mockk.verify
 
 class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
 
-    val userRepository = mockk<UserRepository>()
     val userDomainService = mockk<UserDomainService>()
     val phoneVerificationStore = mockk<PhoneVerificationStore>(relaxed = true)
     val tokenProvider = mockk<TokenProvider>()
     val refreshTokenService = mockk<RefreshTokenService>()
     val passwordHasher = mockk<PasswordHasher>()
     val useCase = VerifyPhoneAndCompleteSignupUseCase(
-        userRepository, userDomainService, phoneVerificationStore, tokenProvider, refreshTokenService, passwordHasher,
+        userDomainService, phoneVerificationStore, tokenProvider, refreshTokenService, passwordHasher,
     )
 
     Given("휴대폰 인증 완료 시") {
@@ -50,7 +49,7 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
             every { passwordHasher.hash(command.password) } returns "bcrypt_hashed"
 
             val savedUserSlot = slot<User>()
-            every { userRepository.save(capture(savedUserSlot)) } answers {
+            every { userDomainService.saveUser(capture(savedUserSlot)) } answers {
                 User(
                     email = savedUserSlot.captured.email,
                     name = savedUserSlot.captured.name,
@@ -71,8 +70,8 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
 
             val result = useCase.execute(command)
 
-            Then("User가 DB에 저장된다") {
-                verify(exactly = 1) { userRepository.save(any()) }
+            Then("User가 DomainService를 통해 저장된다") {
+                verify(exactly = 1) { userDomainService.saveUser(any()) }
             }
 
             Then("Access Token이 발급된다") {
@@ -166,7 +165,7 @@ class VerifyPhoneAndCompleteSignupUseCaseTest : BehaviorSpec({
 
             every { phoneVerificationStore.verify(command.phone, command.code) } returns "existing@example.com"
             every { userDomainService.checkEmailNotDuplicate(command.email) } throws
-                com.rental.commerce.domain.common.DuplicateResourceException(
+                DuplicateResourceException(
                     errorCode = ErrorCode.DUPLICATE_EMAIL,
                 )
 

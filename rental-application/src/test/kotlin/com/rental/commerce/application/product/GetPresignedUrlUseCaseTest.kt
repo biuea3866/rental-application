@@ -2,8 +2,8 @@ package com.rental.commerce.application.product
 
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.ObjectStorageGateway
 import com.rental.commerce.domain.common.PresignedUrlResult
+import com.rental.commerce.domain.product.ProductDomainService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -13,8 +13,8 @@ import io.mockk.verify
 
 class GetPresignedUrlUseCaseTest : BehaviorSpec({
 
-    val objectStorageGateway = mockk<ObjectStorageGateway>()
-    val useCase = GetPresignedUrlUseCase(objectStorageGateway)
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = GetPresignedUrlUseCase(productDomainService)
 
     Given("Presigned URL 생성을 요청할 때") {
 
@@ -31,7 +31,7 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
             )
 
             every {
-                objectStorageGateway.generatePresignedUrl(
+                productDomainService.generatePresignedUrl(
                     bucket = command.bucket,
                     fileName = command.fileName,
                     contentType = command.contentType,
@@ -45,9 +45,9 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
                 result.objectKey shouldBe expectedResult.objectKey
             }
 
-            Then("ObjectStorageGateway가 정확히 한 번 호출된다") {
+            Then("ProductDomainService가 정확히 한 번 호출된다") {
                 verify(exactly = 1) {
-                    objectStorageGateway.generatePresignedUrl(
+                    productDomainService.generatePresignedUrl(
                         bucket = command.bucket,
                         fileName = command.fileName,
                         contentType = command.contentType,
@@ -69,7 +69,7 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
             )
 
             every {
-                objectStorageGateway.generatePresignedUrl(
+                productDomainService.generatePresignedUrl(
                     bucket = command.bucket,
                     fileName = command.fileName,
                     contentType = command.contentType,
@@ -97,7 +97,7 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
             )
 
             every {
-                objectStorageGateway.generatePresignedUrl(
+                productDomainService.generatePresignedUrl(
                     bucket = command.bucket,
                     fileName = command.fileName,
                     contentType = command.contentType,
@@ -125,7 +125,7 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
             )
 
             every {
-                objectStorageGateway.generatePresignedUrl(
+                productDomainService.generatePresignedUrl(
                     bucket = command.bucket,
                     fileName = command.fileName,
                     contentType = command.contentType,
@@ -147,6 +147,17 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
                 contentType = "text/plain",
             )
 
+            every {
+                productDomainService.generatePresignedUrl(
+                    bucket = command.bucket,
+                    fileName = command.fileName,
+                    contentType = command.contentType,
+                )
+            } throws BusinessException(
+                errorCode = ErrorCode.INVALID_FILE_TYPE,
+                message = "지원하지 않는 파일 형식입니다: text/plain",
+            )
+
             Then("INVALID_FILE_TYPE 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
@@ -160,6 +171,17 @@ class GetPresignedUrlUseCaseTest : BehaviorSpec({
                 bucket = "products",
                 fileName = "archive.zip",
                 contentType = "application/zip",
+            )
+
+            every {
+                productDomainService.generatePresignedUrl(
+                    bucket = command.bucket,
+                    fileName = command.fileName,
+                    contentType = command.contentType,
+                )
+            } throws BusinessException(
+                errorCode = ErrorCode.INVALID_FILE_TYPE,
+                message = "지원하지 않는 파일 형식입니다: application/zip",
             )
 
             Then("INVALID_FILE_TYPE 에러가 발생한다") {

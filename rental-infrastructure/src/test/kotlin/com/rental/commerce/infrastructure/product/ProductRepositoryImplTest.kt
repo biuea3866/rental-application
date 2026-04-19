@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.transaction.support.TransactionTemplate
 import org.testcontainers.containers.MySQLContainer
 
 @DataJpaTest
@@ -41,6 +42,7 @@ class ProductRepositoryImplTest(
     private val productRepository: ProductRepository,
     private val productPriceRepository: ProductPriceRepository,
     private val productImageRepository: ProductImageRepository,
+    private val transactionTemplate: TransactionTemplate,
 ) : BehaviorSpec({
 
     extensions(SpringExtension)
@@ -164,7 +166,9 @@ class ProductRepositoryImplTest(
                 ),
             )
             productPriceRepository.saveAll(prices)
-            productPriceRepository.deleteByProductId(product.productId)
+            transactionTemplate.executeWithoutResult {
+                productPriceRepository.deleteByProductId(product.productId)
+            }
 
             Then("해당 상품의 가격이 모두 삭제된다") {
                 val found = productPriceRepository.findByProductId(product.productId)
@@ -228,10 +232,12 @@ class ProductRepositoryImplTest(
                 ),
             )
             productImageRepository.saveAll(images)
-            productImageRepository.deleteByProductIdAndObjectKey(
-                product.productId,
-                "products/${product.productId}/delete-target.jpg",
-            )
+            transactionTemplate.executeWithoutResult {
+                productImageRepository.deleteByProductIdAndObjectKey(
+                    product.productId,
+                    "products/${product.productId}/delete-target.jpg",
+                )
+            }
 
             Then("해당 이미지만 삭제되고 나머지는 유지된다") {
                 val found = productImageRepository.findByProductId(product.productId)

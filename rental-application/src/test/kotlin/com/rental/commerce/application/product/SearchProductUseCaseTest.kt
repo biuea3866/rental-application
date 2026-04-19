@@ -1,9 +1,8 @@
 package com.rental.commerce.application.product
 
 import com.rental.commerce.domain.product.Product
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductImage
-import com.rental.commerce.domain.product.ProductImageRepository
-import com.rental.commerce.domain.product.ProductRepository
 import com.rental.commerce.domain.product.ProductSearchCondition
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
@@ -18,11 +17,9 @@ import org.springframework.data.domain.PageRequest
 
 class SearchProductUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
-    val productImageRepository = mockk<ProductImageRepository>()
+    val productDomainService = mockk<ProductDomainService>()
     val useCase = SearchProductUseCase(
-        productRepository = productRepository,
-        productImageRepository = productImageRepository,
+        productDomainService = productDomainService,
     )
 
     Given("상품 검색을 요청할 때") {
@@ -32,14 +29,14 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl<Product>(emptyList(), PageRequest.of(0, 20), 0L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(emptyList()) } returns emptyMap()
 
             useCase.execute(command)
 
             Then("기본 status는 AVAILABLE로 처리된다") {
                 verify {
-                    productRepository.search(
+                    productDomainService.search(
                         match { it.status == ProductStatus.AVAILABLE },
                     )
                 }
@@ -70,14 +67,16 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 2L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(listOf(1L, 2L)) } returns listOf(
-                ProductImage(
-                    productImageId = 100L,
-                    productId = 1L,
-                    objectKey = "products/thumb-001.jpg",
-                    originalFilename = "front.jpg",
-                    sortOrder = 1,
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(listOf(1L, 2L)) } returns mapOf(
+                1L to listOf(
+                    ProductImage(
+                        productImageId = 100L,
+                        productId = 1L,
+                        objectKey = "products/thumb-001.jpg",
+                        originalFilename = "front.jpg",
+                        sortOrder = 1,
+                    ),
                 ),
             )
 
@@ -118,8 +117,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(listOf(1L)) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(listOf(1L)) } returns emptyMap()
 
             val result = useCase.execute(command)
 
@@ -146,8 +145,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(listOf(3L)) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(listOf(3L)) } returns emptyMap()
 
             val result = useCase.execute(command)
 
@@ -162,8 +161,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl<Product>(emptyList(), PageRequest.of(0, 20), 0L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(emptyList()) } returns emptyMap()
 
             val result = useCase.execute(command)
 
@@ -178,8 +177,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl<Product>(emptyList(), PageRequest.of(1, 10), 30L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(emptyList()) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(emptyList()) } returns emptyMap()
 
             val result = useCase.execute(command)
 
@@ -210,8 +209,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
 
             val page = PageImpl(products, PageRequest.of(0, 20), 1L)
 
-            every { productRepository.search(any<ProductSearchCondition>()) } returns page
-            every { productImageRepository.findByProductIdIn(listOf(4L)) } returns emptyList()
+            every { productDomainService.search(any<ProductSearchCondition>()) } returns page
+            every { productDomainService.getImagesByProductIds(listOf(4L)) } returns emptyMap()
 
             val result = useCase.execute(command)
 
@@ -220,8 +219,8 @@ class SearchProductUseCaseTest : BehaviorSpec({
                 result.content shouldHaveSize 1
             }
 
-            Then("productRepository.search가 조건과 함께 호출된다") {
-                verify { productRepository.search(any<ProductSearchCondition>()) }
+            Then("productDomainService.search가 조건과 함께 호출된다") {
+                verify { productDomainService.search(any<ProductSearchCondition>()) }
             }
         }
     }
