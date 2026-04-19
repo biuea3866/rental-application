@@ -24,9 +24,11 @@ export function UserManagementRow({
 }: UserManagementRowProps) {
   const [suspended, setSuspended] = useState(isSuspended);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleToggle = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       if (suspended) {
         await activateUserApi(userId);
@@ -37,8 +39,9 @@ export function UserManagementRow({
         setSuspended(true);
         onStatusChange?.(userId, true);
       }
-    } catch {
-      // 에러 처리 (toast 등)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "처리에 실패했습니다";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +71,11 @@ export function UserManagementRow({
         >
           {suspended ? "정지됨" : "정상"}
         </span>
+
+        {/* 에러 메시지 */}
+        {error && (
+          <span className="text-xs text-red-500">{error}</span>
+        )}
 
         {/* 토글 버튼 */}
         <button

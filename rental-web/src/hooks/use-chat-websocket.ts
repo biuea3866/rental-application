@@ -27,7 +27,13 @@ export function useChatWebSocket({
   onMessage,
 }: UseChatWebSocketOptions): UseChatWebSocketReturn {
   const clientRef = useRef<Client | null>(null);
+  const onMessageRef = useRef(onMessage);
   const [isConnected, setIsConnected] = useState(false);
+
+  // onMessage를 ref에 저장하여 stale closure 방지
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -48,7 +54,7 @@ export function useChatWebSocket({
         client.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
           try {
             const parsed = JSON.parse(message.body) as ChatMessageResponse;
-            onMessage(parsed);
+            onMessageRef.current(parsed);
           } catch {
             // 파싱 실패 무시
           }
@@ -59,8 +65,7 @@ export function useChatWebSocket({
         setIsConnected(false);
       },
 
-      onStompError: (frame) => {
-        console.error("STOMP 에러:", frame.headers["message"]);
+      onStompError: () => {
         setIsConnected(false);
       },
     });
@@ -72,8 +77,6 @@ export function useChatWebSocket({
       client.deactivate();
       clientRef.current = null;
     };
-    // roomId 변경 시 재연결
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   const sendMessage = useCallback(

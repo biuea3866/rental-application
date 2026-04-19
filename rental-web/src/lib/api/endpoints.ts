@@ -64,6 +64,19 @@ export const ENDPOINTS = {
     RENTER_PROFILE: `${API_VERSION}/mypage/renter-profile`,
   },
 
+  // 리뷰
+  REVIEWS: {
+    BASE: `${API_VERSION}/reviews`,
+    BY_PRODUCT: (productId: string | number) =>
+      `${API_VERSION}/products/${productId}/reviews`,
+    MY_REVIEWS: `${API_VERSION}/my/reviews`,
+  },
+
+  // 정산
+  SETTLEMENTS: {
+    MY_SETTLEMENTS: `${API_VERSION}/my/settlements`,
+  },
+
   // 채팅
   CHAT: {
     ROOMS: `${API_VERSION}/chat/rooms`,

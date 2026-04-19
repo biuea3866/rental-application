@@ -4,6 +4,8 @@ import { productHandlers } from "./handlers/product";
 import { mypageHandlers } from "./handlers/mypage";
 import { notificationHandlers } from "./handlers/notification";
 import { rentalHandlers } from "./handlers/rental";
+import { reviewHandlers } from "./handlers/review";
+import { settlementHandlers } from "./handlers/settlement";
 import { chatHandlers } from "./handlers/chat";
 import { adminHandlers } from "./handlers/admin";
 
@@ -17,6 +19,8 @@ export const server = setupServer(
   ...mypageHandlers,
   ...notificationHandlers,
   ...rentalHandlers,
+  ...reviewHandlers,
+  ...settlementHandlers,
   ...chatHandlers,
   ...adminHandlers
 );

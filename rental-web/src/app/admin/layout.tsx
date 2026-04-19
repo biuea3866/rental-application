@@ -27,14 +27,7 @@ export default function AdminLayout({
     }
 
     // 관리자 역할이 아니면 홈으로 리다이렉트
-    // NOTE: User 타입 확장 시 role에 'ADMIN' 추가 필요
-    const isAdmin =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (user as any)?.role === "ADMIN" ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (user as any)?.isAdmin === true;
-
-    if (!isAdmin) {
+    if (user?.role !== "ADMIN") {
       router.replace("/");
     }
   }, [isAuthenticated, isLoading, user, router]);
