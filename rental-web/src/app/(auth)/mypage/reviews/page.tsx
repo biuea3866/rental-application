@@ -25,7 +25,8 @@ export default function MyReviewsPage() {
     },
   });
 
-  const reviews = data?.content ?? [];
+  // BE ReviewListResult: { reviews, totalElements, totalPages }
+  const reviews = data?.reviews ?? [];
   const totalElements = data?.totalElements ?? 0;
 
   return (

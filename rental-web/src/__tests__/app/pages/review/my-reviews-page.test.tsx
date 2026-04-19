@@ -63,8 +63,9 @@ describe("내 리뷰 목록 페이지", () => {
   });
 
   it("리뷰 목록이 정상적으로 렌더링되어야 한다", async () => {
+    // BE ReviewListResult: reviews 필드 (content 아님)
     const stubData: ReviewListResponse = {
-      content: STUB_REVIEWS,
+      reviews: STUB_REVIEWS,
       totalElements: STUB_REVIEWS.length,
       totalPages: 1,
     };

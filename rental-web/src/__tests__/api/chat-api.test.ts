@@ -26,8 +26,8 @@ describe("Chat API 함수", () => {
     vi.clearAllMocks();
   });
 
-  // TC-CHAT-01: createChatRoomApi — 채팅방 생성
-  it("TC-CHAT-01: createChatRoomApi — POST /api/v1/chat/rooms 올바른 엔드포인트로 호출", async () => {
+  // TC-CHAT-01: createChatRoomApi — 채팅방 생성 (BE 경로: /api/v1/chat-rooms)
+  it("TC-CHAT-01: createChatRoomApi — POST /api/v1/chat-rooms 올바른 엔드포인트로 호출", async () => {
     const { createChatRoomApi } = await import("@/lib/api/chat");
     sharedMockClient.post.mockResolvedValue({
       success: true,
@@ -39,45 +39,45 @@ describe("Chat API 함수", () => {
     const result = await createChatRoomApi(request);
 
     expect(sharedMockClient.post).toHaveBeenCalledWith(
-      "/api/v1/chat/rooms",
+      "/api/v1/chat-rooms",
       request
     );
     expect(result.data.chatRoomId).toBe(1);
   });
 
-  // TC-CHAT-02: getChatRoomsApi — 채팅방 목록 조회
-  it("TC-CHAT-02: getChatRoomsApi — GET /api/v1/chat/rooms 호출", async () => {
+  // TC-CHAT-02: getChatRoomsApi — 채팅방 목록 조회 (BE 경로: /api/v1/chat-rooms)
+  it("TC-CHAT-02: getChatRoomsApi — GET /api/v1/chat-rooms 호출", async () => {
     const { getChatRoomsApi } = await import("@/lib/api/chat");
     sharedMockClient.get.mockResolvedValue({
       success: true,
-      data: [],
+      data: { chatRooms: [] },
       timestamp: new Date().toISOString(),
     });
 
     await getChatRoomsApi();
 
-    expect(sharedMockClient.get).toHaveBeenCalledWith("/api/v1/chat/rooms");
+    expect(sharedMockClient.get).toHaveBeenCalledWith("/api/v1/chat-rooms");
   });
 
-  // TC-CHAT-03: getChatMessagesApi — 메시지 목록 조회
-  it("TC-CHAT-03: getChatMessagesApi — GET /api/v1/chat/rooms/{roomId}/messages 호출", async () => {
+  // TC-CHAT-03: getChatMessagesApi — 메시지 목록 조회 (BE 경로: /api/v1/chat-rooms/{roomId}/messages)
+  it("TC-CHAT-03: getChatMessagesApi — GET /api/v1/chat-rooms/{roomId}/messages 호출", async () => {
     const { getChatMessagesApi } = await import("@/lib/api/chat");
     sharedMockClient.get.mockResolvedValue({
       success: true,
-      data: { content: [], totalElements: 0, totalPages: 0 },
+      data: { messages: { content: [], totalElements: 0, totalPages: 0 } },
       timestamp: new Date().toISOString(),
     });
 
     await getChatMessagesApi(1, { page: 0, size: 20 });
 
     expect(sharedMockClient.get).toHaveBeenCalledWith(
-      "/api/v1/chat/rooms/1/messages",
+      "/api/v1/chat-rooms/1/messages",
       { params: { page: "0", size: "20" } }
     );
   });
 
-  // TC-CHAT-04: sendChatMessageApi — 메시지 전송
-  it("TC-CHAT-04: sendChatMessageApi — POST /api/v1/chat/rooms/{roomId}/messages 호출", async () => {
+  // TC-CHAT-04: sendChatMessageApi — 메시지 전송 (BE 경로: /api/v1/chat-rooms/{roomId}/messages)
+  it("TC-CHAT-04: sendChatMessageApi — POST /api/v1/chat-rooms/{roomId}/messages 호출", async () => {
     const { sendChatMessageApi } = await import("@/lib/api/chat");
     sharedMockClient.post.mockResolvedValue({
       success: true,
@@ -88,7 +88,7 @@ describe("Chat API 함수", () => {
     await sendChatMessageApi(1, { content: "안녕하세요" });
 
     expect(sharedMockClient.post).toHaveBeenCalledWith(
-      "/api/v1/chat/rooms/1/messages",
+      "/api/v1/chat-rooms/1/messages",
       { content: "안녕하세요" }
     );
   });

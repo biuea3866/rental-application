@@ -69,20 +69,22 @@ export const ENDPOINTS = {
     BASE: `${API_VERSION}/reviews`,
     BY_PRODUCT: (productId: string | number) =>
       `${API_VERSION}/products/${productId}/reviews`,
-    MY_REVIEWS: `${API_VERSION}/my/reviews`,
+    /** BE: GET /api/v1/my-reviews */
+    MY_REVIEWS: `${API_VERSION}/my-reviews`,
   },
 
   // 정산
   SETTLEMENTS: {
-    MY_SETTLEMENTS: `${API_VERSION}/my/settlements`,
+    /** BE: GET /api/v1/my-settlements */
+    MY_SETTLEMENTS: `${API_VERSION}/my-settlements`,
   },
 
-  // 채팅
+  // 채팅 — BE: /api/v1/chat-rooms (chat/rooms 아님)
   CHAT: {
-    ROOMS: `${API_VERSION}/chat/rooms`,
-    ROOM_BY_ID: (roomId: string | number) => `${API_VERSION}/chat/rooms/${roomId}`,
+    ROOMS: `${API_VERSION}/chat-rooms`,
+    ROOM_BY_ID: (roomId: string | number) => `${API_VERSION}/chat-rooms/${roomId}`,
     MESSAGES: (roomId: string | number) =>
-      `${API_VERSION}/chat/rooms/${roomId}/messages`,
+      `${API_VERSION}/chat-rooms/${roomId}/messages`,
   },
 
   // 관리자

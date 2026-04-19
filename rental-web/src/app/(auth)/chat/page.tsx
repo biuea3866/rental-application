@@ -20,7 +20,8 @@ export default function ChatListPage() {
     queryFn: getChatRoomsApi,
   });
 
-  const rooms = data?.data ?? [];
+  // BE: GetChatRoomsResult { chatRooms: [...] }
+  const rooms = data?.data?.chatRooms ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">
