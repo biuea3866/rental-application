@@ -428,6 +428,57 @@ export interface RentalStatusChangeResponse {
 }
 
 // ========================================
+// 리뷰 타입
+// ========================================
+
+export interface ReviewResponse {
+  reviewId: number;
+  renterId: number;
+  rentalId: number;
+  productId: number;
+  rating: number;
+  content: string;
+  createdAt: string;
+}
+
+export interface ReviewListResponse {
+  content: ReviewResponse[];
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface CreateReviewRequest {
+  rentalId: number;
+  productId: number;
+  rating: number;
+  content: string;
+}
+
+// ========================================
+// 정산 타입
+// ========================================
+
+export type SettlementStatus = "PENDING" | "COMPLETED";
+
+export interface SettlementResponse {
+  settlementId: number;
+  lenderId: number;
+  rentalId: number;
+  amount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  netAmount: number;
+  status: SettlementStatus;
+  createdAt: string;
+}
+
+export interface SettlementListResponse {
+  content: SettlementResponse[];
+  totalElements: number;
+  totalPages: number;
+}
+
+// ========================================
 // 알림 타입
 // ========================================
 
