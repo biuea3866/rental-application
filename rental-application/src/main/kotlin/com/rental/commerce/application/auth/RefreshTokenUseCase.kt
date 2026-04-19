@@ -1,10 +1,8 @@
 package com.rental.commerce.application.auth
 
 import com.rental.commerce.application.user.AuthTokenResponse
-import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.common.TokenProvider
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -12,15 +10,14 @@ import org.springframework.transaction.annotation.Transactional
 class RefreshTokenUseCase(
     private val refreshTokenService: RefreshTokenService,
     private val tokenProvider: TokenProvider,
-    private val userRepository: UserRepository,
+    private val userDomainService: UserDomainService,
 ) {
 
     @Transactional(readOnly = true)
     fun execute(command: RefreshTokenCommand): AuthTokenResponse {
         val refreshTokenResult = refreshTokenService.rotateToken(command.tokenFamily, command.refreshToken)
 
-        val user = userRepository.findById(refreshTokenResult.userId)
-            ?: throw ResourceNotFoundException(errorCode = ErrorCode.USER_NOT_FOUND)
+        val user = userDomainService.findById(refreshTokenResult.userId)
 
         val userId = user.requireId()
         val accessToken = tokenProvider.createAccessToken(userId, user.roleName())

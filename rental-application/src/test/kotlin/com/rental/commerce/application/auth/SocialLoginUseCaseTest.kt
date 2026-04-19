@@ -1,31 +1,29 @@
 package com.rental.commerce.application.auth
 
-import com.rental.commerce.application.user.AuthTokenResponse
+import com.rental.commerce.domain.auth.AuthDomainService
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.common.SocialLoginGateway
 import com.rental.commerce.domain.common.SocialUserInfo
 import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.SocialProvider
 import com.rental.commerce.domain.user.User
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 
 class SocialLoginUseCaseTest : BehaviorSpec({
 
-    val socialLoginGateway = mockk<SocialLoginGateway>()
-    val userRepository = mockk<UserRepository>()
+    val authDomainService = mockk<AuthDomainService>()
+    val userDomainService = mockk<UserDomainService>()
     val tokenProvider = mockk<TokenProvider>()
     val refreshTokenService = mockk<RefreshTokenService>()
     val useCase = SocialLoginUseCase(
-        socialLoginGateway = socialLoginGateway,
-        userRepository = userRepository,
+        authDomainService = authDomainService,
+        userDomainService = userDomainService,
         tokenProvider = tokenProvider,
         refreshTokenService = refreshTokenService,
     )
@@ -49,16 +47,15 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 id = 1L,
             )
 
-            every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "valid_auth_code") } returns "kakao_access_token"
-            every { socialLoginGateway.getUserInfo(SocialProvider.KAKAO, "kakao_access_token") } returns SocialUserInfo(
+            val socialUserInfo = SocialUserInfo(
                 socialId = "kakao_123",
                 email = "kakao@example.com",
                 name = "카카오유저",
                 provider = SocialProvider.KAKAO,
             )
-            every {
-                userRepository.findBySocialProviderAndSocialProviderId(SocialProvider.KAKAO, "kakao_123")
-            } returns existingUser
+
+            every { authDomainService.authenticateWithSocialProvider(SocialProvider.KAKAO, "valid_auth_code") } returns socialUserInfo
+            every { userDomainService.findOrCreateSocialUser(socialUserInfo) } returns existingUser
             every { tokenProvider.createAccessToken(1L, "RENTER") } returns "access_token_abc"
             every { refreshTokenService.issueRefreshToken(1L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_abc",
@@ -98,18 +95,15 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 id = 2L,
             )
 
-            every { socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "new_user_auth_code") } returns "new_kakao_token"
-            every { socialLoginGateway.getUserInfo(SocialProvider.KAKAO, "new_kakao_token") } returns SocialUserInfo(
+            val socialUserInfo = SocialUserInfo(
                 socialId = "kakao_new_456",
                 email = "new_kakao@example.com",
                 name = "신규카카오유저",
                 provider = SocialProvider.KAKAO,
             )
-            every {
-                userRepository.findBySocialProviderAndSocialProviderId(SocialProvider.KAKAO, "kakao_new_456")
-            } returns null
-            every { userRepository.findByEmail("new_kakao@example.com") } returns null
-            every { userRepository.save(any()) } returns newUser
+
+            every { authDomainService.authenticateWithSocialProvider(SocialProvider.KAKAO, "new_user_auth_code") } returns socialUserInfo
+            every { userDomainService.findOrCreateSocialUser(socialUserInfo) } returns newUser
             every { tokenProvider.createAccessToken(2L, "RENTER") } returns "access_token_new"
             every { refreshTokenService.issueRefreshToken(2L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_new",
@@ -130,25 +124,12 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             Then("신규 유저가 생성되고 유저 ID가 반환된다") {
                 result.userId shouldBe 2L
             }
-
-            Then("유저가 저장된다") {
-                verify(exactly = 1) { userRepository.save(any()) }
-            }
         }
 
         When("같은 이메일로 이미 가입된 유저가 소셜 로그인하면") {
             val command = SocialLoginCommand(
                 provider = SocialProvider.NAVER,
                 authorizationCode = "existing_email_code",
-            )
-
-            val existingUser = User(
-                email = "existing@example.com",
-                name = "기존유저",
-                phone = "01012345678",
-                passwordHash = "hashed_pw",
-                role = UserRole.RENTER,
-                id = 3L,
             )
 
             val linkedUser = User(
@@ -162,18 +143,15 @@ class SocialLoginUseCaseTest : BehaviorSpec({
                 id = 3L,
             )
 
-            every { socialLoginGateway.getAccessToken(SocialProvider.NAVER, "existing_email_code") } returns "naver_token"
-            every { socialLoginGateway.getUserInfo(SocialProvider.NAVER, "naver_token") } returns SocialUserInfo(
+            val socialUserInfo = SocialUserInfo(
                 socialId = "naver_789",
                 email = "existing@example.com",
                 name = "기존유저",
                 provider = SocialProvider.NAVER,
             )
-            every {
-                userRepository.findBySocialProviderAndSocialProviderId(SocialProvider.NAVER, "naver_789")
-            } returns null
-            every { userRepository.findByEmail("existing@example.com") } returns existingUser
-            every { userRepository.save(any()) } returns linkedUser
+
+            every { authDomainService.authenticateWithSocialProvider(SocialProvider.NAVER, "existing_email_code") } returns socialUserInfo
+            every { userDomainService.findOrCreateSocialUser(socialUserInfo) } returns linkedUser
             every { tokenProvider.createAccessToken(3L, "RENTER") } returns "access_token_linked"
             every { refreshTokenService.issueRefreshToken(3L) } returns RefreshTokenResult(
                 refreshToken = "refresh_token_linked",
@@ -197,7 +175,7 @@ class SocialLoginUseCaseTest : BehaviorSpec({
             )
 
             every {
-                socialLoginGateway.getAccessToken(SocialProvider.KAKAO, "invalid_code")
+                authDomainService.authenticateWithSocialProvider(SocialProvider.KAKAO, "invalid_code")
             } throws BusinessException(ErrorCode.EXTERNAL_API_ERROR, "카카오 액세스 토큰 발급 실패")
 
             Then("EXTERNAL_API_ERROR가 발생한다") {

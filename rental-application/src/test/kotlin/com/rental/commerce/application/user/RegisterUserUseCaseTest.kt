@@ -1,8 +1,13 @@
 package com.rental.commerce.application.user
 
+import com.rental.commerce.domain.auth.AuthDomainService
+import com.rental.commerce.domain.common.BusinessException
+import com.rental.commerce.domain.common.DuplicateResourceException
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PhoneVerificationStore
-import com.rental.commerce.domain.common.SmsGateway
 import com.rental.commerce.domain.user.UserDomainService
+import com.rental.commerce.domain.user.UserRole
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -17,8 +22,8 @@ class RegisterUserUseCaseTest : BehaviorSpec({
 
     val userDomainService = mockk<UserDomainService>()
     val phoneVerificationStore = mockk<PhoneVerificationStore>(relaxed = true)
-    val smsGateway = mockk<SmsGateway>(relaxed = true)
-    val useCase = RegisterUserUseCase(userDomainService, phoneVerificationStore, smsGateway)
+    val authDomainService = mockk<AuthDomainService>()
+    val useCase = RegisterUserUseCase(userDomainService, phoneVerificationStore, authDomainService)
 
     Given("회원가입 요청 시") {
 
@@ -28,10 +33,11 @@ class RegisterUserUseCaseTest : BehaviorSpec({
                 password = "password123!",
                 name = "홍길동",
                 phone = "01012345678",
-                role = com.rental.commerce.domain.user.UserRole.RENTER,
+                role = UserRole.RENTER,
             )
 
             every { userDomainService.checkEmailNotDuplicate(command.email) } just runs
+            every { authDomainService.sendPhoneVerificationCode(command.phone) } returns "123456"
 
             val codeSlot = slot<String>()
             every { phoneVerificationStore.save(command.phone, capture(codeSlot), command.email, any()) } returns Unit
@@ -46,8 +52,8 @@ class RegisterUserUseCaseTest : BehaviorSpec({
                 verify(exactly = 1) { phoneVerificationStore.save(command.phone, any(), command.email, any()) }
             }
 
-            Then("SMS 게이트웨이로 인증코드가 발송된다") {
-                verify(exactly = 1) { smsGateway.sendVerificationCode(command.phone, any()) }
+            Then("AuthDomainService를 통해 인증코드가 발송된다") {
+                verify(exactly = 1) { authDomainService.sendPhoneVerificationCode(command.phone) }
             }
 
             Then("응답에 이메일과 전화번호가 포함된다") {
@@ -62,19 +68,19 @@ class RegisterUserUseCaseTest : BehaviorSpec({
                 password = "password123!",
                 name = "홍길동",
                 phone = "01012345678",
-                role = com.rental.commerce.domain.user.UserRole.RENTER,
+                role = UserRole.RENTER,
             )
 
             every { userDomainService.checkEmailNotDuplicate(command.email) } throws
-                com.rental.commerce.domain.common.DuplicateResourceException(
-                    errorCode = com.rental.commerce.domain.common.ErrorCode.DUPLICATE_EMAIL,
+                DuplicateResourceException(
+                    errorCode = ErrorCode.DUPLICATE_EMAIL,
                 )
 
             Then("DUPLICATE_EMAIL 에러가 발생한다") {
-                val exception = io.kotest.assertions.throwables.shouldThrow<com.rental.commerce.domain.common.BusinessException> {
+                val exception = shouldThrow<BusinessException> {
                     useCase.execute(command)
                 }
-                exception.errorCode shouldBe com.rental.commerce.domain.common.ErrorCode.DUPLICATE_EMAIL
+                exception.errorCode shouldBe ErrorCode.DUPLICATE_EMAIL
             }
         }
     }

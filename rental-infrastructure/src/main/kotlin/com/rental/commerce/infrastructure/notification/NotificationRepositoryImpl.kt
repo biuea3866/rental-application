@@ -8,7 +8,6 @@ import com.rental.commerce.domain.notification.NotificationRepository
 import com.rental.commerce.domain.notification.QNotification
 import kotlin.math.ceil
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 
 @Repository
 class NotificationRepositoryImpl(
@@ -74,7 +73,6 @@ class NotificationRepositoryImpl(
             .fetchOne() ?: 0L
     }
 
-    @Transactional
     override fun markAllAsReadByUserId(userId: Long) {
         queryFactory
             .update(notification)

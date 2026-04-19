@@ -5,7 +5,6 @@ import com.rental.commerce.domain.product.ProductImage
 import com.rental.commerce.domain.product.ProductImageRepository
 import com.rental.commerce.domain.product.QProductImage
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 
 @Repository
 class ProductImageRepositoryImpl(
@@ -36,7 +35,6 @@ class ProductImageRepositoryImpl(
         return productImageJpaRepository.saveAll(images)
     }
 
-    @Transactional
     override fun deleteByProductId(productId: Long) {
         queryFactory
             .delete(productImage)
@@ -44,7 +42,6 @@ class ProductImageRepositoryImpl(
             .execute()
     }
 
-    @Transactional
     override fun deleteByProductIdAndObjectKey(productId: Long, objectKey: String) {
         queryFactory
             .delete(productImage)

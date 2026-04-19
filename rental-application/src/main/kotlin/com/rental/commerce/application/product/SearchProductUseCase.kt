@@ -1,7 +1,6 @@
 package com.rental.commerce.application.product
 
-import com.rental.commerce.domain.product.ProductImageRepository
-import com.rental.commerce.domain.product.ProductRepository
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductSearchCondition
 import com.rental.commerce.domain.product.ProductStatus
 import org.springframework.data.domain.Page
@@ -10,8 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class SearchProductUseCase(
-    private val productRepository: ProductRepository,
-    private val productImageRepository: ProductImageRepository,
+    private val productDomainService: ProductDomainService,
 ) {
 
     @Transactional(readOnly = true)
@@ -29,11 +27,10 @@ class SearchProductUseCase(
             sortDirection = command.sortDirection,
         )
 
-        val productPage = productRepository.search(condition)
+        val productPage = productDomainService.search(condition)
 
         val productIds = productPage.content.map { it.productId }
-        val imagesByProductId = productImageRepository.findByProductIdIn(productIds)
-            .groupBy { it.productId }
+        val imagesByProductId = productDomainService.getImagesByProductIds(productIds)
 
         return productPage.map { product ->
             val images = imagesByProductId[product.productId] ?: emptyList()

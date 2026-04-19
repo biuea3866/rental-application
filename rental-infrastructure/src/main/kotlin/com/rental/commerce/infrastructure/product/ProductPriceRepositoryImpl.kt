@@ -5,7 +5,6 @@ import com.rental.commerce.domain.product.ProductPrice
 import com.rental.commerce.domain.product.ProductPriceRepository
 import com.rental.commerce.domain.product.QProductPrice
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 
 @Repository
 class ProductPriceRepositoryImpl(
@@ -26,7 +25,6 @@ class ProductPriceRepositoryImpl(
         return productPriceJpaRepository.saveAll(prices)
     }
 
-    @Transactional
     override fun deleteByProductId(productId: Long) {
         queryFactory
             .delete(productPrice)

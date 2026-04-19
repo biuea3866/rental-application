@@ -6,7 +6,7 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.common.TokenFamilyCompromisedException
 import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.User
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -18,8 +18,8 @@ class RefreshTokenUseCaseTest : BehaviorSpec({
 
     val refreshTokenService = mockk<RefreshTokenService>()
     val tokenProvider = mockk<TokenProvider>()
-    val userRepository = mockk<UserRepository>()
-    val useCase = RefreshTokenUseCase(refreshTokenService, tokenProvider, userRepository)
+    val userDomainService = mockk<UserDomainService>()
+    val useCase = RefreshTokenUseCase(refreshTokenService, tokenProvider, userDomainService)
 
     Given("토큰 갱신 요청 시") {
 
@@ -43,7 +43,7 @@ class RefreshTokenUseCaseTest : BehaviorSpec({
                 tokenFamily = "family-id",
                 userId = 1L,
             )
-            every { userRepository.findById(1L) } returns user
+            every { userDomainService.findById(1L) } returns user
             every { tokenProvider.createAccessToken(1L, "RENTER") } returns "new-access-token"
 
             val result = useCase.execute(command)
@@ -93,7 +93,8 @@ class RefreshTokenUseCaseTest : BehaviorSpec({
                 tokenFamily = "family-id",
                 userId = 999L,
             )
-            every { userRepository.findById(999L) } returns null
+            every { userDomainService.findById(999L) } throws
+                ResourceNotFoundException(errorCode = ErrorCode.USER_NOT_FOUND)
 
             Then("USER_NOT_FOUND 에러가 발생한다") {
                 val exception = shouldThrow<ResourceNotFoundException> {

@@ -1,19 +1,18 @@
 package com.rental.commerce.application.product
 
 import com.rental.commerce.domain.product.Product
-import com.rental.commerce.domain.product.ProductRepository
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductStatus
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 
 class CreateProductDraftUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
-    val useCase = CreateProductDraftUseCase(productRepository)
+    val productDomainService = mockk<ProductDomainService>()
+    val useCase = CreateProductDraftUseCase(productDomainService)
 
     Given("DRAFT 상품 생성을 요청할 때") {
 
@@ -22,10 +21,17 @@ class CreateProductDraftUseCaseTest : BehaviorSpec({
                 userId = 1L,
             )
 
-            val productSlot = slot<Product>()
-            every { productRepository.save(capture(productSlot)) } answers {
-                productSlot.captured
-            }
+            every {
+                productDomainService.createDraft(
+                    userId = 1L,
+                    name = null,
+                    categoryCode = null,
+                )
+            } returns Product(
+                userId = 1L,
+                status = ProductStatus.DRAFT,
+                currentDraftStep = 1,
+            )
 
             val result = useCase.execute(command)
 
@@ -45,8 +51,14 @@ class CreateProductDraftUseCaseTest : BehaviorSpec({
                 result.categoryCode shouldBe null
             }
 
-            Then("ProductRepository.save가 정확히 한 번 호출된다") {
-                verify(exactly = 1) { productRepository.save(any()) }
+            Then("ProductDomainService.createDraft가 정확히 한 번 호출된다") {
+                verify(exactly = 1) {
+                    productDomainService.createDraft(
+                        userId = 1L,
+                        name = null,
+                        categoryCode = null,
+                    )
+                }
             }
         }
 
@@ -57,10 +69,19 @@ class CreateProductDraftUseCaseTest : BehaviorSpec({
                 categoryCode = "ELECTRONICS",
             )
 
-            val productSlot = slot<Product>()
-            every { productRepository.save(capture(productSlot)) } answers {
-                productSlot.captured
-            }
+            every {
+                productDomainService.createDraft(
+                    userId = 2L,
+                    name = "맥북 프로 16인치",
+                    categoryCode = "ELECTRONICS",
+                )
+            } returns Product(
+                userId = 2L,
+                name = "맥북 프로 16인치",
+                categoryCode = "ELECTRONICS",
+                status = ProductStatus.DRAFT,
+                currentDraftStep = 1,
+            )
 
             val result = useCase.execute(command)
 

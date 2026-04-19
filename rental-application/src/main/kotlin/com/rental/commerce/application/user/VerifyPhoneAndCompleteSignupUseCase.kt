@@ -8,13 +8,11 @@ import com.rental.commerce.domain.common.PhoneVerificationStore
 import com.rental.commerce.domain.common.TokenProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserDomainService
-import com.rental.commerce.domain.user.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class VerifyPhoneAndCompleteSignupUseCase(
-    private val userRepository: UserRepository,
     private val userDomainService: UserDomainService,
     private val phoneVerificationStore: PhoneVerificationStore,
     private val tokenProvider: TokenProvider,
@@ -39,7 +37,7 @@ class VerifyPhoneAndCompleteSignupUseCase(
             passwordHash = passwordHasher.hash(command.password),
             role = command.role,
         )
-        val savedUser = userRepository.save(user)
+        val savedUser = userDomainService.saveUser(user)
         val userId = savedUser.requireId()
 
         phoneVerificationStore.delete(command.phone)

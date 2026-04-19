@@ -1,17 +1,15 @@
 package com.rental.commerce.application.user
 
 import com.rental.commerce.application.auth.RefreshTokenService
-import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PasswordHasher
-import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.common.TokenProvider
-import com.rental.commerce.domain.user.UserRepository
+import com.rental.commerce.domain.user.UserDomainService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class LoginUseCase(
-    private val userRepository: UserRepository,
+    private val userDomainService: UserDomainService,
     private val passwordHasher: PasswordHasher,
     private val tokenProvider: TokenProvider,
     private val refreshTokenService: RefreshTokenService,
@@ -19,8 +17,7 @@ class LoginUseCase(
 
     @Transactional(readOnly = true)
     fun execute(command: LoginCommand): AuthTokenResponse {
-        val user = userRepository.findByEmail(command.email)
-            ?: throw ResourceNotFoundException(errorCode = ErrorCode.USER_NOT_FOUND)
+        val user = userDomainService.findByEmail(command.email)
 
         user.verifyPassword(command.password, passwordHasher)
 

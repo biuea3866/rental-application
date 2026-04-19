@@ -4,12 +4,11 @@ import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.product.Product
+import com.rental.commerce.domain.product.ProductAggregate
 import com.rental.commerce.domain.product.ProductCondition
+import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.product.ProductImage
-import com.rental.commerce.domain.product.ProductImageRepository
 import com.rental.commerce.domain.product.ProductPrice
-import com.rental.commerce.domain.product.ProductPriceRepository
-import com.rental.commerce.domain.product.ProductRepository
 import com.rental.commerce.domain.product.ProductStatus
 import com.rental.commerce.domain.product.RentalUnit
 import io.kotest.assertions.throwables.shouldThrow
@@ -21,19 +20,20 @@ import io.mockk.mockk
 
 class GetProductDetailUseCaseTest : BehaviorSpec({
 
-    val productRepository = mockk<ProductRepository>()
-    val productPriceRepository = mockk<ProductPriceRepository>()
-    val productImageRepository = mockk<ProductImageRepository>()
+    val productDomainService = mockk<ProductDomainService>()
     val useCase = GetProductDetailUseCase(
-        productRepository = productRepository,
-        productPriceRepository = productPriceRepository,
-        productImageRepository = productImageRepository,
+        productDomainService = productDomainService,
     )
 
     Given("상품 상세 조회를 요청할 때") {
 
         When("존재하지 않는 상품 ID로 요청하면") {
-            every { productRepository.findById(999L) } returns null
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 999L, requestUserId = null)
+            } throws ResourceNotFoundException(
+                errorCode = ErrorCode.PRODUCT_NOT_FOUND,
+                message = "상품을 찾을 수 없습니다 (id=999)",
+            )
 
             Then("PRODUCT_NOT_FOUND 에러가 발생한다") {
                 val exception = shouldThrow<ResourceNotFoundException> {
@@ -87,9 +87,9 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
                 ),
             )
 
-            every { productRepository.findById(1L) } returns product
-            every { productPriceRepository.findByProductId(1L) } returns prices
-            every { productImageRepository.findByProductId(1L) } returns images
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 1L, requestUserId = null)
+            } returns ProductAggregate(product = product, prices = prices, images = images)
 
             val result = useCase.execute(productId = 1L, requestUserId = null)
 
@@ -130,9 +130,9 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
                 depositAmount = 200000L,
             )
 
-            every { productRepository.findById(2L) } returns product
-            every { productPriceRepository.findByProductId(2L) } returns emptyList()
-            every { productImageRepository.findByProductId(2L) } returns emptyList()
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 2L, requestUserId = null)
+            } returns ProductAggregate(product = product, prices = emptyList(), images = emptyList())
 
             val result = useCase.execute(productId = 2L, requestUserId = null)
 
@@ -153,9 +153,9 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
                 depositAmount = 100000L,
             )
 
-            every { productRepository.findById(3L) } returns product
-            every { productPriceRepository.findByProductId(3L) } returns emptyList()
-            every { productImageRepository.findByProductId(3L) } returns emptyList()
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 3L, requestUserId = 100L)
+            } returns ProductAggregate(product = product, prices = emptyList(), images = emptyList())
 
             val result = useCase.execute(productId = 3L, requestUserId = 100L)
 
@@ -166,17 +166,12 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
         }
 
         When("DRAFT 상태의 상품을 비소유자가 조회하면") {
-            val product = Product(
-                productId = 4L,
-                userId = 100L,
-                name = "테스트 상품",
-                description = "테스트 설명",
-                categoryCode = "ELECTRONICS",
-                status = ProductStatus.DRAFT,
-                depositAmount = 100000L,
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 4L, requestUserId = 200L)
+            } throws BusinessException(
+                errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
+                message = "해당 상품에 접근할 권한이 없습니다 (productId=4)",
             )
-
-            every { productRepository.findById(4L) } returns product
 
             Then("접근 권한 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
@@ -187,17 +182,12 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
         }
 
         When("DRAFT 상태의 상품을 비로그인 사용자가 조회하면") {
-            val product = Product(
-                productId = 5L,
-                userId = 100L,
-                name = "테스트 상품",
-                description = "테스트 설명",
-                categoryCode = "ELECTRONICS",
-                status = ProductStatus.DRAFT,
-                depositAmount = 100000L,
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 5L, requestUserId = null)
+            } throws BusinessException(
+                errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
+                message = "해당 상품에 접근할 권한이 없습니다 (productId=5)",
             )
-
-            every { productRepository.findById(5L) } returns product
 
             Then("접근 권한 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
@@ -218,9 +208,9 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
                 depositAmount = 300000L,
             )
 
-            every { productRepository.findById(6L) } returns product
-            every { productPriceRepository.findByProductId(6L) } returns emptyList()
-            every { productImageRepository.findByProductId(6L) } returns emptyList()
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 6L, requestUserId = 100L)
+            } returns ProductAggregate(product = product, prices = emptyList(), images = emptyList())
 
             val result = useCase.execute(productId = 6L, requestUserId = 100L)
 
@@ -231,17 +221,12 @@ class GetProductDetailUseCaseTest : BehaviorSpec({
         }
 
         When("UNDER_REVIEW 상태의 상품을 비소유자가 조회하면") {
-            val product = Product(
-                productId = 7L,
-                userId = 100L,
-                name = "심사중 상품",
-                description = "심사중 설명",
-                categoryCode = "ELECTRONICS",
-                status = ProductStatus.UNDER_REVIEW,
-                depositAmount = 300000L,
+            every {
+                productDomainService.getProductWithPricesAndImages(productId = 7L, requestUserId = 200L)
+            } throws BusinessException(
+                errorCode = ErrorCode.PRODUCT_OWNERSHIP_DENIED,
+                message = "해당 상품에 접근할 권한이 없습니다 (productId=7)",
             )
-
-            every { productRepository.findById(7L) } returns product
 
             Then("접근 권한 에러가 발생한다") {
                 val exception = shouldThrow<BusinessException> {
