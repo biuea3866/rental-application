@@ -1,7 +1,7 @@
 package com.rental.commerce.application.priceguide
 
 import com.rental.commerce.domain.priceguide.CategoryPriceGuide
-import com.rental.commerce.domain.priceguide.CategoryPriceGuideRepository
+import com.rental.commerce.domain.priceguide.PriceGuideDomainService
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -11,8 +11,8 @@ import io.mockk.verify
 
 class GetPriceGuideUseCaseTest : BehaviorSpec({
 
-    val categoryPriceGuideRepository = mockk<CategoryPriceGuideRepository>()
-    val useCase = GetPriceGuideUseCase(categoryPriceGuideRepository)
+    val priceGuideDomainService = mockk<PriceGuideDomainService>()
+    val useCase = GetPriceGuideUseCase(priceGuideDomainService)
 
     Given("카테고리 코드로 가이드 가격을 조회할 때") {
 
@@ -42,7 +42,7 @@ class GetPriceGuideUseCaseTest : BehaviorSpec({
                 ),
             )
 
-            every { categoryPriceGuideRepository.findByCategoryCode(categoryCode) } returns guides
+            every { priceGuideDomainService.findByCategoryCode(categoryCode) } returns guides
 
             val result = useCase.execute(categoryCode)
 
@@ -72,15 +72,15 @@ class GetPriceGuideUseCaseTest : BehaviorSpec({
                 yearly.maxPrice shouldBe 5000000L
             }
 
-            Then("리포지토리가 정확히 한 번 호출된다") {
-                verify(exactly = 1) { categoryPriceGuideRepository.findByCategoryCode(categoryCode) }
+            Then("DomainService가 정확히 한 번 호출된다") {
+                verify(exactly = 1) { priceGuideDomainService.findByCategoryCode(categoryCode) }
             }
         }
 
         When("해당 카테고리에 가이드 가격이 존재하지 않으면") {
             val categoryCode = "UNKNOWN"
 
-            every { categoryPriceGuideRepository.findByCategoryCode(categoryCode) } returns emptyList()
+            every { priceGuideDomainService.findByCategoryCode(categoryCode) } returns emptyList()
 
             val result = useCase.execute(categoryCode)
 

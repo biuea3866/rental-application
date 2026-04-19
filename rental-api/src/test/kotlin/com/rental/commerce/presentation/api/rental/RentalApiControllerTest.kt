@@ -16,6 +16,7 @@ import com.rental.commerce.application.rental.StartRentalUseCase
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
+import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.PaymentMethod
@@ -594,7 +595,7 @@ class RentalApiControllerTest : BehaviorSpec({
                     )
                 )
 
-                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                every { getMyRentalsUseCase.execute(any()) } returns PageResult(
                     content = summaries,
                     totalElements = 1,
                     totalPages = 1,
@@ -617,7 +618,7 @@ class RentalApiControllerTest : BehaviorSpec({
 
         When("대여 내역이 없는 경우") {
             Then("200 OK와 빈 목록이 반환된다") {
-                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                every { getMyRentalsUseCase.execute(any()) } returns PageResult(
                     content = emptyList(),
                     totalElements = 0,
                     totalPages = 0,
@@ -658,7 +659,7 @@ class RentalApiControllerTest : BehaviorSpec({
                     )
                 )
 
-                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                every { getMyRentalsUseCase.execute(any()) } returns PageResult(
                     content = summaries,
                     totalElements = 1,
                     totalPages = 1,
@@ -680,7 +681,7 @@ class RentalApiControllerTest : BehaviorSpec({
 
         When("role 파라미터 없이 /rentals를 조회하면") {
             Then("200 OK와 전체 대여 목록이 반환된다") {
-                every { getMyRentalsUseCase.execute(any()) } returns com.rental.commerce.domain.common.PageResult(
+                every { getMyRentalsUseCase.execute(any()) } returns PageResult(
                     content = emptyList(),
                     totalElements = 0,
                     totalPages = 0,

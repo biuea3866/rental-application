@@ -65,7 +65,7 @@ class NotificationRepositoryImplTest(
             Then("ID로 조회할 수 있다") {
                 val found = notificationRepository.findById(saved.id)
                 found shouldNotBe null
-                found!!.title shouldBe "테스트 알림"
+                requireNotNull(found).title shouldBe "테스트 알림"
                 found.userId shouldBe 1L
             }
         }
