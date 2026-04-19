@@ -77,6 +77,24 @@ export const ENDPOINTS = {
     MY_SETTLEMENTS: `${API_VERSION}/my/settlements`,
   },
 
+  // 채팅
+  CHAT: {
+    ROOMS: `${API_VERSION}/chat/rooms`,
+    ROOM_BY_ID: (roomId: string | number) => `${API_VERSION}/chat/rooms/${roomId}`,
+    MESSAGES: (roomId: string | number) =>
+      `${API_VERSION}/chat/rooms/${roomId}/messages`,
+  },
+
+  // 관리자
+  ADMIN: {
+    DASHBOARD: `${API_VERSION}/admin/dashboard`,
+    RENTALS: `${API_VERSION}/admin/rentals`,
+    SUSPEND_USER: (userId: string | number) =>
+      `${API_VERSION}/admin/users/${userId}/suspend`,
+    ACTIVATE_USER: (userId: string | number) =>
+      `${API_VERSION}/admin/users/${userId}/activate`,
+  },
+
   // 알림
   NOTIFICATIONS: {
     BASE: `${API_VERSION}/notifications`,

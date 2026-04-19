@@ -66,7 +66,7 @@ export function SignupForm({
       phone: "",
       password: "",
       passwordConfirm: "",
-      role: "RENTER" as UserRole,
+      role: "RENTER" as const,
     },
   });
 
