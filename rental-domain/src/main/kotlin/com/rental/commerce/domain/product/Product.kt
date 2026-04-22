@@ -115,6 +115,28 @@ class Product(
         this.status = ProductStatus.RENTED
     }
 
+    /**
+     * 리뷰 평점 비정규화 갱신 (BE-411 ProductRatingUpdater).
+     *
+     * 호출 규칙:
+     *  - AFTER_COMMIT 리스너에서만 호출.
+     *  - totalCount 와 총합 평균으로 재계산 (idempotent).
+     */
+    fun applyRatingSnapshot(newAvg: java.math.BigDecimal, newCount: Int) {
+        require(newCount >= 0) { "ratingCount 는 0 이상이어야 합니다" }
+        require(newAvg >= java.math.BigDecimal.ZERO) { "ratingAvg 는 0 이상이어야 합니다" }
+        this.ratingAvg = newAvg
+        this.ratingCount = newCount
+    }
+
+    /**
+     * 완료된 대여 건수 증가 (BE-411 ProductRentalCountUpdater).
+     * RentalStatusChangedEvent(RETURNED) AFTER_COMMIT 리스너에서 호출.
+     */
+    fun incrementRentalCount() {
+        this.rentalCount += 1
+    }
+
     fun pullEvents(): List<DomainEvent> {
         val events = domainEvents.toList()
         domainEvents.clear()
