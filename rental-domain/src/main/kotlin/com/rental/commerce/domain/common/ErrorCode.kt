@@ -85,9 +85,8 @@ enum class ErrorCode(
     DISPUTE_NOT_FOUND(404, "DISPUTE_NOT_FOUND", "분쟁을 찾을 수 없습니다"),
     DISPUTE_ALREADY_ACTIVE(409, "DISPUTE_ALREADY_ACTIVE", "이미 진행 중인 분쟁이 있습니다"),
 
-    // Wishlist
-    WISHLIST_ALREADY_EXISTS(409, "WISHLIST_ALREADY_EXISTS", "이미 위시리스트에 담긴 상품입니다"),
-    WISHLIST_NOT_FOUND(404, "WISHLIST_NOT_FOUND", "위시리스트 항목을 찾을 수 없습니다"),
+    // Notification Preference
+    NOTIFICATION_PREFERENCE_NOT_FOUND(404, "NOTIFICATION_PREFERENCE_NOT_FOUND", "알림 설정이 존재하지 않습니다"),
 
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
