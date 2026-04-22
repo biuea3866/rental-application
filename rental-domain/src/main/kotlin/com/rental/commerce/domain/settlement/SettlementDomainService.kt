@@ -46,4 +46,16 @@ class SettlementDomainService(
     fun getMySettlements(lenderId: Long, pageQuery: PageQuery): PageResult<Settlement> {
         return settlementRepository.findByLenderId(lenderId, pageQuery)
     }
+
+    /**
+     * rentalId 의 기존 정산에 환불 보정을 반영한다 (BE-406, ADR-009 §4).
+     *
+     * - 정산 미생성 → 로그 + 스킵 (대여 반납 전 환불은 희귀 — 관리자 수동 보정)
+     * - net_amount = amount - commission - totalRefunded 재계산 (idempotent)
+     */
+    fun applyRefundAdjustment(rentalId: Long, totalRefunded: BigDecimal): Settlement? {
+        val settlement = settlementRepository.findByRentalId(rentalId) ?: return null
+        settlement.applyRefundAdjustment(totalRefunded)
+        return settlementRepository.save(settlement)
+    }
 }

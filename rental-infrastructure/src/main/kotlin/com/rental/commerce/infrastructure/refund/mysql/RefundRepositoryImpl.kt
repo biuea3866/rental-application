@@ -38,4 +38,16 @@ class RefundRepositoryImpl(
 
     override fun findByDisputeId(disputeId: Long): List<Refund> =
         refundJpaRepository.findAllByDisputeId(disputeId)
+
+    override fun sumSucceededAmountByRentalId(rentalId: Long): BigDecimal {
+        val sum = queryFactory
+            .select(refund.amount.sum())
+            .from(refund)
+            .where(
+                refund.rentalId.eq(rentalId),
+                refund.status.eq(RefundStatus.SUCCEEDED),
+            )
+            .fetchOne()
+        return sum ?: BigDecimal.ZERO
+    }
 }
