@@ -19,8 +19,8 @@ CREATE TABLE notification_preference (
 
 -- 기존 가입자 기본값 백필 (legal/PO 결정: marketing OFF 소급 적용)
 INSERT INTO notification_preference (user_id, chat_enabled, rental_enabled, settlement_enabled, marketing_enabled, created_at, updated_at)
-SELECT u.id, 1, 1, 1, 0, NOW(6), NOW(6)
+SELECT u.user_id, 1, 1, 1, 0, NOW(6), NOW(6)
 FROM `user` u
 WHERE NOT EXISTS (
-    SELECT 1 FROM notification_preference np WHERE np.user_id = u.id
+    SELECT 1 FROM notification_preference np WHERE np.user_id = u.user_id
 );
