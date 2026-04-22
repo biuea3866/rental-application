@@ -2,6 +2,7 @@ package com.rental.commerce.domain.review
 
 import com.rental.commerce.domain.common.PageQuery
 import com.rental.commerce.domain.common.PageResult
+import java.math.BigDecimal
 
 interface ReviewRepository {
 
@@ -23,6 +24,6 @@ interface ReviewRepository {
 }
 
 data class RatingSnapshot(
-    val average: java.math.BigDecimal,
+    val average: BigDecimal,
     val count: Int,
 )
