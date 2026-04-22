@@ -56,6 +56,22 @@ class Product(
     @Column(name = "reject_reason", length = 500)
     var rejectReason: String? = null,
 
+    // Sprint 4 비정규화 컬럼 (V20). 리스너(BE-411)가 갱신.
+    @Column(name = "rating_avg", nullable = false, precision = 3, scale = 2)
+    var ratingAvg: java.math.BigDecimal = java.math.BigDecimal.ZERO,
+
+    @Column(name = "rating_count", nullable = false)
+    var ratingCount: Int = 0,
+
+    @Column(name = "rental_count", nullable = false)
+    var rentalCount: Int = 0,
+
+    @Column(name = "region_code", length = 20)
+    var regionCode: String? = null,
+
+    @Column(name = "base_price_amount")
+    var basePriceAmount: Long? = null,
+
     @Column(name = "deleted_at")
     var deletedAt: ZonedDateTime? = null,
 
