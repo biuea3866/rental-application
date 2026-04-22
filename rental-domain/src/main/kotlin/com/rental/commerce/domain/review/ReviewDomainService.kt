@@ -3,6 +3,8 @@ package com.rental.commerce.domain.review
 import com.rental.commerce.domain.common.PageQuery
 import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.ReviewAlreadyExistsException
+import com.rental.commerce.domain.review.event.ReviewCreatedEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 
 /**
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service
 @Service
 class ReviewDomainService(
     private val reviewRepository: ReviewRepository,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     /**
@@ -42,7 +45,16 @@ class ReviewDomainService(
             content = content,
         )
 
-        return reviewRepository.save(review)
+        val saved = reviewRepository.save(review)
+        eventPublisher.publishEvent(
+            ReviewCreatedEvent(
+                reviewId = saved.id,
+                productId = saved.productId,
+                renterId = saved.renterId,
+                rating = saved.rating,
+            ),
+        )
+        return saved
     }
 
     /**

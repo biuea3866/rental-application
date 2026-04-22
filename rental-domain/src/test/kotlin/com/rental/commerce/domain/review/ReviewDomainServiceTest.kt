@@ -3,18 +3,23 @@ package com.rental.commerce.domain.review
 import com.rental.commerce.domain.common.PageQuery
 import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.ReviewAlreadyExistsException
+import com.rental.commerce.domain.review.event.ReviewCreatedEvent
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.context.ApplicationEventPublisher
 
 class ReviewDomainServiceTest : BehaviorSpec({
 
-    fun newMocks(): Pair<ReviewRepository, ReviewDomainService> {
+    fun newMocks(): Triple<ReviewRepository, ApplicationEventPublisher, ReviewDomainService> {
         val repo = mockk<ReviewRepository>()
-        return repo to ReviewDomainService(repo)
+        val publisher = mockk<ApplicationEventPublisher>(relaxed = true)
+        return Triple(repo, publisher, ReviewDomainService(repo, publisher))
     }
 
     fun validContent() = "상태도 좋고 설명과 동일한 상품이었습니다."
@@ -34,7 +39,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
     Given("createReview() — 정상 생성") {
 
         When("중복 리뷰가 없고 유효한 rating과 content를 전달하면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
 
             every { repo.existsByRentalId(10L) } returns false
             every { repo.save(any()) } answers { firstArg() }
@@ -68,7 +73,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
     Given("createReview() — 중복 리뷰 예외") {
 
         When("동일 rentalId로 이미 리뷰가 존재하면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
 
             every { repo.existsByRentalId(10L) } returns true
 
@@ -97,7 +102,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
     Given("createReview() — 잘못된 rating") {
 
         When("rating이 0이면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
 
             every { repo.existsByRentalId(10L) } returns false
 
@@ -119,7 +124,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
         }
 
         When("rating이 6이면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
 
             every { repo.existsByRentalId(10L) } returns false
 
@@ -144,7 +149,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
     Given("getProductReviews() — productId 기준 조회") {
 
         When("productId=100에 리뷰가 3개 있으면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
             val reviews = listOf(
                 createSavedReview(rentalId = 10L, rating = 5),
                 createSavedReview(rentalId = 11L, rating = 4),
@@ -174,7 +179,7 @@ class ReviewDomainServiceTest : BehaviorSpec({
     Given("getMyReviews() — renterId 기준 조회") {
 
         When("renterId=1인 대여자의 리뷰가 2개 있으면") {
-            val (repo, service) = newMocks()
+            val (repo, _, service) = newMocks()
             val reviews = listOf(
                 createSavedReview(rentalId = 20L, rating = 5),
                 createSavedReview(rentalId = 21L, rating = 4),
