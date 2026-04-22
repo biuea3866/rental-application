@@ -18,10 +18,18 @@ class ResolveDisputeUseCase(
 ) {
     fun execute(command: ResolveDisputeCommand): DisputeResult {
         val dispute = when (command.type) {
-            ResolveDisputeCommand.ResolutionType.FULL_REFUND ->
-                disputeDomainService.resolveFullRefund(command.disputeId, command.refundAmount!!)
-            ResolveDisputeCommand.ResolutionType.PARTIAL ->
-                disputeDomainService.resolvePartial(command.disputeId, command.refundAmount!!)
+            ResolveDisputeCommand.ResolutionType.FULL_REFUND -> {
+                val amount = requireNotNull(command.refundAmount) {
+                    "FULL_REFUND 해결 시 refundAmount 는 null 일 수 없습니다"
+                }
+                disputeDomainService.resolveFullRefund(command.disputeId, amount)
+            }
+            ResolveDisputeCommand.ResolutionType.PARTIAL -> {
+                val amount = requireNotNull(command.refundAmount) {
+                    "PARTIAL 해결 시 refundAmount 는 null 일 수 없습니다"
+                }
+                disputeDomainService.resolvePartial(command.disputeId, amount)
+            }
             ResolveDisputeCommand.ResolutionType.REJECTED ->
                 disputeDomainService.resolveRejected(command.disputeId)
         }

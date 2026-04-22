@@ -100,6 +100,18 @@ class Dispute private constructor(
         this.resolvedAt = ZonedDateTime.now()
     }
 
+    /**
+     * 조회 접근 권한 검증 (Rich Domain Model).
+     *
+     * opener 본인 또는 관리자만 조회 가능. UseCase 에 비교 로직을 노출하지 않기 위해
+     * Entity 에 캡슐화 (harness no-entity-field-comparison-in-usecase 규칙 준수).
+     */
+    fun verifyAccessibleBy(requesterId: Long, isAdmin: Boolean) {
+        if (!isAdmin && openerId != requesterId) {
+            throw DisputeForbiddenException()
+        }
+    }
+
     companion object {
         fun create(
             rentalId: Long,
