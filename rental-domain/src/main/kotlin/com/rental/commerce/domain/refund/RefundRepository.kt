@@ -15,4 +15,9 @@ interface RefundRepository {
     fun sumNonFailedAmountByPaymentId(paymentId: Long): BigDecimal
 
     fun findByDisputeId(disputeId: Long): List<Refund>
+
+    /**
+     * rentalId 기준 SUCCEEDED 환불 금액 총합 (Settlement 보정용, BE-406).
+     */
+    fun sumSucceededAmountByRentalId(rentalId: Long): java.math.BigDecimal
 }

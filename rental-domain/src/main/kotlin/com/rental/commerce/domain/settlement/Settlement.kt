@@ -38,12 +38,15 @@ class Settlement private constructor(
     @Column(name = "commission", nullable = false, precision = 15, scale = 2)
     val commission: BigDecimal,
 
-    @Column(name = "net_amount", nullable = false, precision = 15, scale = 2)
-    val netAmount: BigDecimal,
+    netAmount: BigDecimal,
 
     status: SettlementStatus = SettlementStatus.PENDING,
 
 ) : BaseEntity() {
+
+    @Column(name = "net_amount", nullable = false, precision = 15, scale = 2)
+    var netAmount: BigDecimal = netAmount
+        protected set
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -62,6 +65,24 @@ class Settlement private constructor(
         status.validateCanComplete()
         this.status = SettlementStatus.COMPLETED
         this.settledAt = ZonedDateTime.now()
+    }
+
+    /**
+     * 환불 총액 기준으로 net_amount 를 재계산한다 (BE-406, idempotent).
+     *
+     * net_amount = amount - commission - totalRefunded
+     * 음수 금지: totalRefunded 가 (amount - commission) 을 넘는 경우 예외.
+     *
+     * 동일 환불 이벤트 중복 수신 시에도 totalRefunded 가 동일하면 결과가 같으므로 안전.
+     */
+    fun applyRefundAdjustment(totalRefunded: BigDecimal) {
+        require(totalRefunded >= BigDecimal.ZERO) { "환불 총액은 0 이상이어야 합니다" }
+        val base = amount.subtract(commission)
+        val newNet = base.subtract(totalRefunded).setScale(2, RoundingMode.HALF_UP)
+        require(newNet >= BigDecimal.ZERO) {
+            "환불 총액이 수수료 제외 정산 기준금액을 초과합니다. base=$base totalRefunded=$totalRefunded"
+        }
+        this.netAmount = newNet
     }
 
     companion object {
