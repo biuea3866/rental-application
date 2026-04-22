@@ -30,6 +30,20 @@ class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response)
     }
 
+    @ExceptionHandler(IllegalStateException::class)
+    fun handleIllegalState(exception: IllegalStateException): ResponseEntity<ErrorResponse> {
+        logger.warn("IllegalState: ${exception.message}")
+        val response = ErrorResponse.of(ErrorCode.INVALID_STATE_TRANSITION, exception.message ?: ErrorCode.INVALID_STATE_TRANSITION.message)
+        return ResponseEntity.status(ErrorCode.INVALID_STATE_TRANSITION.httpStatus).body(response)
+    }
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(exception: IllegalArgumentException): ResponseEntity<ErrorResponse> {
+        logger.warn("IllegalArgument: ${exception.message}")
+        val response = ErrorResponse.of(ErrorCode.INVALID_INPUT, exception.message ?: ErrorCode.INVALID_INPUT.message)
+        return ResponseEntity.badRequest().body(response)
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadable(exception: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
         logger.warn("HttpMessageNotReadableException: ${exception.message}")
