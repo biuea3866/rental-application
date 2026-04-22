@@ -106,12 +106,12 @@ class FlywaySprint4MigrationTest(
                     "WHERE table_schema = DATABASE() AND table_name = 'product'",
                 String::class.java,
             )
-            Then("rating_avg/rating_count/rental_count/region_code/price_amount 추가됨") {
+            Then("rating_avg/rating_count/rental_count/region_code/base_price_amount 추가됨") {
                 columns shouldContain "rating_avg"
                 columns shouldContain "rating_count"
                 columns shouldContain "rental_count"
                 columns shouldContain "region_code"
-                columns shouldContain "price_amount"
+                columns shouldContain "base_price_amount"
             }
         }
     }
