@@ -165,11 +165,12 @@ class FlywaySprint4MigrationTest(
                     "FROM notification_preference WHERE user_id = ?",
                 9999L,
             )
-            Then("chat/rental/settlement=1, marketing=0 (PRD-004 기본값)") {
-                (row["chat_enabled"] as Number).toInt() shouldBe 1
-                (row["rental_enabled"] as Number).toInt() shouldBe 1
-                (row["settlement_enabled"] as Number).toInt() shouldBe 1
-                (row["marketing_enabled"] as Number).toInt() shouldBe 0
+            Then("chat/rental/settlement=true, marketing=false (PRD-004 기본값)") {
+                // MySQL TINYINT(1) → MySQL Connector/J 가 Boolean 으로 변환
+                row["chat_enabled"] shouldBe true
+                row["rental_enabled"] shouldBe true
+                row["settlement_enabled"] shouldBe true
+                row["marketing_enabled"] shouldBe false
             }
         }
     }
