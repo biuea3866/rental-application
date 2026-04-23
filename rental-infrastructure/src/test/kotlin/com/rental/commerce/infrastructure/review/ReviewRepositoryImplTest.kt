@@ -3,6 +3,7 @@ package com.rental.commerce.infrastructure.review
 import com.rental.commerce.domain.common.PageQuery
 import com.rental.commerce.domain.review.Review
 import com.rental.commerce.infrastructure.common.config.JpaAuditingConfig
+import com.rental.commerce.infrastructure.common.config.QuerydslConfig
 import com.rental.commerce.infrastructure.review.mysql.ReviewJpaRepository
 import com.rental.commerce.infrastructure.review.mysql.ReviewRepositoryImpl
 import io.kotest.assertions.throwables.shouldThrow
@@ -25,6 +26,7 @@ import org.testcontainers.containers.MySQLContainer
 @Import(
     value = [
         JpaAuditingConfig::class,
+        QuerydslConfig::class,
         ReviewRepositoryImpl::class,
     ],
 )
