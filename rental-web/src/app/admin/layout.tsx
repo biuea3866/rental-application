@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
 
 // ========================================
@@ -48,7 +49,12 @@ export default function AdminLayout({
           <span className="text-sm font-bold tracking-wide text-yellow-400">
             ADMIN
           </span>
-          <span className="text-sm text-gray-300">관리자 대시보드</span>
+          <Link href="/admin" className="text-sm text-gray-300 hover:text-white">
+            대시보드
+          </Link>
+          <Link href="/admin/disputes" className="text-sm text-gray-300 hover:text-white">
+            분쟁 관리
+          </Link>
         </div>
       </nav>
 

@@ -1,16 +1,17 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RentalStatusTimeline } from "@/components/rental/RentalStatusTimeline";
 import { RentalActionButtons } from "@/components/rental/RentalActionButtons";
+import { DisputeOpenModal } from "@/components/dispute/DisputeOpenModal";
 import { getRentalDetailApi } from "@/lib/api/rental";
 
 // ========================================
 // 대여 상세 페이지
 // PRD-002: 5.4 대여 상세 페이지 — 상태 타임라인 + 액션 버튼
-// RC-FE-215
+// RC-FE-215 + FE-450: 분쟁 오픈 버튼 (IN_USE / RETURNED 상태)
 // ========================================
 
 /** 로그인 유저 ID를 가져오는 임시 헬퍼 (실제로는 auth store에서 가져옴) */
@@ -44,6 +45,7 @@ export default function RentalDetailPage({ params }: RentalDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
   const currentUserId = getCurrentUserId();
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
 
   const {
     data,
@@ -252,7 +254,32 @@ export default function RentalDetailPage({ params }: RentalDetailPageProps) {
             onActionComplete={() => refetch()}
           />
         </section>
+
+        {/* 분쟁 오픈 버튼 — IN_USE 또는 RETURNED 상태이고 대여자인 경우 */}
+        {(rental.status === "IN_USE" || rental.status === "RETURNED") &&
+          rental.renter.userId === currentUserId && (
+            <section
+              className="bg-white rounded-xl p-4 shadow-sm"
+              data-testid="dispute-section"
+            >
+              <button
+                data-testid="btn-open-dispute"
+                onClick={() => setIsDisputeModalOpen(true)}
+                className="w-full py-2.5 px-4 rounded-lg border border-orange-300 text-orange-600 text-sm font-medium hover:bg-orange-50 transition-colors"
+              >
+                분쟁 오픈
+              </button>
+            </section>
+          )}
       </div>
+
+      {/* 분쟁 오픈 모달 */}
+      <DisputeOpenModal
+        rentalId={rental.rentalId}
+        isOpen={isDisputeModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 }
