@@ -3,6 +3,7 @@ package com.rental.commerce.presentation.api.product
 import com.rental.commerce.application.product.ApproveProductCommand
 import com.rental.commerce.application.product.ApproveProductUseCase
 import com.rental.commerce.application.product.RejectProductUseCase
+import com.rental.commerce.presentation.api.common.RoleRequired
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PatchMapping
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/admin/products")
+@RoleRequired("ADMIN")
 class AdminProductApiController(
     private val approveProductUseCase: ApproveProductUseCase,
     private val rejectProductUseCase: RejectProductUseCase,
