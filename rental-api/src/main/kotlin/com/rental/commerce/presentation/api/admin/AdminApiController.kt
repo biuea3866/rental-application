@@ -10,6 +10,7 @@ import com.rental.commerce.application.admin.GetAdminRentalsUseCase
 import com.rental.commerce.application.admin.SuspendUserCommand
 import com.rental.commerce.application.admin.SuspendUserUseCase
 import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.presentation.api.common.RoleRequired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/api/v1/admin")
+@RoleRequired("ADMIN")
 class AdminApiController(
     private val adminDashboardQueryUseCase: AdminDashboardQueryUseCase,
     private val getAdminRentalsUseCase: GetAdminRentalsUseCase,
