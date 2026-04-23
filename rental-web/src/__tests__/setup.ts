@@ -7,8 +7,6 @@ import { resetNotificationPreferencesHandlerState } from "@/mocks/handlers/notif
 import { resetRentalHandlerState } from "@/mocks/handlers/rental";
 import { resetReviewHandlerState } from "@/mocks/handlers/review";
 import { resetSettlementHandlerState } from "@/mocks/handlers/settlement";
-import { resetWishlistHandlerState } from "@/mocks/handlers/wishlist";
-import { resetDisputeHandlerState } from "@/mocks/handlers/dispute";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 // ========================================
@@ -74,8 +72,6 @@ beforeEach(() => {
   resetRentalHandlerState();
   resetReviewHandlerState();
   resetSettlementHandlerState();
-  resetWishlistHandlerState();
-  resetDisputeHandlerState();
 });
 afterEach(() => {
   server.resetHandlers();
