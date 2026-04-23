@@ -1,0 +1,115 @@
+# =============================================================================
+# PR Senior Review Gate — 머지 전 사후 리뷰 자동 실행
+# =============================================================================
+# PR 오픈/갱신 시 자동 리뷰 체크를 돌려 보안/아키텍처 위반을 머지 전에 잡는다.
+#
+# 동작:
+#  - harness-audit.py 를 PR diff 대상 파일에 한정해 실행
+#  - 보안 관련 휴리스틱 (Controller 에 @RoleRequired 누락, @AuthenticatedMember 없이
+#    userId 파라미터 사용 등) 검사
+#  - 위반 발견 시 PR review 로 request-changes 코멘트
+#
+# 이 워크플로는 "사후 pr-reviewer 에이전트" 의 저비용 버전이며,
+# 보안/레이어 위반 Critical 을 머지 전에 자동 차단하는 것이 목적.
+# =============================================================================
+
+name: PR Senior Review
+
+on:
+  pull_request:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  senior-review:
+    name: PR Senior Review Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5
+        with:
+          python-version: '3.11'
+
+      - name: Diff scope — changed files
+        id: diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | grep -E '\.(kt|sql|yml|yaml)$' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" | head -30
+
+      - name: Harness audit on diff scope
+        id: harness
+        run: |
+          # PR diff 에 포함된 파일만 결과에 남김 — 기존 dev 위반으로 이 PR 을 막지 않음
+          python3 .claude/scripts/harness-audit.py --diff-files "${{ steps.diff.outputs.files }}" > audit.txt 2>&1 || true
+          ERRORS=$(grep -c "^  \[ERROR\]" audit.txt 2>/dev/null || true)
+          ERRORS=${ERRORS:-0}
+          printf "errors=%d\n" "$ERRORS" >> $GITHUB_OUTPUT
+          cat audit.txt
+
+      - name: Senior gate — 보안/구조 휴리스틱
+        id: senior
+        run: |
+          python3 .claude/scripts/senior-gate.py "${{ steps.diff.outputs.files }}" > senior.txt 2>&1 || true
+          SENIOR_CRITICAL=$(grep -c "^\[CRITICAL\]" senior.txt 2>/dev/null || true)
+          SENIOR_CRITICAL=${SENIOR_CRITICAL:-0}
+          printf "critical=%d\n" "$SENIOR_CRITICAL" >> $GITHUB_OUTPUT
+          cat senior.txt
+
+      - name: Post review comment
+        if: steps.harness.outputs.errors != '0' || steps.senior.outputs.critical != '0'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const harness = fs.existsSync('audit.txt') ? fs.readFileSync('audit.txt', 'utf8') : '';
+            const senior = fs.existsSync('senior.txt') ? fs.readFileSync('senior.txt', 'utf8') : '';
+            const errors = '${{ steps.harness.outputs.errors }}';
+            const critical = '${{ steps.senior.outputs.critical }}';
+            const event = parseInt(critical) > 0 ? 'REQUEST_CHANGES' : 'COMMENT';
+            const body = [
+              `## 🔒 PR Senior Review Gate`,
+              ``,
+              `- harness audit errors: **${errors}**`,
+              `- senior heuristic critical: **${critical}**`,
+              ``,
+              `### Harness audit`,
+              '```',
+              harness.slice(0, 30000),
+              '```',
+              ``,
+              `### Senior heuristic`,
+              '```',
+              senior.slice(0, 30000),
+              '```',
+              ``,
+              `*${critical > 0 ? '이 PR 은 머지 전에 위 Critical 을 해결해야 합니다.' : '참고용 코멘트입니다.'}*`,
+            ].join('\n');
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              event,
+              body,
+            });
+
+      - name: Fail workflow on critical
+        if: steps.senior.outputs.critical != '0'
+        run: |
+          echo "Senior gate detected ${{ steps.senior.outputs.critical }} critical issues"
+          exit 1
