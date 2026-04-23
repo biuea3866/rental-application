@@ -708,7 +708,7 @@
         "required": true,
         "description": "Controller → UseCase → Domain → DB 전체 흐름 검증. API 요청/응답, 인증, 에러 처리",
         "tools": "Kotest + MockMvc/WebTestClient + TestContainers"
-      }
+      },
       {
         "layer": "scenario",
         "type": "시나리오 통합 테스트",

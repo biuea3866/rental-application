@@ -3,6 +3,7 @@ package com.rental.commerce.presentation.api.dispute
 import com.rental.commerce.application.dispute.DisputeResult
 import com.rental.commerce.application.dispute.ResolveDisputeUseCase
 import com.rental.commerce.application.dispute.StartDisputeReviewUseCase
+import com.rental.commerce.presentation.api.common.RoleRequired
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PatchMapping
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/api/v1/admin/disputes")
+@RoleRequired("ADMIN")
 class AdminDisputeApiController(
     private val startDisputeReviewUseCase: StartDisputeReviewUseCase,
     private val resolveDisputeUseCase: ResolveDisputeUseCase,
