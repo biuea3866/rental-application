@@ -97,6 +97,13 @@ export const ENDPOINTS = {
       `${API_VERSION}/admin/users/${userId}/activate`,
   },
 
+  // 위시리스트
+  WISHLIST: {
+    BASE: `${API_VERSION}/wishlist`,
+    BY_PRODUCT: (productId: number | string) =>
+      `${API_VERSION}/wishlist/${productId}`,
+  },
+
   // 알림
   NOTIFICATIONS: {
     BASE: `${API_VERSION}/notifications`,
@@ -104,5 +111,10 @@ export const ENDPOINTS = {
     READ: (id: string) => `${API_VERSION}/notifications/${id}/read`,
     READ_ALL: `${API_VERSION}/notifications/read-all`,
     UNREAD_COUNT: `${API_VERSION}/notifications/unread-count`,
+  },
+
+  // 알림 설정 (BE-430/431)
+  NOTIFICATION_PREFERENCES: {
+    BASE: `${API_VERSION}/me/notification-preferences`,
   },
 } as const;
