@@ -89,6 +89,9 @@ enum class ErrorCode(
     WISHLIST_ALREADY_EXISTS(409, "WISHLIST_ALREADY_EXISTS", "이미 위시리스트에 담긴 상품입니다"),
     WISHLIST_NOT_FOUND(404, "WISHLIST_NOT_FOUND", "위시리스트 항목을 찾을 수 없습니다"),
 
+    // Notification Preference
+    NOTIFICATION_PREFERENCE_NOT_FOUND(404, "NOTIFICATION_PREFERENCE_NOT_FOUND", "알림 설정이 존재하지 않습니다"),
+
     // 500
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(500, "EXTERNAL_API_ERROR", "외부 서비스 호출에 실패했습니다"),
