@@ -162,6 +162,10 @@ export interface Product {
   images: ImageResponse[];
   createdAt: string;
   updatedAt: string;
+  /** 평균 평점 (BE: ratingAvg) — FE-452 */
+  ratingAvg?: number | null;
+  /** 대여 횟수 (BE: rentalCount) — FE-452 */
+  rentalCount?: number | null;
 }
 
 /** Product 헬퍼: DAILY 가격 조회 */
@@ -185,6 +189,10 @@ export interface ProductSummary {
   depositAmount: number | null;
   thumbnailUrl: string | null;
   createdAt: string;
+  /** 평균 평점 (BE: ratingAvg) — FE-452 */
+  ratingAvg?: number | null;
+  /** 대여 횟수 (BE: rentalCount) — FE-452 */
+  rentalCount?: number | null;
 }
 
 // ========================================
@@ -568,6 +576,82 @@ export interface AdminRentalListResponse {
 }
 
 // ========================================
+// 위시리스트 타입 (BE WishlistResult / WishlistPageResult 기준)
+// ========================================
+
+/** BE WishlistResult: { id, userId, productId, createdAt } */
+export interface WishlistResult {
+  id: number;
+  userId: number;
+  productId: number;
+  createdAt: string;
+}
+
+/** BE WishlistPageResult: { items, totalElements, totalPages } */
+export interface WishlistPageResult {
+  items: WishlistResult[];
+  totalElements: number;
+  totalPages: number;
+}
+
+// ========================================
+// 분쟁 타입 (FE-450 / FE-451)
+// ========================================
+
+export type DisputeReason =
+  | "DAMAGED"
+  | "NOT_RETURNED"
+  | "LATE_RETURN"
+  | "WRONG_ITEM"
+  | "OTHER";
+
+export type DisputeStatus =
+  | "OPEN"
+  | "UNDER_REVIEW"
+  | "RESOLVED_REFUND"
+  | "RESOLVED_PARTIAL"
+  | "RESOLVED_REJECTED"
+  | "CANCELLED";
+
+export type DisputeResolveType = "FULL_REFUND" | "PARTIAL" | "REJECTED";
+
+/** POST /api/v1/disputes 요청 바디 */
+export interface OpenDisputeRequest {
+  rentalId: number;
+  reason: DisputeReason;
+  description: string;
+  attachmentUrls: string[];
+}
+
+/** 분쟁 결과 (단건 응답) */
+export interface DisputeResult {
+  id: number;
+  rentalId: number;
+  openerId: number;
+  reason: DisputeReason;
+  description: string;
+  status: DisputeStatus;
+  attachmentUrls: string[];
+  refundAmount?: number;
+  resolvedAt?: string;
+  createdAt: string;
+}
+
+/** 관리자 분쟁 해결 요청 */
+export interface AdminResolveDisputeRequest {
+  type: DisputeResolveType;
+  refundAmount?: number;
+}
+
+/** 분쟁 목록 조회 파라미터 */
+export interface DisputeListParams {
+  status?: DisputeStatus;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+// ========================================
 // 알림 타입
 // ========================================
 
@@ -591,5 +675,26 @@ export interface Notification {
 
 export interface UnreadCountResponse {
   count: number;
+}
+
+// ========================================
+// 알림 설정 타입 (BE-430/431)
+// ========================================
+
+/** BE NotificationPreferenceResult */
+export interface NotificationPreferenceResult {
+  userId: number;
+  chatEnabled: boolean;
+  rentalEnabled: boolean;
+  settlementEnabled: boolean;
+  marketingEnabled: boolean;
+}
+
+/** PATCH /api/v1/me/notification-preferences 요청 (partial) */
+export interface UpdateNotificationPreferenceRequest {
+  chatEnabled?: boolean;
+  rentalEnabled?: boolean;
+  settlementEnabled?: boolean;
+  marketingEnabled?: boolean;
 }
 
