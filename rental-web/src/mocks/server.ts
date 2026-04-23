@@ -3,6 +3,7 @@ import { authHandlers } from "./handlers/auth";
 import { productHandlers } from "./handlers/product";
 import { mypageHandlers } from "./handlers/mypage";
 import { notificationHandlers } from "./handlers/notification";
+import { notificationPreferencesHandlers } from "./handlers/notification-preferences";
 import { rentalHandlers } from "./handlers/rental";
 import { reviewHandlers } from "./handlers/review";
 import { settlementHandlers } from "./handlers/settlement";
@@ -18,9 +19,10 @@ export const server = setupServer(
   ...productHandlers,
   ...mypageHandlers,
   ...notificationHandlers,
+  ...notificationPreferencesHandlers,
   ...rentalHandlers,
   ...reviewHandlers,
   ...settlementHandlers,
   ...chatHandlers,
-  ...adminHandlers
+  ...adminHandlers,
 );

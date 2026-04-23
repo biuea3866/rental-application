@@ -3,6 +3,7 @@ import { server } from "@/mocks/server";
 import { resetAuthHandlerState } from "@/mocks/handlers/auth";
 import { resetMyPageHandlerState } from "@/mocks/handlers/mypage";
 import { resetNotificationHandlerState } from "@/mocks/handlers/notification";
+import { resetNotificationPreferencesHandlerState } from "@/mocks/handlers/notification-preferences";
 import { resetRentalHandlerState } from "@/mocks/handlers/rental";
 import { resetReviewHandlerState } from "@/mocks/handlers/review";
 import { resetSettlementHandlerState } from "@/mocks/handlers/settlement";
@@ -67,6 +68,7 @@ beforeEach(() => {
   resetAuthHandlerState();
   resetMyPageHandlerState();
   resetNotificationHandlerState();
+  resetNotificationPreferencesHandlerState();
   resetRentalHandlerState();
   resetReviewHandlerState();
   resetSettlementHandlerState();
