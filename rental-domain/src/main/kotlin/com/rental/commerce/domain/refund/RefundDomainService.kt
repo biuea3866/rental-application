@@ -1,7 +1,10 @@
 package com.rental.commerce.domain.refund
 
+import com.rental.commerce.domain.refund.event.RefundCompletedEvent
 import com.rental.commerce.domain.refund.port.PaymentRefundGateway
+import com.rental.commerce.domain.rental.RentalPaymentRepository
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
@@ -20,8 +23,66 @@ import java.math.BigDecimal
 class RefundDomainService(
     private val refundRepository: RefundRepository,
     private val paymentRefundGateway: PaymentRefundGateway,
+    private val rentalPaymentRepository: RentalPaymentRepository,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    /**
+     * rental 기준 환불 처리 + 완료 이벤트 발행 (BE-405 Listener 가 호출).
+     *
+     * Infrastructure Listener 에 비즈니스 로직이 새지 않도록, 결제 정보 조회 + PG 호출 +
+     * RefundCompletedEvent 발행까지 이 메서드에서 일원화한다 (ADR-009 §4, pr-reviewer 지적).
+     *
+     * 도메인 경계: 분쟁 도메인은 의존하지 않고 primitive(rentalId, disputeId?, amount, reasonCode)
+     * 만 받음.
+     */
+    fun processRefundForRental(
+        rentalId: Long,
+        disputeId: Long?,
+        amount: BigDecimal,
+        reasonCode: String,
+    ): Refund? {
+        val payment = rentalPaymentRepository.findByRentalId(rentalId)
+            ?: run {
+                log.error(
+                    "[RefundDomainService.processRefundForRental] rental_payment 없음. rentalId={}",
+                    rentalId,
+                )
+                return null
+            }
+
+        val paymentKey = payment.externalPaymentId
+            ?: run {
+                log.error(
+                    "[RefundDomainService.processRefundForRental] externalPaymentId 없음. rentalId={}",
+                    rentalId,
+                )
+                return null
+            }
+
+        val refund = processRefund(
+            paymentId = payment.id,
+            paymentKey = paymentKey,
+            paymentAmount = BigDecimal.valueOf(payment.amount),
+            rentalId = rentalId,
+            disputeId = disputeId,
+            amount = amount,
+            reason = reasonCode,
+        )
+
+        eventPublisher.publishEvent(
+            RefundCompletedEvent(
+                refundId = refund.id,
+                paymentId = refund.paymentId,
+                rentalId = refund.rentalId,
+                disputeId = refund.disputeId,
+                amount = refund.amount,
+                status = refund.status,
+            ),
+        )
+        return refund
+    }
 
     fun processRefund(
         paymentId: Long,

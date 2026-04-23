@@ -2,6 +2,7 @@ package com.rental.commerce.domain.refund
 
 import com.rental.commerce.domain.refund.port.PaymentRefundGateway
 import com.rental.commerce.domain.refund.port.PaymentRefundResult
+import com.rental.commerce.domain.rental.RentalPaymentRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -10,12 +11,20 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import java.math.BigDecimal
+import org.springframework.context.ApplicationEventPublisher
 
 class RefundDomainServiceTest : BehaviorSpec({
 
     val refundRepository = mockk<RefundRepository>()
     val paymentGateway = mockk<PaymentRefundGateway>()
-    val service = RefundDomainService(refundRepository, paymentGateway)
+    val rentalPaymentRepository = mockk<RentalPaymentRepository>(relaxed = true)
+    val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    val service = RefundDomainService(
+        refundRepository,
+        paymentGateway,
+        rentalPaymentRepository,
+        eventPublisher,
+    )
 
     Given("processRefund") {
         When("누적 환불 금액이 원 결제 초과") {
