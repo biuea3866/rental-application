@@ -9,6 +9,7 @@ import { reviewHandlers } from "./handlers/review";
 import { settlementHandlers } from "./handlers/settlement";
 import { chatHandlers } from "./handlers/chat";
 import { adminHandlers } from "./handlers/admin";
+import { wishlistHandlers } from "./handlers/wishlist";
 
 // ========================================
 // MSW 서버 설정 (테스트용)
@@ -25,4 +26,5 @@ export const server = setupServer(
   ...settlementHandlers,
   ...chatHandlers,
   ...adminHandlers,
+  ...wishlistHandlers,
 );
