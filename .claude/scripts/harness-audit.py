@@ -149,10 +149,22 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", default=".", help="프로젝트 루트")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument(
+        "--diff-files",
+        default=None,
+        help="감사 대상 파일 화이트리스트 (개행 또는 콤마 구분). 지정 시 리스트에 포함된 파일만 결과에 남김.",
+    )
     args = parser.parse_args()
 
     root = Path(args.path).resolve()
     violations, error_count = audit(root)
+
+    if args.diff_files:
+        raw = args.diff_files.replace(",", "\n")
+        allow = {line.strip() for line in raw.splitlines() if line.strip()}
+        if allow:
+            violations = [v for v in violations if v["file"] in allow]
+            error_count = sum(1 for v in violations if v["severity"] == "error")
 
     if args.format == "json":
         print(json.dumps(violations, ensure_ascii=False, indent=2))

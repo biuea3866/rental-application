@@ -55,17 +55,20 @@ jobs:
       - name: Harness audit on diff scope
         id: harness
         run: |
-          python3 .claude/scripts/harness-audit.py > audit.txt 2>&1 || true
-          ERRORS=$(grep -c "^\[ERROR\]" audit.txt || echo 0)
-          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+          # PR diff 에 포함된 파일만 결과에 남김 — 기존 dev 위반으로 이 PR 을 막지 않음
+          python3 .claude/scripts/harness-audit.py --diff-files "${{ steps.diff.outputs.files }}" > audit.txt 2>&1 || true
+          ERRORS=$(grep -c "^  \[ERROR\]" audit.txt 2>/dev/null || true)
+          ERRORS=${ERRORS:-0}
+          printf "errors=%d\n" "$ERRORS" >> $GITHUB_OUTPUT
           cat audit.txt
 
       - name: Senior gate — 보안/구조 휴리스틱
         id: senior
         run: |
           python3 .claude/scripts/senior-gate.py "${{ steps.diff.outputs.files }}" > senior.txt 2>&1 || true
-          SENIOR_CRITICAL=$(grep -c "^\[CRITICAL\]" senior.txt || echo 0)
-          echo "critical=$SENIOR_CRITICAL" >> $GITHUB_OUTPUT
+          SENIOR_CRITICAL=$(grep -c "^\[CRITICAL\]" senior.txt 2>/dev/null || true)
+          SENIOR_CRITICAL=${SENIOR_CRITICAL:-0}
+          printf "critical=%d\n" "$SENIOR_CRITICAL" >> $GITHUB_OUTPUT
           cat senior.txt
 
       - name: Post review comment
