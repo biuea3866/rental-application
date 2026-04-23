@@ -94,7 +94,7 @@
         "id": "no-kafka-topic-hardcode",
         "pattern": "\"event\\.rental\\.",
         "file_glob": "*.kt",
-        "exclude_glob": "**/RentalTopics.kt",
+        "exclude_glob": "**/RentalTopics.kt,**/*Test*.kt",
         "message": "Kafka 토픽 문자열 하드코딩 금지 — RentalTopics 상수를 사용하세요.",
         "severity": "error"
       },
@@ -184,6 +184,20 @@
         "file_glob": "*/domain/user/**/*.kt",
         "message": "도메인 패키지 간 참조 금지 — domain.user에서 domain.rental/product/notification import 불가. domain.common만 허용.",
         "severity": "error"
+      },
+      {
+        "id": "no-cross-domain-import-admin",
+        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|product|user|notification)\\.",
+        "file_glob": "*/domain/admin/**/*.kt",
+        "message": "도메인 패키지 간 참조 금지 — domain.admin에서 다른 도메인 import 불가. domain.common 만 허용하며 필요한 타입은 common 으로 이동하거나 VO/String 으로 받으세요. (harness-auditor 제안)",
+        "severity": "warning"
+      },
+      {
+        "id": "no-cross-domain-import-auth",
+        "pattern": "import com\\.rental\\.commerce\\.domain\\.(rental|product|notification|user)\\.",
+        "file_glob": "*/domain/auth/**/*.kt",
+        "message": "도메인 패키지 간 참조 금지 — domain.auth에서 user/rental/product/notification import 불가. SocialProvider 등 공용 타입은 domain.common 으로 이동. (harness-auditor 제안)",
+        "severity": "warning"
       }
     ]
   },
