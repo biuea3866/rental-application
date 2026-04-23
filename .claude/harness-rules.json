@@ -116,6 +116,7 @@
         "id": "no-entity-field-comparison-in-usecase",
         "pattern": "\\w+\\.(userId|productId|orderId|rentalId|status|role)\\s*(==|!=)\\s*",
         "file_glob": "*UseCase*.kt",
+        "exclude_glob": "*Test*",
         "message": "UseCase에서 Entity 필드를 직접 비교하지 마세요 — Entity 내부에 검증 메서드를 캡슐화하세요 (Rich Domain Model).",
         "severity": "error"
       },
@@ -161,6 +162,7 @@
         "id": "no-status-check-in-usecase",
         "pattern": "\\.status\\.canTransitTo|\\.status\\s*(==|!=)\\s*\\w+Status",
         "file_glob": "*UseCase*.kt",
+        "exclude_glob": "*Test*",
         "message": "UseCase에서 상태 검증 금지 — Entity의 상태 전이 메서드 내부에 캡슐화.",
         "severity": "error"
       },
