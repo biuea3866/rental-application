@@ -67,5 +67,15 @@ class ErrorCodeTest : BehaviorSpec({
                 errorCode.httpStatus shouldBe 500
             }
         }
+
+        When("REFUND_EXCEEDS_PAYMENT 에러 코드를 조회하면") {
+            val errorCode = ErrorCode.REFUND_EXCEEDS_PAYMENT
+
+            Then("400 상태 코드, code=REFUND_EXCEEDS_PAYMENT, 비어있지 않은 message를 가진다") {
+                errorCode.httpStatus shouldBe 400
+                errorCode.code shouldBe "REFUND_EXCEEDS_PAYMENT"
+                errorCode.message.shouldNotBeBlank()
+            }
+        }
     }
 })
