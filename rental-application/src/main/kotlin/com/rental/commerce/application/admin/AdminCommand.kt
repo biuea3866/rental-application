@@ -1,7 +1,7 @@
 package com.rental.commerce.application.admin
 
 import com.rental.commerce.domain.admin.AdminRentalFilter
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 
 /**
  * 관리자 전용 Command 모음.

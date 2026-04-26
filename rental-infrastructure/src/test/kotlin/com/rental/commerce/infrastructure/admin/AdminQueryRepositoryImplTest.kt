@@ -6,7 +6,7 @@ import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.PaymentMethod
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalPayment
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.infrastructure.common.config.JpaAuditingConfig
 import com.rental.commerce.infrastructure.common.config.QuerydslConfig
 import com.rental.commerce.infrastructure.rental.RentalJpaRepository

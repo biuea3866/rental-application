@@ -1,6 +1,6 @@
 package com.rental.commerce.infrastructure.user
 
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.SocialProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole

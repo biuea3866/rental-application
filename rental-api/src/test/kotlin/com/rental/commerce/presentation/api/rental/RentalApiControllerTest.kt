@@ -21,7 +21,7 @@ import com.rental.commerce.domain.common.ResourceNotFoundException
 import com.rental.commerce.domain.rental.DeliveryInfo
 import com.rental.commerce.domain.rental.PaymentMethod
 import com.rental.commerce.domain.rental.PaymentStatus
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.presentation.api.common.AuthenticatedRequestWrapper
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
 import com.rental.commerce.presentation.api.common.MemberIdArgumentResolver

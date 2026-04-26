@@ -6,7 +6,7 @@ import com.rental.commerce.domain.product.ProductDomainService
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
 import com.rental.commerce.domain.rental.RentalQueryCondition
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import java.time.ZonedDateTime
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

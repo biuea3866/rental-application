@@ -5,7 +5,7 @@ import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.SocialUserInfo
 import com.rental.commerce.domain.common.TokenProvider
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.SocialProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserDomainService
 import com.rental.commerce.domain.user.UserRole

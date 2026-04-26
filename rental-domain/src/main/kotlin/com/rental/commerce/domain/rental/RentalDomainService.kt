@@ -1,11 +1,12 @@
 package com.rental.commerce.domain.rental
 
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
 import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.PaymentFailedException
-import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.common.RentalPeriodConflictException
+import com.rental.commerce.domain.common.RentalStatus
 import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit

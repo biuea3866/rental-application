@@ -7,7 +7,7 @@ import com.rental.commerce.domain.rental.PaymentStatus
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalDomainService
 import com.rental.commerce.domain.rental.RentalPayment
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.RentalWithPayment
 import com.rental.commerce.domain.user.UserDomainService
 import java.time.ZonedDateTime

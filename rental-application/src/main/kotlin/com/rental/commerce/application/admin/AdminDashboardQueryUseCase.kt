@@ -2,7 +2,7 @@ package com.rental.commerce.application.admin
 
 import com.rental.commerce.domain.admin.AdminDomainService
 import com.rental.commerce.domain.admin.DashboardResult
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

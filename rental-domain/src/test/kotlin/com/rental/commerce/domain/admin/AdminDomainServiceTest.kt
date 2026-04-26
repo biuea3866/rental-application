@@ -3,8 +3,8 @@ package com.rental.commerce.domain.admin
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PageResult
-import com.rental.commerce.domain.rental.RentalStatus
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.RentalStatus
+import com.rental.commerce.domain.common.SocialProvider
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole

@@ -11,7 +11,7 @@ import com.rental.commerce.domain.admin.WeeklyRevenueResult
 import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.rental.QRental
 import com.rental.commerce.domain.rental.QRentalPayment
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import org.springframework.stereotype.Component
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit

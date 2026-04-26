@@ -2,7 +2,7 @@ package com.rental.commerce.infrastructure.product
 
 import com.rental.commerce.domain.product.ProductRepository
 import com.rental.commerce.domain.rental.RentalRepository
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import com.rental.commerce.domain.review.ReviewRepository
 import com.rental.commerce.domain.review.event.ReviewCreatedEvent

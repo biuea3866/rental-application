@@ -1,6 +1,7 @@
 package com.rental.commerce.domain.rental
 
 import com.rental.commerce.domain.common.PageQuery
+import com.rental.commerce.domain.common.RentalStatus
 
 /**
  * 내 대여 목록 조회 조건 — renterId 또는 lenderId 기준 + role 필터 + 상태 필터 + 페이지네이션.

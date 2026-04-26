@@ -3,6 +3,7 @@ package com.rental.commerce.domain.user
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.PasswordHasher
+import com.rental.commerce.domain.common.SocialProvider
 import com.rental.commerce.domain.common.UnauthorizedException
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow

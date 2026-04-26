@@ -2,7 +2,7 @@ package com.rental.commerce.infrastructure.notification
 
 import com.rental.commerce.domain.notification.Notification
 import com.rental.commerce.domain.notification.NotificationDomainService
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import com.rental.commerce.infrastructure.kafka.RentalTopics
 import io.kotest.core.spec.style.BehaviorSpec

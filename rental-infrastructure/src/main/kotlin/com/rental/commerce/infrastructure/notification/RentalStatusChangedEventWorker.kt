@@ -3,7 +3,7 @@ package com.rental.commerce.infrastructure.notification
 import com.rental.commerce.domain.notification.Notification
 import com.rental.commerce.domain.notification.NotificationDomainService
 import com.rental.commerce.domain.notification.NotificationType
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

@@ -1,4 +1,4 @@
-package com.rental.commerce.domain.rental
+package com.rental.commerce.domain.common
 
 enum class RentalStatus {
     REQUESTED,

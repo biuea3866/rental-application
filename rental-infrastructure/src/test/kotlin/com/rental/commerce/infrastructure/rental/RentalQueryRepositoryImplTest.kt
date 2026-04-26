@@ -7,7 +7,7 @@ import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalPayment
 import com.rental.commerce.domain.rental.RentalQueryCondition
 import com.rental.commerce.domain.rental.RentalQueryRepository
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.infrastructure.common.config.JpaAuditingConfig
 import com.rental.commerce.infrastructure.common.config.QuerydslConfig
 import io.kotest.core.spec.style.BehaviorSpec
