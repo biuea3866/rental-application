@@ -7,6 +7,7 @@ import com.rental.commerce.domain.common.PageResult
 import com.rental.commerce.domain.common.PaymentFailedException
 import com.rental.commerce.domain.common.RentalNotFoundException
 import com.rental.commerce.domain.common.RentalPeriodConflictException
+import com.rental.commerce.domain.common.RentalStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

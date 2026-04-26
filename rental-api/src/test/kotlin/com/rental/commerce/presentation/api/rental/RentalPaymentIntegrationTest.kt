@@ -22,7 +22,7 @@ import com.rental.commerce.domain.rental.PaymentMethod
 import com.rental.commerce.domain.rental.PaymentStatus
 import com.rental.commerce.domain.rental.RentalPaymentRepository
 import com.rental.commerce.domain.rental.RentalRepository
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.user.User
 import com.rental.commerce.domain.user.UserRepository
 import com.rental.commerce.domain.user.UserRole

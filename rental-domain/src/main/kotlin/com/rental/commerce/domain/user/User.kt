@@ -2,9 +2,10 @@ package com.rental.commerce.domain.user
 
 import com.rental.commerce.domain.common.BaseEntity
 import com.rental.commerce.domain.common.BusinessException
-import com.rental.commerce.domain.common.PasswordHasher
-import com.rental.commerce.domain.common.UnauthorizedException
 import com.rental.commerce.domain.common.ErrorCode
+import com.rental.commerce.domain.common.PasswordHasher
+import com.rental.commerce.domain.common.SocialProvider
+import com.rental.commerce.domain.common.UnauthorizedException
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

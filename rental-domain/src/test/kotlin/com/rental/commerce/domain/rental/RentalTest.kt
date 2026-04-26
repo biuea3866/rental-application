@@ -3,6 +3,7 @@ package com.rental.commerce.domain.rental
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec

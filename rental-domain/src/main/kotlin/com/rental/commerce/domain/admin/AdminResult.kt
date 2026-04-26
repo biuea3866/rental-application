@@ -1,6 +1,6 @@
 package com.rental.commerce.domain.admin
 
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import java.time.ZonedDateTime
 
 data class DashboardResult(

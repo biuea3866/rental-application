@@ -1,5 +1,7 @@
 package com.rental.commerce.domain.user
 
+import com.rental.commerce.domain.common.SocialProvider
+
 interface UserRepository {
 
     fun save(user: User): User

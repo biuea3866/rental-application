@@ -3,7 +3,7 @@ package com.rental.commerce.domain.auth
 import com.rental.commerce.domain.common.SmsGateway
 import com.rental.commerce.domain.common.SocialLoginGateway
 import com.rental.commerce.domain.common.SocialUserInfo
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.SocialProvider
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 

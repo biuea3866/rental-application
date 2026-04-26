@@ -5,6 +5,7 @@ import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.DomainEvent
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.InvalidStateTransitionException
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded

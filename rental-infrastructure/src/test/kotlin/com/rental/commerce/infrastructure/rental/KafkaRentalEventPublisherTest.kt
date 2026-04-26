@@ -1,6 +1,6 @@
 package com.rental.commerce.infrastructure.rental
 
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import com.rental.commerce.infrastructure.kafka.RentalTopics
 import io.kotest.assertions.throwables.shouldNotThrowAny

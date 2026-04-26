@@ -9,7 +9,7 @@ import com.rental.commerce.application.admin.GetAdminRentalsCommand
 import com.rental.commerce.application.admin.GetAdminRentalsUseCase
 import com.rental.commerce.application.admin.SuspendUserCommand
 import com.rental.commerce.application.admin.SuspendUserUseCase
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.presentation.api.common.RoleRequired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

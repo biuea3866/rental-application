@@ -2,7 +2,7 @@ package com.rental.commerce.application.rental
 
 import com.rental.commerce.domain.rental.PaymentStatus
 import com.rental.commerce.domain.rental.RentalPayment
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 
 data class ProcessPaymentResult(
     val rentalId: Long,

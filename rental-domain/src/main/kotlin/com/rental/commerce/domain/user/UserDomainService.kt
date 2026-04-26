@@ -3,6 +3,7 @@ package com.rental.commerce.domain.user
 import com.rental.commerce.domain.common.DuplicateResourceException
 import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.common.ResourceNotFoundException
+import com.rental.commerce.domain.common.SocialProvider
 import com.rental.commerce.domain.common.SocialUserInfo
 import org.springframework.stereotype.Service
 

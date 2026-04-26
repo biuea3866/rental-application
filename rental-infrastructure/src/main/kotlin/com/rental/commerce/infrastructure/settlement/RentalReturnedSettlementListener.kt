@@ -1,6 +1,6 @@
 package com.rental.commerce.infrastructure.settlement
 
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import com.rental.commerce.domain.settlement.SettlementDomainService
 import org.slf4j.LoggerFactory

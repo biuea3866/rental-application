@@ -2,7 +2,7 @@ package com.rental.commerce.presentation.api.auth
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.rental.commerce.application.auth.SocialLoginCommand
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.SocialProvider
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 

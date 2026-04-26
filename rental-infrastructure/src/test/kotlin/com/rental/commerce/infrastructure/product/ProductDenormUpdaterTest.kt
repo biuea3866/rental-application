@@ -4,7 +4,7 @@ import com.rental.commerce.domain.product.Product
 import com.rental.commerce.domain.product.ProductRepository
 import com.rental.commerce.domain.rental.Rental
 import com.rental.commerce.domain.rental.RentalRepository
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.domain.rental.event.RentalStatusChangedEvent
 import com.rental.commerce.domain.review.RatingSnapshot
 import com.rental.commerce.domain.review.ReviewRepository

@@ -1,6 +1,6 @@
 package com.rental.commerce.domain.common
 
-import com.rental.commerce.domain.user.SocialProvider
+import com.rental.commerce.domain.common.SocialProvider
 
 data class SocialUserInfo(
     val socialId: String,

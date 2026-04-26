@@ -1,5 +1,6 @@
 package com.rental.commerce.domain.user
 
+import com.rental.commerce.domain.common.SocialProvider
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 

@@ -9,7 +9,7 @@ import com.rental.commerce.application.admin.GetAdminRentalsUseCase
 import com.rental.commerce.application.admin.SuspendUserUseCase
 import com.rental.commerce.domain.common.BusinessException
 import com.rental.commerce.domain.common.ErrorCode
-import com.rental.commerce.domain.rental.RentalStatus
+import com.rental.commerce.domain.common.RentalStatus
 import com.rental.commerce.presentation.api.common.GlobalExceptionHandler
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.Runs

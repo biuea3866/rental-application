@@ -1,4 +1,4 @@
-package com.rental.commerce.domain.user
+package com.rental.commerce.domain.common
 
 enum class SocialProvider {
     KAKAO,
