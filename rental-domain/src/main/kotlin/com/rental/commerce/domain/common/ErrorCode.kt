@@ -77,6 +77,9 @@ enum class ErrorCode(
     // 422 — Settlement
     SETTLEMENT_ALREADY_PROCESSED(422, "SETTLEMENT_ALREADY_PROCESSED", "이미 처리된 정산입니다"),
 
+    // 400 — Refund
+    REFUND_EXCEEDS_PAYMENT(400, "REFUND_EXCEEDS_PAYMENT", "환불 요청 금액이 결제 금액을 초과합니다"),
+
     // Dispute — 400/403/404/409
     DISPUTE_INVALID_DESCRIPTION(400, "DISPUTE_INVALID_DESCRIPTION", "분쟁 설명은 1~1000자여야 합니다"),
     DISPUTE_INVALID_AMOUNT(400, "DISPUTE_INVALID_AMOUNT", "환불 금액은 0보다 커야 합니다"),

@@ -1,5 +1,6 @@
 package com.rental.commerce.domain.refund
 
+import com.rental.commerce.domain.common.ErrorCode
 import com.rental.commerce.domain.refund.port.PaymentRefundGateway
 import com.rental.commerce.domain.refund.port.PaymentRefundResult
 import com.rental.commerce.domain.rental.RentalPaymentRepository
@@ -28,15 +29,18 @@ class RefundDomainServiceTest : BehaviorSpec({
 
     Given("processRefund") {
         When("누적 환불 금액이 원 결제 초과") {
-            Then("RefundExceedsPaymentException") {
+            Then("RefundExceedsPaymentException — errorCode.code = REFUND_EXCEEDS_PAYMENT") {
                 every { refundRepository.sumNonFailedAmountByPaymentId(1L) } returns BigDecimal("8000")
-                shouldThrow<RefundExceedsPaymentException> {
+                val exception = shouldThrow<RefundExceedsPaymentException> {
                     service.processRefund(
                         paymentId = 1L, paymentKey = "pk", paymentAmount = BigDecimal("10000"),
                         rentalId = 100L, disputeId = null, amount = BigDecimal("3000"),
                         reason = "초과 시나리오",
                     )
                 }
+                exception.errorCode shouldBe ErrorCode.REFUND_EXCEEDS_PAYMENT
+                exception.errorCode.code shouldBe "REFUND_EXCEEDS_PAYMENT"
+                exception.errorCode.httpStatus shouldBe 400
             }
         }
 
