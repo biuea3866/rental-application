@@ -6,6 +6,7 @@ import com.rental.commerce.domain.rental.RentalPaymentRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 /**
@@ -18,8 +19,13 @@ import java.math.BigDecimal
  *  4. 결과에 따라 markSucceeded / markFailed
  *
  * SELECT ... FOR UPDATE 는 Repository 구현체가 담당 (인프라 레이어).
+ *
+ * 트랜잭션 정책 (CLAUDE.md — @Transactional 은 UseCase / DomainService 에서만):
+ *  - 클래스 기본: @Transactional (쓰기 포함 메서드가 대부분)
+ *  - 모든 public 메서드는 쓰기 작업을 포함하므로 readOnly = false 유지
  */
 @Service
+@Transactional
 class RefundDomainService(
     private val refundRepository: RefundRepository,
     private val paymentRefundGateway: PaymentRefundGateway,
